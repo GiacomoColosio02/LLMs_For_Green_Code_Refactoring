@@ -1,0 +1,36 @@
+# Measurement Configuration for SWE-Perf Extended
+
+measurement:
+  repetitions: 30                    # Number of times to repeat each test
+  sampling_interval_ms: 100          # Sample metrics every 100ms
+  baseline_duration_sec: 5.0         # Duration of baseline measurement
+  min_test_duration_sec: 5.0         # Minimum test duration for accurate measurement
+
+energy:
+  tool: codecarbon                   # Energy measurement tool
+  measure_power_secs: 0.1            # Power sampling interval
+  tracking_mode: process             # Options: process, machine
+  log_level: error                   # Reduce codecarbon verbosity
+  save_to_file: false                # Don't auto-save, we handle it
+
+resources:
+  tool: psutil                       # Resource monitoring tool
+  cpu_interval: 0.1                  # CPU sampling interval (seconds)
+  include_children: true             # Include child processes
+  per_core_cpu: true                 # Track per-core CPU usage
+
+carbon:
+  grid_intensity_default: 450        # Default: EU average (gCO₂e/kWh)
+  # Override with specific country if known
+  country_iso_code: null             # e.g., "ESP", "FRA", "USA"
+
+output:
+  format: json                       # Output format: json or csv
+  save_raw_samples: true             # Save all raw measurement samples
+  compress: false                    # Compress output files
+  timestamp_format: "%Y%m%d_%H%M%S"  # Timestamp format for filenames
+
+paths:
+  raw_measurements: "data/raw/measurements"
+  logs: "data/raw/logs"
+  processed: "data/processed"
