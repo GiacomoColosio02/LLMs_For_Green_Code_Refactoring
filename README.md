@@ -2,7 +2,7 @@
 
 Benchmarking Large Language Models for Green Code Refactoring using SWE-Perf extended with GSMM metrics.
 
-## 🎯 Project Overview
+## Project Overview
 
 ### Metrics
 
