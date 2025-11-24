@@ -1,0 +1,46 @@
+{
+  "description": "Carbon intensity by country (gCO2e/kWh) - 2024 data",
+  "source": "ElectricityMap, IEA, European Environment Agency",
+  "last_updated": "2024-01",
+  
+  "intensities": {
+    "ISL": 20,
+    "NOR": 30,
+    "SWE": 35,
+    "FRA": 50,
+    "CHE": 60,
+    "FIN": 80,
+    "BRA": 120,
+    "CAN": 150,
+    "NZL": 180,
+    "ESP": 250,
+    "ITA": 300,
+    "PRT": 320,
+    "GBR": 350,
+    "USA": 400,
+    "DEU": 420,
+    "EU": 450,
+    "JPN": 500,
+    "RUS": 550,
+    "CHN": 650,
+    "IND": 700,
+    "POL": 800,
+    "AUS": 850
+  },
+  
+  "categories": {
+    "very_low": ["ISL", "NOR", "SWE", "FRA"],
+    "low": ["CHE", "FIN", "BRA", "CAN"],
+    "medium": ["ESP", "ITA", "PRT", "GBR"],
+    "high": ["USA", "DEU", "EU", "JPN"],
+    "very_high": ["CHN", "IND", "POL", "AUS"]
+  },
+  
+  "notes": {
+    "ISL": "Primarily geothermal and hydroelectric",
+    "FRA": "Primarily nuclear power",
+    "DEU": "Transitioning from nuclear to renewables",
+    "POL": "Heavy reliance on coal",
+    "ESP": "High solar and wind penetration"
+  }
+}
