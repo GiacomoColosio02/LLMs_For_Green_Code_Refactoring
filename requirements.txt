@@ -28,3 +28,14 @@ ipykernel>=6.25.0
 # Utilities
 tqdm>=4.65.0
 python-dotenv>=1.0.0
+
+
+#LLMS
+# Aggiungi queste righe
+openai>=1.0.0
+anthropic>=0.25.0
+google-generativeai>=0.3.0
+google-cloud-aiplatform>=1.38.0
+dashscope>=1.14.0  # Alibaba Qwen
+together>=1.0.0    # Per Llama 4 via Together.ai
+tiktoken>=0.5.0    # Token counting OpenAI
