@@ -1,4 +1,4 @@
-.# Python
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -55,6 +55,21 @@ results/figures/*.pdf
 emissions.csv
 codecarbon.log
 
-# Secrets
+# Secrets & API Keys - IMPORTANTE!
 .env
 secrets.yaml
+configs/llm_api_keys.yaml
+
+# Large model files (se scarichi modelli locali)
+*.bin
+*.safetensors
+*.gguf
+models/
+
+# Repository temporanei clonati durante misurazioni
+/tmp/sweperf_repos/
+
+# Log files
+*.log
+nohup.out
+measurement_full.log
