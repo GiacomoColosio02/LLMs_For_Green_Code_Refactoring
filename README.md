@@ -49,7 +49,7 @@ The **SWE-Perf dataset** provides real-world performance optimization instances 
 
 ## Step 1: Adding New Metrics
 
-We extend SWE-Perf with **8 new sustainability metrics** aligned with the **Green Software Measurement Model (GSMM)**:
+We extend SWE-Perf with **11 new sustainability metrics (including 3 GPU metrics)** aligned with the **Green Software Measurement Model (GSMM)**:
 
 ### 1. Efficiency Metrics (Resource-Oriented)
 
@@ -59,9 +59,14 @@ We extend SWE-Perf with **8 new sustainability metrics** aligned with the **Gree
 | **`cpu_usage_mean_percent`** | % | `psutil.cpu_percent()` | CPU is primary energy consumer, direct correlation |
 | **`cpu_usage_peak_percent`** | % | `max(cpu_samples)` | Identifies computational bursts, hardware sizing |
 | **`ram_usage_peak_mb`** | MB | `psutil.memory_info().rss` | Hardware obsolescence prevention, memory leak detection |
+| **`gpu_usage_mean_percent`** | % | `pynvml` | GPU compute utilization, critical for ML/AI workloads |
+| **`gpu_usage_peak_percent`** | % | `max(gpu_samples)` | Maximum GPU load, identifies computation spikes |
+| **`gpu_memory_peak_mb`** | MB | `pynvml.nvmlDeviceGetMemoryInfo()` | GPU memory usage, prevents OOM errors |
 
 **Sampling Configuration:**
 - Sampling rate: 0.1s (10 Hz)
+- **GPU sampling rate**: 0.1s (same as CPU/RAM) for consistent correlation
+- GPU monitoring automatically disabled if no NVIDIA GPU detected
 - Trade-off: <1% measurement overhead vs. sufficient granularity
 
 ### 2. Greenness Metrics (Energy-Oriented)

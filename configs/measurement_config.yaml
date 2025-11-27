@@ -34,3 +34,11 @@ paths:
   raw_measurements: "data/raw/measurements"
   logs: "data/raw/logs"
   processed: "data/processed"
+
+gpu:
+  enabled: true                      # Enable GPU monitoring
+  sampling_interval: 0.1             # GPU sampling interval (seconds)
+  track_memory: true                 # Track GPU memory usage
+  track_temperature: true            # Track GPU temperature
+  track_power: true                  # Track GPU power draw
+  device_index: 0                    # GPU device to monitor (0 = first GPU)

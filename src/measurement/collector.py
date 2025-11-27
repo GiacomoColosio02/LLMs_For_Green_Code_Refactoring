@@ -10,11 +10,12 @@ from datetime import datetime
 
 from src.measurement.resource_monitor import ResourceMonitor
 from src.measurement.energy_monitor import EnergyMonitor
+from src.measurement.gpu_monitor import GPUMonitor, is_gpu_available
 from src.utils.config import load_config
 
 
 class MetricsCollector:
-    """Collect all metrics (CPU, RAM, Energy, Carbon) for a test execution."""
+    """Collect all metrics (CPU, RAM, GPU, Energy, Carbon) for a test execution."""
     
     def __init__(
         self,
@@ -26,7 +27,7 @@ class MetricsCollector:
         Initialize metrics collector.
         
         Args:
-            instance_id: Unique identifier for the instance (e.g., 'astropy__astropy-16065')
+            instance_id: Unique identifier for the instance
             country_code: ISO country code for carbon intensity
             config: Configuration dictionary (if None, loads default)
         """
@@ -34,9 +35,21 @@ class MetricsCollector:
         self.country_code = country_code
         self.config = config if config is not None else load_config()
         
+        # Check GPU availability
+        self.gpu_enabled = (
+            self.config.get('gpu', {}).get('enabled', False) and 
+            is_gpu_available()
+        )
+        
+        if self.gpu_enabled:
+            print("✅ GPU monitoring enabled")
+        else:
+            print("ℹ️  GPU monitoring disabled")
+        
         # Monitoring components
         self.resource_monitor: Optional[ResourceMonitor] = None
         self.energy_monitor: Optional[EnergyMonitor] = None
+        self.gpu_monitor: Optional[GPUMonitor] = None
         
         # Results
         self.metrics: Dict = {}
@@ -64,6 +77,16 @@ class MetricsCollector:
             tracking_mode=self.config['energy']['tracking_mode']
         )
         
+        gpu_monitor = None
+        if self.gpu_enabled:
+            gpu_config = self.config.get('gpu', {})
+            gpu_monitor = GPUMonitor(
+                device_index=gpu_config.get('device_index', 0),
+                track_temperature=gpu_config.get('track_temperature', True),
+                track_power=gpu_config.get('track_power', True)
+            )
+            gpu_monitor.start_monitoring()
+        
         # Start monitoring
         resource_monitor.start_monitoring()
         energy_monitor.start()
@@ -72,6 +95,8 @@ class MetricsCollector:
         start_time = time.time()
         while time.time() - start_time < duration:
             resource_monitor.add_sample()
+            if gpu_monitor:
+                gpu_monitor.add_sample()
             time.sleep(self.config['resources']['cpu_interval'])
         
         # Stop and collect
@@ -86,9 +111,23 @@ class MetricsCollector:
             'power_watts': energy_stats['mean_power_draw_watts']
         }
         
+        # Add GPU metrics if available
+        if gpu_monitor:
+            gpu_stats = gpu_monitor.get_statistics()
+            baseline.update({
+                'gpu_utilization_mean_percent': gpu_stats['gpu_utilization_mean_percent'],
+                'gpu_memory_mean_mb': gpu_stats['gpu_memory_mean_mb']
+            })
+            gpu_monitor.shutdown()
+        
         print(f"  ✅ Baseline: {baseline['cpu_usage_mean_percent']:.1f}% CPU, "
               f"{baseline['ram_usage_mean_mb']:.1f} MB RAM, "
-              f"{baseline['power_watts']:.2f} W")
+              f"{baseline['power_watts']:.2f} W", end='')
+        
+        if self.gpu_enabled:
+            print(f", {baseline['gpu_utilization_mean_percent']:.1f}% GPU")
+        else:
+            print()
         
         return baseline
     
@@ -101,7 +140,7 @@ class MetricsCollector:
         Measure test execution with all metrics.
         
         Args:
-            test_command: Command to execute (e.g., 'pytest test.py::test_func')
+            test_command: Command to execute
             repetitions: Number of times to repeat the test
             
         Returns:
@@ -125,6 +164,16 @@ class MetricsCollector:
                 tracking_mode=self.config['energy']['tracking_mode']
             )
             
+            gpu_monitor = None
+            if self.gpu_enabled:
+                gpu_config = self.config.get('gpu', {})
+                gpu_monitor = GPUMonitor(
+                    device_index=gpu_config.get('device_index', 0),
+                    track_temperature=gpu_config.get('track_temperature', True),
+                    track_power=gpu_config.get('track_power', True)
+                )
+                gpu_monitor.start_monitoring()
+            
             # Start monitoring
             resource_monitor.start_monitoring()
             energy_monitor.start()
@@ -142,6 +191,8 @@ class MetricsCollector:
             # Monitor while test runs
             while proc.poll() is None:
                 resource_monitor.add_sample()
+                if gpu_monitor:
+                    gpu_monitor.add_sample()
                 time.sleep(self.config['resources']['cpu_interval'])
             
             end_time = time.time()
@@ -170,9 +221,32 @@ class MetricsCollector:
                 'energy_efficiency': energy_stats['energy_efficiency_tests_per_joule']
             }
             
+            # Add GPU metrics if available
+            if gpu_monitor:
+                gpu_stats = gpu_monitor.get_statistics()
+                measurement.update({
+                    'gpu_utilization_mean_percent': gpu_stats['gpu_utilization_mean_percent'],
+                    'gpu_utilization_peak_percent': gpu_stats['gpu_utilization_peak_percent'],
+                    'gpu_memory_mean_mb': gpu_stats['gpu_memory_mean_mb'],
+                    'gpu_memory_peak_mb': gpu_stats['gpu_memory_peak_mb'],
+                    'gpu_memory_mean_percent': gpu_stats['gpu_memory_mean_percent'],
+                    'gpu_memory_peak_percent': gpu_stats['gpu_memory_peak_percent']
+                })
+                
+                if 'gpu_temperature_mean_celsius' in gpu_stats:
+                    measurement['gpu_temperature_mean_celsius'] = gpu_stats['gpu_temperature_mean_celsius']
+                    measurement['gpu_temperature_peak_celsius'] = gpu_stats['gpu_temperature_peak_celsius']
+                
+                if 'gpu_power_mean_watts' in gpu_stats:
+                    measurement['gpu_power_mean_watts'] = gpu_stats['gpu_power_mean_watts']
+                    measurement['gpu_power_peak_watts'] = gpu_stats['gpu_power_peak_watts']
+                
+                gpu_monitor.shutdown()
+            
             all_measurements.append(measurement)
             
-            print(f"✅ {duration:.2f}s, {measurement['cpu_usage_mean_percent']:.1f}% CPU, "
+            gpu_info = f", {measurement.get('gpu_utilization_mean_percent', 0):.1f}% GPU" if self.gpu_enabled else ""
+            print(f"✅ {duration:.2f}s, {measurement['cpu_usage_mean_percent']:.1f}% CPU{gpu_info}, "
                   f"{measurement['energy_joules']:.2f} J")
         
         # Calculate aggregated statistics
@@ -187,6 +261,7 @@ class MetricsCollector:
         """Calculate mean and std from multiple measurements."""
         import statistics
         
+        # Base metrics (always present)
         keys = [
             'duration_seconds',
             'cpu_usage_mean_percent',
@@ -199,14 +274,39 @@ class MetricsCollector:
             'energy_efficiency'
         ]
         
+        # Add GPU metrics if available
+        if self.gpu_enabled and measurements:
+            if 'gpu_utilization_mean_percent' in measurements[0]:
+                keys.extend([
+                    'gpu_utilization_mean_percent',
+                    'gpu_utilization_peak_percent',
+                    'gpu_memory_mean_mb',
+                    'gpu_memory_peak_mb',
+                    'gpu_memory_mean_percent',
+                    'gpu_memory_peak_percent'
+                ])
+            
+            if 'gpu_temperature_mean_celsius' in measurements[0]:
+                keys.extend([
+                    'gpu_temperature_mean_celsius',
+                    'gpu_temperature_peak_celsius'
+                ])
+            
+            if 'gpu_power_mean_watts' in measurements[0]:
+                keys.extend([
+                    'gpu_power_mean_watts',
+                    'gpu_power_peak_watts'
+                ])
+        
         aggregated = {}
         
         for key in keys:
-            values = [m[key] for m in measurements]
-            aggregated[f'{key}_mean'] = statistics.mean(values)
-            aggregated[f'{key}_std'] = statistics.stdev(values) if len(values) > 1 else 0.0
-            aggregated[f'{key}_min'] = min(values)
-            aggregated[f'{key}_max'] = max(values)
+            values = [m[key] for m in measurements if key in m]
+            if values:
+                aggregated[f'{key}_mean'] = statistics.mean(values)
+                aggregated[f'{key}_std'] = statistics.stdev(values) if len(values) > 1 else 0.0
+                aggregated[f'{key}_min'] = min(values)
+                aggregated[f'{key}_max'] = max(values)
         
         return aggregated
     
@@ -231,6 +331,7 @@ class MetricsCollector:
             'instance_id': self.instance_id,
             'timestamp': timestamp,
             'country_code': self.country_code,
+            'gpu_enabled': self.gpu_enabled,
             'config': self.config
         }
         
@@ -245,7 +346,7 @@ class MetricsCollector:
 
 if __name__ == "__main__":
     # Test the collector with a simple command
-    print("Testing MetricsCollector...")
+    print("Testing MetricsCollector with GPU support...")
     print("=" * 60)
     
     collector = MetricsCollector(
@@ -268,10 +369,19 @@ if __name__ == "__main__":
     print("📊 SUMMARY:")
     print(f"  Baseline CPU: {baseline['cpu_usage_mean_percent']:.1f}%")
     print(f"  Baseline Power: {baseline['power_watts']:.2f} W")
+    
+    if collector.gpu_enabled:
+        print(f"  Baseline GPU: {baseline.get('gpu_utilization_mean_percent', 0):.1f}%")
+    
     print(f"\n  Test duration: {results['aggregated']['duration_seconds_mean']:.2f} ± "
           f"{results['aggregated']['duration_seconds_std']:.3f} s")
     print(f"  Test CPU: {results['aggregated']['cpu_usage_mean_percent_mean']:.1f} ± "
           f"{results['aggregated']['cpu_usage_mean_percent_std']:.1f} %")
+    
+    if collector.gpu_enabled:
+        print(f"  Test GPU: {results['aggregated'].get('gpu_utilization_mean_percent_mean', 0):.1f} ± "
+              f"{results['aggregated'].get('gpu_utilization_mean_percent_std', 0):.1f} %")
+    
     print(f"  Test Energy: {results['aggregated']['energy_joules_mean']:.2f} ± "
           f"{results['aggregated']['energy_joules_std']:.2f} J")
     print(f"  Test Carbon: {results['aggregated']['carbon_grams_mean']:.6f} ± "
