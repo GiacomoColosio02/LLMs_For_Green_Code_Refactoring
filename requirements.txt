@@ -39,3 +39,6 @@ google-cloud-aiplatform>=1.38.0
 dashscope>=1.14.0  # Alibaba Qwen
 together>=1.0.0    # Per Llama 4 via Together.ai
 tiktoken>=0.5.0    # Token counting OpenAI
+# GPU Monitoring (NVIDIA)
+pynvml>=11.5.0
+gpustat>=1.1.1
