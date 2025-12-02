@@ -1,0 +1,25 @@
+[33mcommit 6aa41af6a93d7447932994cdf6ddd74f97e39a11[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: Giacomo <colosio.giacomo.2002@gmail.com>
+Date:   Thu Nov 27 17:19:17 2025 +0100
+
+    feat: Add GPU monitoring metrics (GSMM compliance)
+    
+    - Add GPU usage metrics: utilization %, memory, temperature, power
+    - Implement src/measurement/gpu_monitor.py using pynvml
+    - Integrate GPU monitoring into MetricsCollector
+    - Add GPU configuration to measurement_config.yaml
+    - Update requirements.txt with pynvml and gpustat
+    - Add test script: scripts/test_gpu_monitoring.py
+    - Update README with 11 metrics (8 base + 3 GPU)
+    - System gracefully degrades when GPU not available
+    
+    Hardware target: NVIDIA RTX 4090 on server
+    GSMM reference: GPU usage as critical energy indicator
+
+ README.md                       |   7 [32m++[m[31m-[m
+ configs/measurement_config.yaml |  10 [32m+++[m[31m-[m
+ requirements.txt                |   3 [32m+[m
+ scripts/test_gpu_monitoring.py  | 174 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ src/measurement/collector.py    | 134 [32m+++++++++++++++++++++++++++++++++++++++[m[31m----[m
+ src/measurement/gpu_monitor.py  | 239 [32m++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ 6 files changed, 553 insertions(+), 14 deletions(-)

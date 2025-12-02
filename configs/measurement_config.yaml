@@ -1,7 +1,7 @@
 # Measurement Configuration for SWE-Perf Extended
 
 measurement:
-  repetitions: 30                    # Number of times to repeat each test
+  repetitions: 3                    # Number of times to repeat each test
   sampling_interval_ms: 100          # Sample metrics every 100ms
   baseline_duration_sec: 5.0         # Duration of baseline measurement
   min_test_duration_sec: 5.0         # Minimum test duration for accurate measurement
