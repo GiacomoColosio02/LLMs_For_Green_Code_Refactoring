@@ -1,16 +1,18 @@
 """
 Measure a single SWE-Perf instance with all metrics.
 """
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import json
 import argparse
 import subprocess
 import tempfile
 import shutil
-from pathlib import Path
 from typing import Dict, Optional
-
-from src.measurement.collector import MetricsCollector
 from src.utils.config import load_config
+from src.measurement.collector import MetricsCollector
 
 
 class SWEPerfMeasurer:
@@ -63,13 +65,15 @@ class SWEPerfMeasurer:
         """
         repo_name = instance['repo']
         repo_url = f"https://github.com/{repo_name}.git"
-        repo_path = temp_dir / repo_name.split('/')[-1]
+        
+        # Use commit hash as subdirectory to avoid conflicts between base/head
+        repo_path = temp_dir / f"{repo_name.split('/')[-1]}_{commit[:8]}"
         
         print(f"  📦 Cloning {repo_name}...")
         
-        # Clone repository (shallow clone for speed)
+        # Clone repository (FULL clone to reach old commits)
         subprocess.run(
-            ['git', 'clone', '--depth', '1', '--no-single-branch', repo_url, str(repo_path)],
+            ['git', 'clone', repo_url, str(repo_path)],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             check=True
@@ -77,13 +81,6 @@ class SWEPerfMeasurer:
         
         # Checkout specific commit
         print(f"  🔀 Checking out commit {commit[:8]}...")
-        subprocess.run(
-            ['git', 'fetch', 'origin', commit],
-            cwd=repo_path,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=True
-        )
         subprocess.run(
             ['git', 'checkout', commit],
             cwd=repo_path,
@@ -94,27 +91,74 @@ class SWEPerfMeasurer:
         
         return repo_path
     
-    def install_dependencies(self, repo_path: Path, version: str):
+    def install_dependencies(self, repo_path: Path, version: str) -> Optional[Path]:
         """
-        Install package dependencies.
+        Create virtual environment and install package dependencies.
         
         Args:
             repo_path: Path to repository
             version: Version string from SWE-Perf
+            
+        Returns:
+            Path to venv directory, or None if failed
         """
-        print(f"  📦 Installing dependencies (version: {version})...")
+        print(f"  📦 Creating virtual environment...")
         
-        # Try to install with pip
+        venv_path = repo_path / "venv_sweperf"
+        
         try:
+            # Create virtual environment
             subprocess.run(
-                ['pip', 'install', '-e', '.', '--quiet'],
+                ['python3', '-m', 'venv', str(venv_path)],
+                check=True,
+                timeout=60
+            )
+            print(f"  ✅ Virtual environment created")
+            
+            # Upgrade pip in venv
+            subprocess.run(
+                [str(venv_path / 'bin' / 'pip'), 'install', '--upgrade', 'pip'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=60
+            )
+            
+            # Install package with dependencies
+            print(f"  📦 Installing dependencies (version: {version})...")
+            subprocess.run(
+                [str(venv_path / 'bin' / 'pip'), 'install', '-e', '.'],
                 cwd=repo_path,
                 check=True,
-                timeout=300  # 5 minutes timeout
+                timeout=600  # 10 minutes timeout
             )
+            
+            # Install test dependencies (pytest, hypothesis, scipy)
+            print(f"  📦 Installing test dependencies...")
+            subprocess.run(
+                [str(venv_path / 'bin' / 'pip'), 'install', 
+                 'pytest>=8.0', 'hypothesis', 'scipy', 'pytest-astropy'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=120
+            )
+            
+            # Fallback: downgrade numpy for old repos if needed
+            try:
+                subprocess.run(
+                    [str(venv_path / 'bin' / 'pip'), 'install', 'numpy<2.0'],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=60
+                )
+            except:
+                pass  # If this fails, not critical
+            
             print(f"  ✅ Dependencies installed")
+            return venv_path
+            
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
             print(f"  ⚠️  Warning: Could not install dependencies: {e}")
+            return None
     
     def measure_commit(
         self,
@@ -141,8 +185,12 @@ class SWEPerfMeasurer:
         # Setup repository
         repo_path = self.setup_repository(instance, temp_dir, commit)
         
-        # Install dependencies
-        self.install_dependencies(repo_path, instance['version'])
+        # Install dependencies and get venv path
+        venv_path = self.install_dependencies(repo_path, instance['version'])
+        
+        if venv_path is None:
+            print(f"  ⚠️  Skipping measurements - dependencies failed")
+            return {}
         
         # Get test commands
         efficiency_tests = instance['efficiency_test']
@@ -170,8 +218,9 @@ class SWEPerfMeasurer:
         for i, test_name in enumerate(efficiency_tests):
             print(f"\n  📝 Test {i+1}/{len(efficiency_tests)}: {test_name}")
             
-            # Build pytest command
-            test_command = f"cd {repo_path} && python -m pytest {test_name} -v"
+            # Build pytest command using venv pytest
+            pytest_bin = venv_path / 'bin' / 'python'
+            test_command = f"cd {repo_path} && {pytest_bin} -m pytest {test_name} -v"
             
             # Measure test execution
             test_results = collector.measure_test_execution(

@@ -511,4 +511,4 @@ This project is part of a Master's thesis. The code and methodology are open for
 
 ---
 
-**Last Updated:** November 2025
+**Last Updated:** November 2025^X Exit      ^R Read File ^\ Replace   ^U Paste     ^J Justify   ^/ Go To Line
