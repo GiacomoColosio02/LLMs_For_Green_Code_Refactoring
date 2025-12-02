@@ -71,9 +71,9 @@ class CPUEnergyMonitor:
                 raise ValueError(f"Column 'CPU_ENERGY (J)' not found. Available: {df.columns.tolist()}")
             
             # Time is in nanoseconds, convert to seconds
-            initial_time_ns = df['Time'].iloc[0]
-            final_time_ns = df['Time'].iloc[-1]
-            duration_seconds = (final_time_ns - initial_time_ns) / 1e9
+            initial_time_ms = df['Time'].iloc[0]
+            final_time_ms = df['Time'].iloc[-1]
+            duration_seconds = (final_time_ms - initial_time_ms) / 1e3
             
             # Energy is cumulative in Joules
             initial_energy = df['CPU_ENERGY (J)'].iloc[0]
