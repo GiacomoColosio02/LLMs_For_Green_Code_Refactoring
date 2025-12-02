@@ -9,7 +9,14 @@ measurement:
 energy:
   tool: codecarbon                   # Energy measurement tool
   measure_power_secs: 0.1            # Power sampling interval
-  tracking_mode: process             # Options: process, machine
+  tracking_mode: process             # Options: process, machineDear Aitor,
+
+Thank you very much for the invitation to participate in the second mentor session. Unfortunately, the Hydrapolis team, consisting of myself and Diego Terzi, will not be able to attend due to commitments with our university that prevent us from following the session.
+
+We truly appreciate your support and hope to collaborate in the future.
+
+Best regards,
+Giacomo Colosio
   log_level: error                   # Reduce codecarbon verbosity
   save_to_file: false                # Don't auto-save, we handle it
 
