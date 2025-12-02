@@ -79,6 +79,16 @@ class SWEPerfMeasurer:
             check=True
         )
         
+        # Fetch specific commit (might not be in default branches)
+        print(f"  🔀 Fetching commit {commit[:8]}...")
+        subprocess.run(
+            ['git', 'fetch', 'origin', commit],
+            cwd=repo_path,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False  # Don't fail if already present
+        )
+        
         # Checkout specific commit
         print(f"  🔀 Checking out commit {commit[:8]}...")
         subprocess.run(
