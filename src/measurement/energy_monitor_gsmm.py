@@ -65,6 +65,50 @@ class SystemResourceTracker:
         }
 
 
+class GPUMonitorThread:
+    """Wrapper for GPU monitor with threading."""
+    
+    def __init__(self, gpu_monitor: GPUMonitor, interval: float = 0.1):
+        self.gpu_monitor = gpu_monitor
+        self.interval = interval
+        self.running = False
+        self.thread = None
+    
+    def _sample_loop(self):
+        """Sampling loop for GPU."""
+        while self.running:
+            try:
+                self.gpu_monitor.add_sample()
+                time.sleep(self.interval)
+            except Exception as e:
+                print(f"Warning: GPU sampling error: {e}")
+                break
+    
+    def start(self):
+        """Start GPU sampling thread."""
+        self.gpu_monitor.start_monitoring()
+        self.running = True
+        self.thread = threading.Thread(target=self._sample_loop, daemon=True)
+        self.thread.start()
+    
+    def stop(self) -> Dict:
+        """Stop sampling and return statistics."""
+        self.running = False
+        if self.thread:
+            self.thread.join(timeout=1.0)
+        
+        stats = self.gpu_monitor.get_statistics()
+        self.gpu_monitor.shutdown()
+        
+        # Rename utilization -> usage for consistency
+        renamed = {}
+        for key, value in stats.items():
+            new_key = key.replace('utilization', 'usage')
+            renamed[new_key] = value
+        
+        return renamed
+
+
 class EnergyMonitorGSMM:
     """
     Energy monitor following GSMM methodology.
@@ -82,14 +126,18 @@ class EnergyMonitorGSMM:
         self.config = config
         
         # Initialize GPU monitor if available and enabled
-        self.gpu_monitor = None
+        self.gpu_monitor_thread = None
         if config.get('gpu', {}).get('enabled', False):
             try:
                 gpu_config = config.get('gpu', {})
-                self.gpu_monitor = GPUMonitor(
+                gpu_monitor = GPUMonitor(
                     device_index=gpu_config.get('device_index', 0),
                     track_temperature=gpu_config.get('track_temperature', True),
                     track_power=gpu_config.get('track_power', True)
+                )
+                self.gpu_monitor_thread = GPUMonitorThread(
+                    gpu_monitor, 
+                    interval=gpu_config.get('sampling_interval', 0.1)
                 )
             except Exception as e:
                 print(f"Warning: GPU monitoring unavailable: {e}")
@@ -117,9 +165,9 @@ class EnergyMonitorGSMM:
         """
         start_time = time.time()
         
-        # Start GPU monitoring if available
-        if self.gpu_monitor:
-            self.gpu_monitor.start_monitoring()
+        # Start GPU monitoring thread if available
+        if self.gpu_monitor_thread:
+            self.gpu_monitor_thread.start()
         
         # Start system resource tracking
         resource_tracker = SystemResourceTracker(interval=0.1)
@@ -149,16 +197,20 @@ class EnergyMonitorGSMM:
         # Stop resource tracking
         resource_stats = resource_tracker.stop()
         
-        # Stop GPU monitoring if available
+        # Stop GPU monitoring thread if available
         gpu_metrics = {}
-        if self.gpu_monitor:
-            gpu_metrics = self.gpu_monitor.get_statistics()
-            self.gpu_monitor.shutdown()
+        if self.gpu_monitor_thread:
+            gpu_metrics = self.gpu_monitor_thread.stop()
         
         duration = time.time() - start_time
         
         # Extract energy values
-        gpu_energy_joules = gpu_metrics.get('total_energy', 0.0) if gpu_metrics else 0.0
+        gpu_energy_joules = 0.0
+        if gpu_metrics and 'gpu_power_mean_watts' in gpu_metrics:
+            # Calculate GPU energy from power samples
+            gpu_power_mean = gpu_metrics['gpu_power_mean_watts']
+            gpu_energy_joules = gpu_power_mean * duration
+        
         cpu_energy_joules = cpu_metrics.get('cpu_energy_joules', 0.0)
         
         # Calculate total energy (GPU + CPU)
@@ -195,8 +247,8 @@ class EnergyMonitorGSMM:
             'ram_usage_mean_mb': resource_stats['ram_usage_mean_mb'],
             'ram_usage_peak_mb': resource_stats['ram_usage_peak_mb'],
             
-            # GPU details (if available) - rename utilization to usage
-            **{f'gpu_{k.replace("utilization", "usage")}': v for k, v in gpu_metrics.items() if k != 'total_energy'},
+            # GPU details (if available) - already renamed to usage
+            **{k: v for k, v in gpu_metrics.items() if k not in ['gpu_power_mean_watts', 'gpu_power_peak_watts']},
             
             # CPU details
             'cpu_power_watts': cpu_metrics.get('cpu_power_watts', 0),
@@ -222,7 +274,7 @@ class EnergyMonitorGSMM:
 
 if __name__ == "__main__":
     # Test
-    print("Testing EnergyMonitorGSMM with ResourceTracking...")
+    print("Testing EnergyMonitorGSMM with Threading...")
     
     config = {
         'gpu': {
@@ -244,5 +296,6 @@ if __name__ == "__main__":
     print(f"   Baseline Energy: {baseline['total_energy_joules']:.2f} J")
     print(f"   CPU Usage: {baseline['cpu_usage_mean_percent']:.1f}%")
     print(f"   RAM Usage: {baseline['ram_usage_mean_mb']:.1f} MB")
+    print(f"   GPU Usage: {baseline.get('gpu_usage_mean_percent', 0):.1f}%")
     
-    print("\n✅ EnergyMonitorGSMM with resources working!")
+    print("\n✅ EnergyMonitorGSMM with threading working!")
