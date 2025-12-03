@@ -253,6 +253,7 @@ class MetricsCollector:
         return filepath
 
 
+
 if __name__ == "__main__":
     # Test the collector with GSMM
     print("Testing MetricsCollector with GSMM...")
@@ -266,12 +267,34 @@ if __name__ == "__main__":
     # Measure baseline
     baseline = collector.measure_baseline(duration=3.0)
     
-    # Measure a simple test
-    test_command = "sleep 2"
-    results = collector.measure_test_execution(
-        test_command=test_command,
-        repetitions=2
-    )
+    # Measure a simple shell command (not a pytest test)
+    # We need to pass wrap_with_pytest=False for shell commands
+    print("\n🔬 Measuring shell command (2 repetitions)...")
+    
+    all_measurements = []
+    for rep in range(2):
+        print(f"  Run {rep + 1}/2...", end=' ')
+        
+        # Measure with GSMM monitor (shell command, not pytest)
+        measurement = collector.energy_monitor.measure_test_energy(
+            "sleep 2",
+            venv_python=None,
+            wrap_with_pytest=False  # Shell command, not pytest!
+        )
+        
+        measurement['repetition'] = rep + 1
+        measurement['return_code'] = 0
+        
+        all_measurements.append(measurement)
+        
+        print(f"✅ {measurement['duration_seconds']:.2f}s, "
+              f"{measurement['total_energy_joules']:.2f} J")
+    
+    # Calculate aggregated statistics
+    results = {
+        'measurements': all_measurements,
+        'aggregated': collector._aggregate_measurements(all_measurements)
+    }
     
     # Print summary
     print("\n" + "=" * 60)
