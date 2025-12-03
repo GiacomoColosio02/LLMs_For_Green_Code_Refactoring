@@ -278,10 +278,12 @@ class SWEPerfMeasurer:
         print(f"  Head commit: {instance['head_commit'][:8]}")
         print(f"  Efficiency tests: {len(instance['efficiency_test'])}")
         
+        
         # Create temporary directory
-        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp_dir:
-            temp_path = Path(temp_dir)
-            
+        temp_dir = tempfile.mkdtemp()
+        temp_path = Path(temp_dir)
+        
+        try:
             # Measure base commit
             base_results = self.measure_commit(
                 instance=instance,
@@ -297,9 +299,9 @@ class SWEPerfMeasurer:
                 commit_type='head',
                 temp_dir=temp_path
             )
-        
-        # Combine all results
-        final_results = {
+        finally:
+            # Cleanup with ignore_errors (survives permission errors)
+            shutil.rmtree(temp_dir, ignore_errors=True)
             'instance_id': instance_id,
             'repo': instance['repo'],
             'base_commit': instance['base_commit'],
