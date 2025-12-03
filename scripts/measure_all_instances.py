@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from datetime import datetime
 
-from scripts.measure_instance import SWEPerfMeasurer
+from measure_instance import SWEPerfMeasurer
 
 
 def measure_all_instances(
