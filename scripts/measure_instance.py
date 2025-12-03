@@ -279,7 +279,7 @@ class SWEPerfMeasurer:
         print(f"  Efficiency tests: {len(instance['efficiency_test'])}")
         
         # Create temporary directory
-        with tempfile.TemporaryDirectory() as temp_dir:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp_dir:
             temp_path = Path(temp_dir)
             
             # Measure base commit
