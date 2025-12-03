@@ -98,7 +98,9 @@ class GPUMonitorThread:
             self.thread.join(timeout=1.0)
         
         stats = self.gpu_monitor.get_statistics()
-        self.gpu_monitor.shutdown()
+        
+        # DON'T shutdown NVML here - it breaks subsequent measurements!
+        # NVML will be shutdown when the whole EnergyMonitorGSMM is destroyed
         
         # Rename utilization -> usage for consistency
         renamed = {}
@@ -270,6 +272,14 @@ class EnergyMonitorGSMM:
         # Use sleep command as baseline (explicitly don't wrap with pytest)
         baseline_command = f"sleep {duration_seconds}"
         return self.measure_test_energy(baseline_command, wrap_with_pytest=False)
+    
+    def __del__(self):
+        """Cleanup NVML when EnergyMonitorGSMM is destroyed."""
+        if self.gpu_monitor_thread and self.gpu_monitor_thread.gpu_monitor:
+            try:
+                self.gpu_monitor_thread.gpu_monitor.shutdown()
+            except:
+                pass
 
 
 if __name__ == "__main__":
