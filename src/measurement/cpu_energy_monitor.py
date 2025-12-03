@@ -42,8 +42,22 @@ class CPUEnergyMonitor:
             output_csv = Path(f"energibridge_temp_{os.getpid()}.csv")
             cleanup_csv = True
         
-        # Build energibridge command - output CSV with sudo permissions
-        energibridge_cmd = f"sudo {self.energibridge_path} -o {output_csv} -- {command}"
+        # For complex commands with cd/&&, wrap in a bash script
+        # EnergiBridge cannot handle shell operators like cd, &&, ||, etc.
+        if 'cd ' in command or '&&' in command or '||' in command or ';' in command:
+            # Create temporary bash script
+            script_path = Path(f"energibridge_script_{os.getpid()}.sh")
+            with open(script_path, 'w') as f:
+                f.write("#!/bin/bash\n")
+                f.write("set -e\n")  # Exit on error
+                f.write(f"{command}\n")
+            script_path.chmod(0o755)
+            
+            # Use bash script instead of direct command
+            energibridge_cmd = f"sudo {self.energibridge_path} -o {output_csv} -- bash {script_path}"
+        else:
+            # Simple command, pass directly
+            energibridge_cmd = f"sudo {self.energibridge_path} -o {output_csv} -- {command}"
         
         # Execute
         try:
@@ -60,7 +74,16 @@ class CPUEnergyMonitor:
                           shell=True, check=True)
             
         except subprocess.CalledProcessError as e:
+            # Cleanup on error
+            if cleanup_csv and output_csv.exists():
+                output_csv.unlink()
+            if 'script_path' in locals() and script_path.exists():
+                script_path.unlink()
             raise RuntimeError(f"EnergiBridge failed: {e.stderr}")
+        finally:
+            # Cleanup script if created
+            if 'script_path' in locals() and script_path.exists():
+                script_path.unlink()
         
         # Parse CSV output
         try:
@@ -70,7 +93,7 @@ class CPUEnergyMonitor:
             if 'CPU_ENERGY (J)' not in df.columns:
                 raise ValueError(f"Column 'CPU_ENERGY (J)' not found. Available: {df.columns.tolist()}")
             
-            # Time is in nanoseconds, convert to seconds
+            # Time is in milliseconds, convert to seconds
             initial_time_ms = df['Time'].iloc[0]
             final_time_ms = df['Time'].iloc[-1]
             duration_seconds = (final_time_ms - initial_time_ms) / 1e3
