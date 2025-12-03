@@ -1,13 +1,68 @@
 """
-GSMM Energy Monitor - GPU + CPU energy monitoring.
+GSMM Energy Monitor - GPU + CPU energy monitoring with resource tracking.
 Implements the Green Software Maturity Model approach.
 """
 from pathlib import Path
 from typing import Dict, Optional
 import time
+import threading
+import psutil
 
 from .gpu_monitor import GPUMonitor
 from .cpu_energy_monitor import CPUEnergyMonitor
+
+
+class SystemResourceTracker:
+    """Track system-wide CPU and RAM usage during test execution."""
+    
+    def __init__(self, interval: float = 0.1):
+        self.interval = interval
+        self.cpu_samples = []
+        self.ram_samples = []
+        self.running = False
+        self.thread = None
+    
+    def _sample_loop(self):
+        """Sampling loop running in separate thread."""
+        while self.running:
+            # System CPU percentage
+            cpu_pct = psutil.cpu_percent(interval=self.interval)
+            self.cpu_samples.append(cpu_pct)
+            
+            # System RAM usage
+            mem = psutil.virtual_memory()
+            ram_mb = mem.used / (1024 ** 2)
+            self.ram_samples.append(ram_mb)
+    
+    def start(self):
+        """Start sampling."""
+        self.cpu_samples = []
+        self.ram_samples = []
+        self.running = True
+        self.thread = threading.Thread(target=self._sample_loop, daemon=True)
+        self.thread.start()
+    
+    def stop(self) -> Dict:
+        """Stop sampling and return statistics."""
+        self.running = False
+        if self.thread:
+            self.thread.join(timeout=1.0)
+        
+        if not self.cpu_samples:
+            return {
+                'cpu_usage_mean_percent': 0.0,
+                'cpu_usage_peak_percent': 0.0,
+                'ram_usage_mean_mb': 0.0,
+                'ram_usage_peak_mb': 0.0
+            }
+        
+        import statistics
+        return {
+            'cpu_usage_mean_percent': statistics.mean(self.cpu_samples),
+            'cpu_usage_peak_percent': max(self.cpu_samples),
+            'ram_usage_mean_mb': statistics.mean(self.ram_samples),
+            'ram_usage_peak_mb': max(self.ram_samples)
+        }
 
 
 class EnergyMonitorGSMM:
@@ -66,6 +121,10 @@ class EnergyMonitorGSMM:
         if self.gpu_monitor:
             self.gpu_monitor.start_monitoring()
         
+        # Start system resource tracking
+        resource_tracker = SystemResourceTracker(interval=0.1)
+        resource_tracker.start()
+        
         # Auto-detect if command needs pytest wrapping
         if wrap_with_pytest is None:
             # If command already contains pytest or python, don't wrap
@@ -86,6 +145,9 @@ class EnergyMonitorGSMM:
         # Measure CPU energy (includes test execution)
         # cpu_energy_monitor will wrap complex commands (with cd, &&) in bash script
         cpu_metrics = self.cpu_monitor.measure_energy(full_command)
+        
+        # Stop resource tracking
+        resource_stats = resource_tracker.stop()
         
         # Stop GPU monitoring if available
         gpu_metrics = {}
@@ -127,8 +189,14 @@ class EnergyMonitorGSMM:
             # Duration
             'duration_seconds': duration,
             
-            # GPU details (if available)
-            **{f'gpu_{k}': v for k, v in gpu_metrics.items() if k != 'total_energy'},
+            # CPU/RAM usage (from resource tracker)
+            'cpu_usage_mean_percent': resource_stats['cpu_usage_mean_percent'],
+            'cpu_usage_peak_percent': resource_stats['cpu_usage_peak_percent'],
+            'ram_usage_mean_mb': resource_stats['ram_usage_mean_mb'],
+            'ram_usage_peak_mb': resource_stats['ram_usage_peak_mb'],
+            
+            # GPU details (if available) - rename utilization to usage
+            **{f'gpu_{k.replace("utilization", "usage")}': v for k, v in gpu_metrics.items() if k != 'total_energy'},
             
             # CPU details
             'cpu_power_watts': cpu_metrics.get('cpu_power_watts', 0),
@@ -154,7 +222,7 @@ class EnergyMonitorGSMM:
 
 if __name__ == "__main__":
     # Test
-    print("Testing EnergyMonitorGSMM...")
+    print("Testing EnergyMonitorGSMM with ResourceTracking...")
     
     config = {
         'gpu': {
@@ -174,9 +242,7 @@ if __name__ == "__main__":
     print("\n1. Testing baseline measurement (3s)...")
     baseline = monitor.measure_baseline(3.0)
     print(f"   Baseline Energy: {baseline['total_energy_joules']:.2f} J")
-    print(f"   GPU: {baseline['gpu_energy_joules']:.2f} J")
-    print(f"   CPU: {baseline['cpu_energy_joules']:.2f} J")
-    print(f"   Power: {baseline['power_watts']:.2f} W")
-    print(f"   Carbon: {baseline['carbon_grams']:.4f} g")
+    print(f"   CPU Usage: {baseline['cpu_usage_mean_percent']:.1f}%")
+    print(f"   RAM Usage: {baseline['ram_usage_mean_mb']:.1f} MB")
     
-    print("\n✅ EnergyMonitorGSMM working!")
+    print("\n✅ EnergyMonitorGSMM with resources working!")
