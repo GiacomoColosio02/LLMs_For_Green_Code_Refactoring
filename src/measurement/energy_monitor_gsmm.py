@@ -48,14 +48,14 @@ class EnergyMonitorGSMM:
         # Grid intensity for carbon calculation (gCO2e/kWh)
         self.grid_intensity = config.get('energy', {}).get('grid_intensity', 250)
     
-    def measure_test_energy(self, test_command: str, venv_python: Optional[Path] = None, wrap_with_pytest: bool = True) -> Dict:
+    def measure_test_energy(self, test_command: str, venv_python: Optional[Path] = None, wrap_with_pytest: Optional[bool] = None) -> Dict:
         """
         Measure energy consumption for a test execution.
         
         Args:
             test_command: Command to execute (pytest test or shell command)
-            venv_python: Path to virtual environment python (if any)
-            wrap_with_pytest: If True, wraps command with pytest (default: True)
+            venv_python: Path to virtual environment python (if any) - IGNORED if command already contains python/pytest
+            wrap_with_pytest: If True, wraps command with pytest. If None, auto-detects. If False, uses command as-is.
             
         Returns:
             Dictionary with energy metrics
@@ -66,18 +66,25 @@ class EnergyMonitorGSMM:
         if self.gpu_monitor:
             self.gpu_monitor.start_monitoring()
         
+        # Auto-detect if command needs pytest wrapping
+        if wrap_with_pytest is None:
+            # If command already contains pytest or python, don't wrap
+            wrap_with_pytest = not ('pytest' in test_command or 'python' in test_command)
+        
         # Build full command
         if wrap_with_pytest:
-            # This is a pytest test command
+            # This is a test name that needs to be wrapped with pytest
             if venv_python:
                 full_command = f"{venv_python} -m pytest {test_command}"
             else:
                 full_command = f"pytest {test_command}"
         else:
-            # This is a direct shell command (e.g., sleep for baseline)
+            # This is already a complete command (e.g., "cd /path && python -m pytest test")
+            # Use it as-is
             full_command = test_command
         
         # Measure CPU energy (includes test execution)
+        # cpu_energy_monitor will wrap complex commands (with cd, &&) in bash script
         cpu_metrics = self.cpu_monitor.measure_energy(full_command)
         
         # Stop GPU monitoring if available
@@ -140,7 +147,7 @@ class EnergyMonitorGSMM:
         Returns:
             Dictionary with baseline energy metrics
         """
-        # Use sleep command as baseline (don't wrap with pytest)
+        # Use sleep command as baseline (explicitly don't wrap with pytest)
         baseline_command = f"sleep {duration_seconds}"
         return self.measure_test_energy(baseline_command, wrap_with_pytest=False)
 
