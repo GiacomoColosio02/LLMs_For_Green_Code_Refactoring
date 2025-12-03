@@ -30,7 +30,12 @@ class EnergyMonitorGSMM:
         self.gpu_monitor = None
         if config.get('gpu', {}).get('enabled', False):
             try:
-                self.gpu_monitor = GPUMonitor(config)
+                gpu_config = config.get('gpu', {})
+                self.gpu_monitor = GPUMonitor(
+                    device_index=gpu_config.get('device_index', 0),
+                    track_temperature=gpu_config.get('track_temperature', True),
+                    track_power=gpu_config.get('track_power', True)
+                )
             except Exception as e:
                 print(f"Warning: GPU monitoring unavailable: {e}")
         
@@ -43,13 +48,14 @@ class EnergyMonitorGSMM:
         # Grid intensity for carbon calculation (gCO2e/kWh)
         self.grid_intensity = config.get('energy', {}).get('grid_intensity', 250)
     
-    def measure_test_energy(self, test_command: str, venv_python: Optional[Path] = None) -> Dict:
+    def measure_test_energy(self, test_command: str, venv_python: Optional[Path] = None, wrap_with_pytest: bool = True) -> Dict:
         """
         Measure energy consumption for a test execution.
         
         Args:
-            test_command: pytest command to execute
+            test_command: Command to execute (pytest test or shell command)
             venv_python: Path to virtual environment python (if any)
+            wrap_with_pytest: If True, wraps command with pytest (default: True)
             
         Returns:
             Dictionary with energy metrics
@@ -60,24 +66,30 @@ class EnergyMonitorGSMM:
         if self.gpu_monitor:
             self.gpu_monitor.start_monitoring()
         
-        # Measure CPU energy (includes test execution)
-        # Wrap command with venv python if provided
-        if venv_python:
-            full_command = f"{venv_python} -m pytest {test_command}"
+        # Build full command
+        if wrap_with_pytest:
+            # This is a pytest test command
+            if venv_python:
+                full_command = f"{venv_python} -m pytest {test_command}"
+            else:
+                full_command = f"pytest {test_command}"
         else:
-            full_command = f"pytest {test_command}"
+            # This is a direct shell command (e.g., sleep for baseline)
+            full_command = test_command
         
+        # Measure CPU energy (includes test execution)
         cpu_metrics = self.cpu_monitor.measure_energy(full_command)
         
         # Stop GPU monitoring if available
         gpu_metrics = {}
         if self.gpu_monitor:
-            gpu_metrics = self.gpu_monitor.stop_monitoring()
+            gpu_metrics = self.gpu_monitor.get_statistics()
+            self.gpu_monitor.shutdown()
         
         duration = time.time() - start_time
         
         # Extract energy values
-        gpu_energy_joules = gpu_metrics.get('total_energy', 0.0)
+        gpu_energy_joules = gpu_metrics.get('total_energy', 0.0) if gpu_metrics else 0.0
         cpu_energy_joules = cpu_metrics.get('cpu_energy_joules', 0.0)
         
         # Calculate total energy (GPU + CPU)
@@ -128,9 +140,9 @@ class EnergyMonitorGSMM:
         Returns:
             Dictionary with baseline energy metrics
         """
-        # Use sleep command as baseline
+        # Use sleep command as baseline (don't wrap with pytest)
         baseline_command = f"sleep {duration_seconds}"
-        return self.measure_test_energy(baseline_command)
+        return self.measure_test_energy(baseline_command, wrap_with_pytest=False)
 
 
 if __name__ == "__main__":
@@ -140,6 +152,7 @@ if __name__ == "__main__":
     config = {
         'gpu': {
             'enabled': True,
+            'device_index': 0,
             'sampling_interval': 0.1,
             'track_temperature': True,
             'track_power': True
@@ -151,8 +164,8 @@ if __name__ == "__main__":
     
     monitor = EnergyMonitorGSMM(config)
     
-    print("\n1. Testing baseline measurement (5s)...")
-    baseline = monitor.measure_baseline(5.0)
+    print("\n1. Testing baseline measurement (3s)...")
+    baseline = monitor.measure_baseline(3.0)
     print(f"   Baseline Energy: {baseline['total_energy_joules']:.2f} J")
     print(f"   GPU: {baseline['gpu_energy_joules']:.2f} J")
     print(f"   CPU: {baseline['cpu_energy_joules']:.2f} J")
