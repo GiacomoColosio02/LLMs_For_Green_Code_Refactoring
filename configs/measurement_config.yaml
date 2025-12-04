@@ -41,3 +41,15 @@ gpu:
   track_temperature: true            # Track GPU temperature
   track_power: true                  # Track GPU power draw
   device_index: 0                    # GPU device to monitor (0 = first GPU)
+
+# Wattmeter configuration (NETIO PowerBOX 4KF)
+wattmeter:
+  enabled: true
+  ip: "10.4.60.25"
+  endpoint: "/netio.json"
+  output_id: 1
+  timeout: 5
+  polling_interval: 0.1
+  
+# Note: Wattmeter provides 100% energy coverage (replaces GPU+CPU partial measurements)
+# When wattmeter is enabled, system_energy_joules becomes the primary metric
