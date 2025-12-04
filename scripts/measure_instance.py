@@ -125,12 +125,13 @@ class SWEPerfMeasurer:
             )
             print(f"  ✅ Virtual environment created")
             
-            # Upgrade pip in venv
+            # Upgrade pip and install base packages (workarounds for Python 3.12)
             subprocess.run(
-                [str(venv_path / 'bin' / 'pip'), 'install', '--upgrade', 'pip'],
+                [str(venv_path / 'bin' / 'pip'), 'install', '--upgrade', 
+                 'pip', 'setuptools', 'wheel'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                timeout=60
+                timeout=120
             )
             
             # Install package with dependencies
@@ -142,11 +143,11 @@ class SWEPerfMeasurer:
                 timeout=600  # 10 minutes timeout
             )
             
-            # Install test dependencies (pytest, hypothesis, scipy)
+            # Install test dependencies (pytest, hypothesis, scipy, urllib3)
             print(f"  📦 Installing test dependencies...")
             subprocess.run(
                 [str(venv_path / 'bin' / 'pip'), 'install', 
-                 'pytest>=8.0', 'hypothesis', 'scipy', 'pytest-astropy'],
+                 'pytest>=8.0', 'hypothesis', 'scipy', 'pytest-astropy', 'urllib3'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=120
