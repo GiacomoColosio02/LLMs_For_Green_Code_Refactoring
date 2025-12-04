@@ -1,5 +1,5 @@
 """
-GSMM Energy Monitor - GPU + CPU energy monitoring with resource tracking.
+GSMM Energy Monitor - GPU + CPU + Wattmeter energy monitoring with resource tracking.
 Implements the Green Software Maturity Model approach.
 """
 from pathlib import Path
@@ -10,6 +10,7 @@ import psutil
 
 from .gpu_monitor import GPUMonitor
 from .cpu_energy_monitor import CPUEnergyMonitor
+from .wattmeter_monitor import WattmeterMonitor, WattmeterMonitorThread
 
 
 class SystemResourceTracker:
@@ -114,8 +115,7 @@ class GPUMonitorThread:
 class EnergyMonitorGSMM:
     """
     Energy monitor following GSMM methodology.
-    Currently measures GPU + CPU energy (~75-90% coverage).
-    Can be extended with Wattmeter for 100% coverage.
+    Supports GPU + CPU energy (~75-90% coverage) and optional Wattmeter (100% coverage).
     """
     
     def __init__(self, config: dict):
@@ -123,7 +123,7 @@ class EnergyMonitorGSMM:
         Initialize GSMM energy monitor.
         
         Args:
-            config: Configuration dictionary with GPU and energy settings
+            config: Configuration dictionary with GPU, CPU, and wattmeter settings
         """
         self.config = config
         
@@ -141,8 +141,9 @@ class EnergyMonitorGSMM:
                     gpu_monitor, 
                     interval=gpu_config.get('sampling_interval', 0.1)
                 )
+                print("✅ GPU monitoring enabled")
             except Exception as e:
-                print(f"Warning: GPU monitoring unavailable: {e}")
+                print(f"⚠️  GPU monitoring unavailable: {e}")
         
         # Initialize CPU energy monitor
         try:
@@ -150,8 +151,35 @@ class EnergyMonitorGSMM:
         except Exception as e:
             raise RuntimeError(f"CPU energy monitoring required but unavailable: {e}")
         
+        # Initialize Wattmeter (optional, provides 100% system coverage)
+        self.wattmeter_enabled = config.get('wattmeter', {}).get('enabled', False)
+        self.wattmeter_thread = None
+        if self.wattmeter_enabled:
+            try:
+                wattmeter_config = config.get('wattmeter', {})
+                wattmeter = WattmeterMonitor(
+                    ip=wattmeter_config.get('ip', '10.4.60.25'),
+                    output_id=wattmeter_config.get('output_id', 1),
+                    timeout=wattmeter_config.get('timeout', 5),
+                    polling_interval=wattmeter_config.get('polling_interval', 0.1)
+                )
+                self.wattmeter_thread = WattmeterMonitorThread(wattmeter)
+                print("✅ Wattmeter monitoring enabled (SYSTEM-LEVEL, 100% coverage)")
+            except Exception as e:
+                print(f"⚠️  Wattmeter unavailable: {e}")
+                print("   Continuing with GPU+CPU measurements only (~75-90% coverage)")
+                self.wattmeter_enabled = False
+        
         # Grid intensity for carbon calculation (gCO2e/kWh)
         self.grid_intensity = config.get('energy', {}).get('grid_intensity', 250)
+        
+        # Print coverage status
+        if self.wattmeter_enabled:
+            print(f"✅ GSMM Energy monitoring enabled (grid: {self.grid_intensity} gCO2e/kWh)")
+            print("   Coverage: 100% (wattmeter system-level)")
+        else:
+            print(f"✅ GSMM Energy monitoring enabled (grid: {self.grid_intensity} gCO2e/kWh)")
+            print("   Coverage: ~75-90% (GPU + CPU only)")
     
     def measure_test_energy(self, test_command: str, venv_python: Optional[Path] = None, wrap_with_pytest: Optional[bool] = None) -> Dict:
         """
@@ -166,6 +194,10 @@ class EnergyMonitorGSMM:
             Dictionary with energy metrics
         """
         start_time = time.time()
+        
+        # Start wattmeter thread FIRST (for complete system coverage)
+        if self.wattmeter_thread:
+            self.wattmeter_thread.start()
         
         # Start GPU monitoring thread if available
         if self.gpu_monitor_thread:
@@ -204,6 +236,11 @@ class EnergyMonitorGSMM:
         if self.gpu_monitor_thread:
             gpu_metrics = self.gpu_monitor_thread.stop()
         
+        # Stop wattmeter thread if available
+        wattmeter_metrics = {}
+        if self.wattmeter_thread:
+            wattmeter_metrics = self.wattmeter_thread.stop()
+        
         duration = time.time() - start_time
         
         # Extract energy values
@@ -217,7 +254,7 @@ class EnergyMonitorGSMM:
         
         # Calculate total energy (GPU + CPU)
         # Note: This is ~75-90% coverage (missing RAM, Storage, PSU overhead)
-        # With Wattmeter, total_energy would be from system measurement (100% coverage)
+        # With Wattmeter, system_energy provides 100% coverage
         total_energy_joules = gpu_energy_joules + cpu_energy_joules
         
         # Calculate derived metrics
@@ -230,29 +267,46 @@ class EnergyMonitorGSMM:
         # Energy efficiency: tests per Joule (inverse of energy per test)
         energy_efficiency = 1.0 / total_energy_joules if total_energy_joules > 0 else 0
         
-        # Compile all metrics
-        metrics = {
-            # Core energy metrics (GSMM)
+        # Compile GREEN metrics (GSMM)
+        green_metrics = {
             'gpu_energy_joules': gpu_energy_joules,
             'cpu_energy_joules': cpu_energy_joules,
             'total_energy_joules': total_energy_joules,
             'power_watts': power_watts,
             'carbon_grams': carbon_grams,
             'energy_efficiency': energy_efficiency,
+        }
+        
+        # Add wattmeter metrics if available (100% system coverage)
+        if wattmeter_metrics:
+            green_metrics['system_energy_joules'] = wattmeter_metrics.get('system_energy_joules', 0)
+            green_metrics['system_power_mean_watts'] = wattmeter_metrics.get('system_power_mean_watts', 0)
+            green_metrics['system_power_peak_watts'] = wattmeter_metrics.get('system_power_peak_watts', 0)
             
-            # Duration
+            # Recalculate carbon with system energy (more accurate, 100% coverage)
+            if green_metrics['system_energy_joules'] > 0:
+                system_energy_kwh = green_metrics['system_energy_joules'] / 3600000.0  # J -> kWh
+                green_metrics['carbon_grams_system'] = system_energy_kwh * self.grid_intensity
+        
+        # Compile all metrics
+        metrics = {
+            # GREEN metrics (6 core + 3 wattmeter if available)
+            **green_metrics,
+            
+            # EFFICIENCY metrics (7 total)
             'duration_seconds': duration,
-            
-            # CPU/RAM usage (from resource tracker)
             'cpu_usage_mean_percent': resource_stats['cpu_usage_mean_percent'],
             'cpu_usage_peak_percent': resource_stats['cpu_usage_peak_percent'],
-            'ram_usage_mean_mb': resource_stats['ram_usage_mean_mb'],
             'ram_usage_peak_mb': resource_stats['ram_usage_peak_mb'],
             
-            # GPU details (if available) - already renamed to usage
-            **{k: v for k, v in gpu_metrics.items() if k not in ['gpu_power_mean_watts', 'gpu_power_peak_watts']},
+            # GPU usage metrics (if available)
+            'gpu_usage_mean_percent': gpu_metrics.get('gpu_usage_mean_percent', 0),
+            'gpu_usage_peak_percent': gpu_metrics.get('gpu_usage_peak_percent', 0),
+            'gpu_memory_peak_mb': gpu_metrics.get('gpu_memory_peak_mb', 0),
             
-            # CPU details
+            # Additional details
+            'ram_usage_mean_mb': resource_stats['ram_usage_mean_mb'],
+            **{k: v for k, v in gpu_metrics.items() if k not in ['gpu_power_mean_watts', 'gpu_power_peak_watts', 'gpu_usage_mean_percent', 'gpu_usage_peak_percent', 'gpu_memory_peak_mb']},
             'cpu_power_watts': cpu_metrics.get('cpu_power_watts', 0),
             'cpu_samples': cpu_metrics.get('samples', 0),
         }
@@ -284,7 +338,7 @@ class EnergyMonitorGSMM:
 
 if __name__ == "__main__":
     # Test
-    print("Testing EnergyMonitorGSMM with Threading...")
+    print("Testing EnergyMonitorGSMM with Wattmeter...")
     
     config = {
         'gpu': {
@@ -293,6 +347,13 @@ if __name__ == "__main__":
             'sampling_interval': 0.1,
             'track_temperature': True,
             'track_power': True
+        },
+        'wattmeter': {
+            'enabled': True,
+            'ip': '10.4.60.25',
+            'output_id': 1,
+            'timeout': 5,
+            'polling_interval': 0.1
         },
         'energy': {
             'grid_intensity': 250  # Spain
@@ -303,9 +364,10 @@ if __name__ == "__main__":
     
     print("\n1. Testing baseline measurement (3s)...")
     baseline = monitor.measure_baseline(3.0)
-    print(f"   Baseline Energy: {baseline['total_energy_joules']:.2f} J")
+    print(f"   Total Energy: {baseline['total_energy_joules']:.2f} J")
+    if 'system_energy_joules' in baseline:
+        print(f"   System Energy (Wattmeter): {baseline['system_energy_joules']:.2f} J")
     print(f"   CPU Usage: {baseline['cpu_usage_mean_percent']:.1f}%")
     print(f"   RAM Usage: {baseline['ram_usage_mean_mb']:.1f} MB")
-    print(f"   GPU Usage: {baseline.get('gpu_usage_mean_percent', 0):.1f}%")
     
-    print("\n✅ EnergyMonitorGSMM with threading working!")
+    print("\n✅ EnergyMonitorGSMM with Wattmeter working!")
