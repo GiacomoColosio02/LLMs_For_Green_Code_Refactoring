@@ -7,10 +7,9 @@ import requests
 import statistics
 import threading
 from typing import Dict, Optional, List
-from .base_monitor import BaseMonitor
 
 
-class WattmeterMonitor(BaseMonitor):
+class WattmeterMonitor:
     """
     Monitor power consumption using NETIO PowerBOX 4KF wattmeter.
     
@@ -21,7 +20,6 @@ class WattmeterMonitor(BaseMonitor):
     Features:
         - System-level power measurement (wall power)
         - 100% energy coverage (GPU + CPU + RAM + PSU + all components)
-        - Replaces GPU+CPU partial measurements when available
     """
     
     def __init__(self, ip: str = "10.4.60.25", output_id: int = 1, 
@@ -30,12 +28,11 @@ class WattmeterMonitor(BaseMonitor):
         Initialize wattmeter monitor.
         
         Args:
-            ip: Wattmeter IP address (default: 10.4.60.25)
-            output_id: Output ID where server is connected (default: 1)
+            ip: Wattmeter IP address
+            output_id: Output ID where server is connected
             timeout: Request timeout in seconds
             polling_interval: Sampling interval in seconds
         """
-        super().__init__()
         self.ip = ip
         self.endpoint = f"http://{ip}/netio.json"
         self.output_id = output_id
@@ -55,7 +52,7 @@ class WattmeterMonitor(BaseMonitor):
             # Verify output exists
             outputs = data.get('Outputs', [])
             if not outputs or len(outputs) < self.output_id:
-                raise ValueError(f"Output {self.output_id} not found in wattmeter response")
+                raise ValueError(f"Output {self.output_id} not found")
             
             print(f"✅ Wattmeter connected: {self.ip}")
             print(f"   Output {self.output_id}: {outputs[self.output_id-1].get('Name', 'Unknown')}")
@@ -80,7 +77,7 @@ class WattmeterMonitor(BaseMonitor):
                 return None
             
             output = outputs[self.output_id - 1]
-            power_watts = output.get('Load', 0)  # Load is in Watts
+            power_watts = output.get('Load', 0)
             
             return power_watts
             
@@ -91,10 +88,9 @@ class WattmeterMonitor(BaseMonitor):
     def start_monitoring(self):
         """Start power monitoring."""
         self.power_samples = []
-        print(f"📊 Wattmeter monitoring started (output {self.output_id})")
     
     def add_sample(self):
-        """Add a power sample (called by monitoring thread)."""
+        """Add a power sample."""
         power = self.get_current_power()
         if power is not None:
             self.power_samples.append(power)
@@ -120,17 +116,14 @@ class WattmeterMonitor(BaseMonitor):
             'duration_seconds': duration
         }
         
-        print(f"✅ Wattmeter: {metrics['system_energy_joules']:.2f} J "
-              f"({metrics['system_power_mean_watts']:.2f} W avg)")
-        
         return metrics
     
     def get_statistics(self) -> Dict[str, float]:
-        """Get current statistics without stopping."""
+        """Get current statistics."""
         return self.stop_monitoring()
     
     def shutdown(self):
-        """Cleanup (wattmeter needs no shutdown)."""
+        """Cleanup."""
         pass
 
 
