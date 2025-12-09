@@ -179,7 +179,7 @@ Generate optimization as SEARCH/REPLACE patch:
 =======
 # New optimized code
 >>>>>>> REPLACE
-```
+
 Provide ONLY the patch. No explanations or analysis.
 </output_format>
 ```
@@ -276,7 +276,6 @@ ANALYSIS:
 [Your detailed step-by-step reasoning here]
 PATCH:
 
-```
 
 ### path/to/file.py
 <<<<<<< SEARCH
@@ -284,12 +283,13 @@ PATCH:
 =======
 ...
 >>>>>>> REPLACE
-```
+
 </output_format>
-```
+
 
 **Expected Output Structure:**
 ```
+
 ANALYSIS:
 Step 1 - Identify Targets:
 - Function 'as_decorator' found at astropy/units/decorators.py:42
@@ -545,7 +545,7 @@ DIAGNOSIS:
 JUSTIFICATION:
 [How new patch addresses each identified issue]
 NEW_PATCH:
-
+```
 ### path/to/file.py
 <<<<<<< SEARCH
 ...
