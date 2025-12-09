@@ -181,8 +181,9 @@ class GPUMonitor:
     
     def __del__(self):
         """Ensure NVML is shutdown on deletion."""
-        self.shutdown()
-
+        # DON'T call shutdown() here - it breaks subsequent measurements!
+        # NVML will be cleaned up automatically by Python at process exit
+        pass
 
 def is_gpu_available() -> bool:
     """Check if GPU monitoring is available."""
