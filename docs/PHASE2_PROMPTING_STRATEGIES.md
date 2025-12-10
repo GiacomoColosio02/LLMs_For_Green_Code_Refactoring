@@ -288,7 +288,6 @@ PATCH:
 
 
 **Expected Output Structure:**
-```
 
 ANALYSIS:
 Step 1 - Identify Targets:
@@ -388,9 +387,9 @@ TURN 3 (Critical Reviewer):
 
 Example output format:
 "REVIEW:
-✅ Good: Loop elimination in function X
-❌ Issue: Edge case not handled on line 45
-💡 Suggestion: Add bounds check to prevent IndexError"
+Good: Loop elimination in function X
+Issue: Edge case not handled on line 45
+Suggestion: Add bounds check to prevent IndexError"
 
 TURN 4 (Senior Refactoring Engineer - Final):
 - Input: Reviewer's critique
@@ -431,11 +430,11 @@ TURN 2 (Engineer):
 
 TURN 3 (Reviewer):
 REVIEW:
-✅ Good: Unit conversion caching implementation is sound
-❌ Issue: Cache may grow unbounded, consider LRU policy
-❌ Issue: Quantity reuse optimization breaks when quantity has .info attribute
-💡 Suggestion: Add cache size limit (e.g., @lru_cache(maxsize=128))
-💡 Suggestion: Check for .info before reusing Quantity object
+Good: Unit conversion caching implementation is sound
+Issue: Cache may grow unbounded, consider LRU policy
+Issue: Quantity reuse optimization breaks when quantity has .info attribute
+Suggestion: Add cache size limit (e.g., @lru_cache(maxsize=128))
+Suggestion: Check for .info before reusing Quantity object
 
 TURN 4 (Engineer - Final):
 [Generates revised patch addressing all reviewer points]
