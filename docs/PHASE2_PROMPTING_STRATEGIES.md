@@ -544,14 +544,13 @@ DIAGNOSIS:
 JUSTIFICATION:
 [How new patch addresses each identified issue]
 NEW_PATCH:
-```
+
 ### path/to/file.py
 <<<<<<< SEARCH
 ...
 =======
 ...
 >>>>>>> REPLACE
-```
 </output_format>
 ```
 
@@ -570,7 +569,7 @@ NEW_PATCH:
 - Peak RAM: 245MB → 289MB (+17.9%)
 
 **Test Results:**
-✅ All 12 tests passed
+All 12 tests passed
 
 **Key Observations:**
 - Optimization reduced CPU energy by only 5%, below 20% target
@@ -679,42 +678,42 @@ vs. Human Performance:
 │  PHASE 2 PIPELINE                                           │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  For each (instance, model, strategy, setting):            │
+│  For each (instance, model, strategy, setting):             │
 │                                                             │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │ 1. PROMPT GENERATION                                │  │
-│  │    - Load instance from SWE-Perf                    │  │
-│  │    - Populate prompt template                       │  │
-│  │    - Oracle: Extract target files/functions        │  │
-│  │    - Realistic: Compile repository context         │  │
-│  └─────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ 1. PROMPT GENERATION                                │    │
+│  │    - Load instance from SWE-Perf                    │    │
+│  │    - Populate prompt template                       │    │
+│  │    - Oracle: Extract target files/functions         │    │
+│  │    - Realistic: Compile repository context          │    │
+│  └─────────────────────────────────────────────────────┘    │
 │                         ↓                                   │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │ 2. LLM INFERENCE                                    │  │
-│  │    - Call model API (OpenAI, Anthropic, HF)        │  │
-│  │    - Handle multi-turn (Self-Collab, LDB)          │  │
-│  │    - Parse SEARCH/REPLACE output                   │  │
-│  └─────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ 2. LLM INFERENCE                                    │    │
+│  │    - Call model API (OpenAI, Anthropic, HF)         │    │
+│  │    - Handle multi-turn (Self-Collab, LDB)           │    │
+│  │    - Parse SEARCH/REPLACE output                    │    │
+│  └─────────────────────────────────────────────────────┘    │
 │                         ↓                                   │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │ 3. PATCH APPLICATION                                │  │
-│  │    - Validate patch format                          │  │
-│  │    - Apply to BASE commit                           │  │
-│  │    - Handle conflicts/errors                        │  │
-│  └─────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ 3. PATCH APPLICATION                                │    │
+│  │    - Validate patch format                          │    │
+│  │    - Apply to BASE commit                           │    │
+│  │    - Handle conflicts/errors                        │    │
+│  └─────────────────────────────────────────────────────┘    │
 │                         ↓                                   │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │ 4. MEASUREMENT (using Phase 1 infrastructure)      │  │
-│  │    - Run tests with GSMM monitoring                 │  │
-│  │    - Collect 17 metrics                             │  │
-│  │    - For LDB: Generate feedback, iterate           │  │
-│  └─────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ 4. MEASUREMENT (using Phase 1 infrastructure)       │    │
+│  │    - Run tests with GSMM monitoring                 │    │
+│  │    - Collect 17 metrics                             │    │
+│  │    - For LDB: Generate feedback, iterate            │    │
+│  └─────────────────────────────────────────────────────┘    │
 │                         ↓                                   │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │ 5. STORAGE                                          │  │
-│  │    - Save: patch, metrics, logs, intermediate data │  │
-│  │    - JSON format for analysis                       │  │
-│  └─────────────────────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │ 5. STORAGE                                          │    │
+│  │    - Save: patch, metrics, logs, intermediate data  │    │
+│  │    - JSON format for analysis                       │    │
+│  └─────────────────────────────────────────────────────┘    │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
