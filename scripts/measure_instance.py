@@ -126,9 +126,10 @@ class SWEPerfMeasurer:
             print(f"  ✅ Virtual environment created")
             
             # Upgrade pip and install base packages (workarounds for Python 3.12)
+            # Use setuptools<70 to keep dep_util module (removed in newer versions)
             subprocess.run(
                 [str(venv_path / 'bin' / 'pip'), 'install', '--upgrade', 
-                 'pip', 'setuptools', 'wheel'],
+                 'pip', 'setuptools<70', 'wheel'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=120
