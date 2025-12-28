@@ -158,7 +158,7 @@ class SWEPerfMeasurer:
             print(f"  📦 Installing build dependencies...")
             subprocess.run(
                 [str(venv_path / 'bin' / 'pip'), 'install',
-                 'extension_helpers', 'setuptools_scm', 'cython', 'numpy'],
+                 'extension_helpers', 'setuptools_scm', 'cython', 'numpy<2.0'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=180
