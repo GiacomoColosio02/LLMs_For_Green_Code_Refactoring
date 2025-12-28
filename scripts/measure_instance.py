@@ -153,6 +153,17 @@ class SWEPerfMeasurer:
                 timeout=120
             )
             
+            # Install common build dependencies for scientific Python projects
+            # These are needed when using --no-build-isolation
+            print(f"  📦 Installing build dependencies...")
+            subprocess.run(
+                [str(venv_path / 'bin' / 'pip'), 'install',
+                 'extension_helpers', 'setuptools_scm', 'cython', 'numpy'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=180
+            )
+            
             # Install package with dependencies
             # Use --no-build-isolation to use our setuptools<70 instead of isolated env
             print(f"  📦 Installing dependencies (version: {version})...")
