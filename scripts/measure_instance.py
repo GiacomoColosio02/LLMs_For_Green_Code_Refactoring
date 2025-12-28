@@ -14,6 +14,9 @@ from typing import Dict, Optional
 from src.utils.config import load_config
 from src.measurement.collector import MetricsCollector
 
+# Python version to use for virtual environments (matching SWE-Perf paper)
+PYTHON_EXECUTABLE = "python3.9"
+
 
 class SWEPerfMeasurer:
     """Measure SWE-Perf instance with green metrics."""
@@ -29,6 +32,21 @@ class SWEPerfMeasurer:
         self.dataset_path = Path(dataset_path)
         self.country_code = country_code
         self.config = load_config()
+        
+        # Verify Python 3.9 is available
+        try:
+            result = subprocess.run(
+                [PYTHON_EXECUTABLE, '--version'],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            print(f"✅ Using {result.stdout.strip()}")
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            raise RuntimeError(
+                f"❌ {PYTHON_EXECUTABLE} not found! "
+                "SWE-Perf requires Python 3.9 for compatibility."
+            )
         
         # Load dataset
         print(f"📂 Loading dataset from {self.dataset_path}...")
@@ -112,24 +130,23 @@ class SWEPerfMeasurer:
         Returns:
             Path to venv directory, or None if failed
         """
-        print(f"  📦 Creating virtual environment...")
+        print(f"  📦 Creating virtual environment with {PYTHON_EXECUTABLE}...")
         
         venv_path = repo_path / "venv_sweperf"
         
         try:
-            # Create virtual environment
+            # Create virtual environment with Python 3.9
             subprocess.run(
-                ['python3', '-m', 'venv', str(venv_path)],
+                [PYTHON_EXECUTABLE, '-m', 'venv', str(venv_path)],
                 check=True,
                 timeout=60
             )
             print(f"  ✅ Virtual environment created")
             
-            # Upgrade pip and install base packages (workarounds for Python 3.12)
-            # Use setuptools<70 to keep dep_util module (removed in newer versions)
+            # Upgrade pip and install base packages
             subprocess.run(
                 [str(venv_path / 'bin' / 'pip'), 'install', '--upgrade', 
-                 'pip', 'setuptools<70', 'wheel'],
+                 'pip', 'setuptools', 'wheel'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=120
@@ -148,22 +165,11 @@ class SWEPerfMeasurer:
             print(f"  📦 Installing test dependencies...")
             subprocess.run(
                 [str(venv_path / 'bin' / 'pip'), 'install', 
-                 'pytest>=8.0', 'hypothesis', 'scipy', 'pytest-astropy', 'urllib3'],
+                 'pytest', 'hypothesis', 'scipy', 'pytest-astropy', 'urllib3'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=120
             )
-            
-            # Fallback: downgrade numpy for old repos if needed
-            try:
-                subprocess.run(
-                    [str(venv_path / 'bin' / 'pip'), 'install', 'numpy<2.0'],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    timeout=60
-                )
-            except:
-                pass  # If this fails, not critical
             
             print(f"  ✅ Dependencies installed")
             return venv_path
