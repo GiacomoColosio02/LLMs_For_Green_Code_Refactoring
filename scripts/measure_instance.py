@@ -144,18 +144,20 @@ class SWEPerfMeasurer:
             print(f"  ✅ Virtual environment created")
             
             # Upgrade pip and install base packages
+            # CRITICAL: Use setuptools<70 to keep dep_util module
             subprocess.run(
                 [str(venv_path / 'bin' / 'pip'), 'install', '--upgrade', 
-                 'pip', 'setuptools', 'wheel'],
+                 'pip', 'setuptools<70', 'wheel'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=120
             )
             
             # Install package with dependencies
+            # Use --no-build-isolation to use our setuptools<70 instead of isolated env
             print(f"  📦 Installing dependencies (version: {version})...")
             subprocess.run(
-                [str(venv_path / 'bin' / 'pip'), 'install', '-e', '.'],
+                [str(venv_path / 'bin' / 'pip'), 'install', '-e', '.', '--no-build-isolation'],
                 cwd=repo_path,
                 check=True,
                 timeout=600  # 10 minutes timeout
