@@ -49,7 +49,7 @@ wattmeter:
   endpoint: "/netio.json"
   output_id: 1
   timeout: 5
-  polling_interval: 0.1
+  polling_interval: 1.0
   
 # Note: Wattmeter provides 100% energy coverage (replaces GPU+CPU partial measurements)
 # When wattmeter is enabled, system_energy_joules becomes the primary metric
