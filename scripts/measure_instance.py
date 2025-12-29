@@ -1,5 +1,6 @@
 """
 Measure a single SWE-Perf instance with all metrics.
+Optimized for compatibility with legacy scientific Python projects.
 """
 import sys
 from pathlib import Path
@@ -10,12 +11,19 @@ import argparse
 import subprocess
 import tempfile
 import shutil
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from src.utils.config import load_config
 from src.measurement.collector import MetricsCollector
 
 # Python version to use for virtual environments (matching SWE-Perf paper)
 PYTHON_EXECUTABLE = "python3.9"
+
+# Version constraints for compatibility with legacy scientific Python
+COMPATIBLE_VERSIONS = {
+    'setuptools': '<70',      # Keep dep_util module (removed in 70+)
+    'numpy': '<2.0',          # Keep np.product, np.cumproduct (removed in 2.0)
+    'matplotlib': '<3.9',     # Keep register_cmap (removed in 3.9)
+}
 
 
 class SWEPerfMeasurer:
@@ -133,6 +141,7 @@ class SWEPerfMeasurer:
         print(f"  📦 Creating virtual environment with {PYTHON_EXECUTABLE}...")
         
         venv_path = repo_path / "venv_sweperf"
+        venv_pip = str(venv_path / 'bin' / 'pip')
         
         try:
             # Create virtual environment with Python 3.9
@@ -143,22 +152,24 @@ class SWEPerfMeasurer:
             )
             print(f"  ✅ Virtual environment created")
             
-            # Upgrade pip and install base packages
-            # CRITICAL: Use setuptools<70 to keep dep_util module
+            # Upgrade pip and install base packages with version constraints
+            # CRITICAL: setuptools<70 keeps dep_util module
+            print(f"  📦 Installing base packages (setuptools{COMPATIBLE_VERSIONS['setuptools']})...")
             subprocess.run(
-                [str(venv_path / 'bin' / 'pip'), 'install', '--upgrade', 
-                 'pip', 'setuptools<70', 'wheel'],
+                [venv_pip, 'install', '--upgrade', 
+                 'pip', f"setuptools{COMPATIBLE_VERSIONS['setuptools']}", 'wheel'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=120
             )
             
-            # Install common build dependencies for scientific Python projects
+            # Install build dependencies for scientific Python projects
             # These are needed when using --no-build-isolation
-            print(f"  📦 Installing build dependencies...")
+            print(f"  📦 Installing build dependencies (numpy{COMPATIBLE_VERSIONS['numpy']})...")
             subprocess.run(
-                [str(venv_path / 'bin' / 'pip'), 'install',
-                 'extension_helpers', 'setuptools_scm', 'cython', 'numpy<2.0'],
+                [venv_pip, 'install',
+                 'extension_helpers', 'setuptools_scm', 'cython', 
+                 f"numpy{COMPATIBLE_VERSIONS['numpy']}"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=180
@@ -166,22 +177,25 @@ class SWEPerfMeasurer:
             
             # Install package with dependencies
             # Use --no-build-isolation to use our setuptools<70 instead of isolated env
-            print(f"  📦 Installing dependencies (version: {version})...")
+            print(f"  📦 Installing project dependencies (version: {version})...")
             subprocess.run(
-                [str(venv_path / 'bin' / 'pip'), 'install', '-e', '.', '--no-build-isolation'],
+                [venv_pip, 'install', '-e', '.', '--no-build-isolation'],
                 cwd=repo_path,
                 check=True,
                 timeout=600  # 10 minutes timeout
             )
             
-            # Install test dependencies (pytest, hypothesis, scipy, urllib3)
-            print(f"  📦 Installing test dependencies...")
+            # Install test dependencies with version constraints
+            # CRITICAL: matplotlib<3.9 keeps register_cmap
+            print(f"  📦 Installing test dependencies (matplotlib{COMPATIBLE_VERSIONS['matplotlib']})...")
             subprocess.run(
-                [str(venv_path / 'bin' / 'pip'), 'install', 
-                 'pytest', 'hypothesis', 'scipy', 'pytest-astropy', 'urllib3'],
+                [venv_pip, 'install', 
+                 'pytest', 'hypothesis', 'scipy', 'pytest-astropy', 'urllib3',
+                 f"matplotlib{COMPATIBLE_VERSIONS['matplotlib']}",
+                 f"numpy{COMPATIBLE_VERSIONS['numpy']}"],  # Re-enforce numpy constraint
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                timeout=120
+                timeout=180
             )
             
             print(f"  ✅ Dependencies installed")
@@ -190,6 +204,50 @@ class SWEPerfMeasurer:
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
             print(f"  ⚠️  Warning: Could not install dependencies: {e}")
             return None
+    
+    def measure_single_test(
+        self,
+        collector: MetricsCollector,
+        test_name: str,
+        repo_path: Path,
+        venv_path: Path,
+        repetitions: int
+    ) -> Optional[Dict]:
+        """
+        Measure a single test with error handling.
+        
+        Args:
+            collector: MetricsCollector instance
+            test_name: Name of the test to run
+            repo_path: Path to repository
+            venv_path: Path to virtual environment
+            repetitions: Number of repetitions
+            
+        Returns:
+            Test results dict or None if failed
+        """
+        try:
+            # Build pytest command using venv python
+            pytest_bin = venv_path / 'bin' / 'python'
+            test_command = f"cd {repo_path} && {pytest_bin} -m pytest {test_name} -v"
+            
+            # Measure test execution
+            test_results = collector.measure_test_execution(
+                test_command=test_command,
+                repetitions=repetitions
+            )
+            
+            test_results['test_name'] = test_name
+            test_results['status'] = 'success'
+            return test_results
+            
+        except Exception as e:
+            print(f"    ❌ Test failed: {str(e)[:100]}")
+            return {
+                'test_name': test_name,
+                'status': 'failed',
+                'error': str(e)[:500]
+            }
     
     def measure_commit(
         self,
@@ -221,14 +279,14 @@ class SWEPerfMeasurer:
         
         if venv_path is None:
             print(f"  ⚠️  Skipping measurements - dependencies failed")
-            return {}
+            return {'status': 'dependency_failed'}
         
         # Get test commands
         efficiency_tests = instance['efficiency_test']
         
         if not efficiency_tests:
             print(f"  ⚠️  No efficiency tests found!")
-            return {}
+            return {'status': 'no_tests'}
         
         print(f"  🧪 Found {len(efficiency_tests)} efficiency tests")
         
@@ -243,31 +301,40 @@ class SWEPerfMeasurer:
             duration=self.config['measurement']['baseline_duration_sec']
         )
         
-        # Measure each test
+        # Measure each test (with individual error handling)
         all_test_results = []
+        successful_tests = 0
+        failed_tests = 0
         
         for i, test_name in enumerate(efficiency_tests):
             print(f"\n  📝 Test {i+1}/{len(efficiency_tests)}: {test_name}")
             
-            # Build pytest command using venv pytest
-            pytest_bin = venv_path / 'bin' / 'python'
-            test_command = f"cd {repo_path} && {pytest_bin} -m pytest {test_name} -v"
-            
-            # Measure test execution
-            test_results = collector.measure_test_execution(
-                test_command=test_command,
+            result = self.measure_single_test(
+                collector=collector,
+                test_name=test_name,
+                repo_path=repo_path,
+                venv_path=venv_path,
                 repetitions=self.config['measurement']['repetitions']
             )
             
-            test_results['test_name'] = test_name
-            all_test_results.append(test_results)
+            if result and result.get('status') == 'success':
+                successful_tests += 1
+            else:
+                failed_tests += 1
+            
+            all_test_results.append(result)
+        
+        print(f"\n  📊 Test summary: {successful_tests} passed, {failed_tests} failed")
         
         # Combine results
         results = {
             'commit': commit,
             'commit_type': commit_type,
             'baseline': baseline,
-            'tests': all_test_results
+            'tests': all_test_results,
+            'successful_tests': successful_tests,
+            'failed_tests': failed_tests,
+            'status': 'success' if successful_tests > 0 else 'all_tests_failed'
         }
         
         # Cleanup
@@ -291,7 +358,7 @@ class SWEPerfMeasurer:
         instance = self.get_instance(instance_id)
         if instance is None:
             print(f"❌ Instance '{instance_id}' not found in dataset!")
-            return
+            return None
         
         print(f"\n📊 Instance info:")
         print(f"  Repository: {instance['repo']}")
@@ -323,6 +390,14 @@ class SWEPerfMeasurer:
             # Cleanup with ignore_errors (survives permission errors)
             shutil.rmtree(temp_dir, ignore_errors=True)
         
+        # Check if we have any valid results
+        base_ok = base_results.get('status') == 'success'
+        head_ok = head_results.get('status') == 'success'
+        
+        if not base_ok and not head_ok:
+            print(f"\n❌ Both commits failed - not saving results")
+            return None
+        
         # Combine all results
         final_results = {
             'instance_id': instance_id,
@@ -331,19 +406,28 @@ class SWEPerfMeasurer:
             'head_commit': instance['head_commit'],
             'base_measurements': base_results,
             'head_measurements': head_results,
-            'original_duration_changes': instance['duration_changes']
+            'original_duration_changes': instance['duration_changes'],
+            'measurement_status': {
+                'base_ok': base_ok,
+                'head_ok': head_ok,
+                'total_tests': len(instance['efficiency_test']),
+                'base_successful': base_results.get('successful_tests', 0),
+                'head_successful': head_results.get('successful_tests', 0)
+            }
         }
         
         # Save results
         output_path = Path(output_dir) / instance_id
         output_path.mkdir(parents=True, exist_ok=True)
         
-        output_file = output_path / f"measurements.json"
+        output_file = output_path / "measurements.json"
         with open(output_file, 'w') as f:
             json.dump(final_results, f, indent=2)
         
         print("\n" + "=" * 60)
         print(f"✅ MEASUREMENT COMPLETE!")
+        print(f"  Base: {base_results.get('successful_tests', 0)} tests passed")
+        print(f"  Head: {head_results.get('successful_tests', 0)} tests passed")
         print(f"💾 Results saved to: {output_file}")
         print("=" * 60)
         
