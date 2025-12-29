@@ -1,8 +1,10 @@
 """
 GPU monitoring using NVIDIA Management Library (NVML).
+Uses singleton pattern for NVML to prevent segfaults from multiple init/shutdown.
 """
 import time
 import statistics
+import atexit
 from typing import Dict, List, Optional
 from dataclasses import dataclass, asdict
 
@@ -14,6 +16,96 @@ except ImportError:
     print("⚠️ pynvml not available. GPU monitoring disabled.")
 
 
+# =============================================================================
+# NVML SINGLETON MANAGER
+# =============================================================================
+class NVMLManager:
+    """
+    Singleton manager for NVML initialization.
+    Ensures NVML is initialized only ONCE per process and never shutdown
+    until process exit.
+    """
+    _instance = None
+    _initialized = False
+    _device_count = 0
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def ensure_initialized(self) -> bool:
+        """
+        Ensure NVML is initialized. Safe to call multiple times.
+        
+        Returns:
+            True if NVML is available and initialized, False otherwise
+        """
+        if not NVML_AVAILABLE:
+            return False
+        
+        if self._initialized:
+            return True
+        
+        try:
+            pynvml.nvmlInit()
+            self._device_count = pynvml.nvmlDeviceGetCount()
+            self._initialized = True
+            
+            # Register shutdown at process exit (not before!)
+            atexit.register(self._shutdown_at_exit)
+            
+            print(f"✅ NVML initialized (found {self._device_count} GPU(s))")
+            return True
+            
+        except pynvml.NVMLError as e:
+            print(f"⚠️ NVML initialization failed: {e}")
+            return False
+    
+    def _shutdown_at_exit(self):
+        """Called only at process exit by atexit."""
+        if self._initialized:
+            try:
+                pynvml.nvmlShutdown()
+                print("✅ NVML shutdown complete")
+            except:
+                pass
+            self._initialized = False
+    
+    def is_available(self) -> bool:
+        """Check if GPU is available (initializes if needed)."""
+        return self.ensure_initialized() and self._device_count > 0
+    
+    def get_device_count(self) -> int:
+        """Get number of GPUs."""
+        if self.ensure_initialized():
+            return self._device_count
+        return 0
+    
+    def get_handle(self, device_index: int = 0):
+        """Get device handle."""
+        if not self.ensure_initialized():
+            raise RuntimeError("NVML not available")
+        if device_index >= self._device_count:
+            raise ValueError(f"Device {device_index} not found (have {self._device_count})")
+        return pynvml.nvmlDeviceGetHandleByIndex(device_index)
+
+
+# Global singleton instance
+_nvml_manager = NVMLManager()
+
+
+def is_gpu_available() -> bool:
+    """
+    Check if GPU monitoring is available.
+    Safe to call multiple times - uses singleton.
+    """
+    return _nvml_manager.is_available()
+
+
+# =============================================================================
+# GPU SAMPLE DATA CLASS
+# =============================================================================
 @dataclass
 class GPUSample:
     """Single sample of GPU usage."""
@@ -26,6 +118,9 @@ class GPUSample:
     power_draw_watts: Optional[float] = None
 
 
+# =============================================================================
+# GPU MONITOR CLASS
+# =============================================================================
 class GPUMonitor:
     """Monitor GPU usage using NVML."""
     
@@ -43,25 +138,20 @@ class GPUMonitor:
             track_temperature: Track GPU temperature
             track_power: Track GPU power draw
         """
-        if not NVML_AVAILABLE:
-            raise RuntimeError("pynvml not available. Install with: pip install pynvml")
+        if not _nvml_manager.is_available():
+            raise RuntimeError("GPU not available. Install pynvml and ensure NVIDIA driver is loaded.")
         
         self.device_index = device_index
         self.track_temperature = track_temperature
         self.track_power = track_power
         self.samples: List[GPUSample] = []
         
-        # Initialize NVML
-        try:
-            pynvml.nvmlInit()
-            self.handle = pynvml.nvmlDeviceGetHandleByIndex(device_index)
-            
-            # Get GPU name
-            self.gpu_name = pynvml.nvmlDeviceGetName(self.handle)
-            print(f"📊 GPU Monitor initialized: {self.gpu_name}")
-            
-        except pynvml.NVMLError as e:
-            raise RuntimeError(f"Failed to initialize GPU {device_index}: {e}")
+        # Get handle from singleton manager
+        self.handle = _nvml_manager.get_handle(device_index)
+        
+        # Get GPU name
+        self.gpu_name = pynvml.nvmlDeviceGetName(self.handle)
+        print(f"📊 GPU Monitor initialized: {self.gpu_name}")
     
     def sample_once(self) -> GPUSample:
         """
@@ -173,68 +263,80 @@ class GPUMonitor:
         return [asdict(s) for s in self.samples]
     
     def shutdown(self):
-        """Cleanup NVML."""
-        try:
-            pynvml.nvmlShutdown()
-        except:
-            pass
+        """
+        Cleanup method - DOES NOTHING now.
+        NVML shutdown is handled by NVMLManager at process exit.
+        Kept for API compatibility.
+        """
+        # DO NOT call nvmlShutdown() here!
+        # The singleton manager handles this at process exit.
+        pass
     
     def __del__(self):
-        """Ensure NVML is shutdown on deletion."""
-        # DON'T call shutdown() here - it breaks subsequent measurements!
-        # NVML will be cleaned up automatically by Python at process exit
+        """Destructor - does nothing, shutdown handled by singleton."""
         pass
 
-def is_gpu_available() -> bool:
-    """Check if GPU monitoring is available."""
-    if not NVML_AVAILABLE:
-        return False
-    
-    try:
-        pynvml.nvmlInit()
-        device_count = pynvml.nvmlDeviceGetCount()
-        pynvml.nvmlShutdown()
-        return device_count > 0
-    except:
-        return False
 
-
+# =============================================================================
+# MAIN TEST
+# =============================================================================
 if __name__ == "__main__":
-    # Test the GPU monitor
-    print("Testing GPU Monitor...")
+    print("Testing GPU Monitor with Singleton NVML Manager...")
     print("=" * 60)
+    
+    # Test 1: Check availability multiple times (should not crash)
+    print("\n1. Testing is_gpu_available() multiple times...")
+    for i in range(5):
+        result = is_gpu_available()
+        print(f"   Call {i+1}: {result}")
     
     if not is_gpu_available():
         print("❌ No GPU available for testing")
         exit(1)
     
-    monitor = GPUMonitor(device_index=0)
+    # Test 2: Create multiple GPUMonitor instances
+    print("\n2. Creating multiple GPUMonitor instances...")
+    monitors = []
+    for i in range(3):
+        m = GPUMonitor(device_index=0)
+        monitors.append(m)
+        print(f"   Created monitor {i+1}: {m.gpu_name}")
+    
+    # Test 3: Sample from first monitor
+    print("\n3. Sampling from first monitor (3 seconds)...")
+    monitor = monitors[0]
     monitor.start_monitoring()
     
-    # Simulate some monitoring
-    print("\n📊 Monitoring GPU for 3 seconds...\n")
     for i in range(30):
         monitor.add_sample()
         time.sleep(0.1)
     
     stats = monitor.get_statistics()
     
-    print("GPU Statistics:")
-    print(f"  GPU Name: {monitor.gpu_name}")
-    print(f"  Utilization mean: {stats['gpu_utilization_mean_percent']:.1f}%")
-    print(f"  Utilization peak: {stats['gpu_utilization_peak_percent']:.1f}%")
-    print(f"  Memory mean: {stats['gpu_memory_mean_mb']:.1f} MB ({stats['gpu_memory_mean_percent']:.1f}%)")
-    print(f"  Memory peak: {stats['gpu_memory_peak_mb']:.1f} MB ({stats['gpu_memory_peak_percent']:.1f}%)")
+    print("   GPU Statistics:")
+    print(f"     Utilization mean: {stats['gpu_utilization_mean_percent']:.1f}%")
+    print(f"     Utilization peak: {stats['gpu_utilization_peak_percent']:.1f}%")
+    print(f"     Memory mean: {stats['gpu_memory_mean_mb']:.1f} MB")
+    print(f"     Memory peak: {stats['gpu_memory_peak_mb']:.1f} MB")
     
     if 'gpu_temperature_mean_celsius' in stats:
-        print(f"  Temperature mean: {stats['gpu_temperature_mean_celsius']:.1f}°C")
-        print(f"  Temperature peak: {stats['gpu_temperature_peak_celsius']:.1f}°C")
+        print(f"     Temperature mean: {stats['gpu_temperature_mean_celsius']:.1f}°C")
     
     if 'gpu_power_mean_watts' in stats:
-        print(f"  Power mean: {stats['gpu_power_mean_watts']:.1f} W")
-        print(f"  Power peak: {stats['gpu_power_peak_watts']:.1f} W")
+        print(f"     Power mean: {stats['gpu_power_mean_watts']:.1f} W")
     
-    print(f"  Samples: {stats['num_samples']}")
+    # Test 4: Delete monitors (should NOT cause segfault)
+    print("\n4. Deleting monitors (testing no segfault)...")
+    del monitors
+    del monitor
     
-    monitor.shutdown()
-    print("\n✨ GPU monitor test passed!")
+    # Test 5: Create new monitor after deletion (should work!)
+    print("\n5. Creating new monitor after deletion...")
+    new_monitor = GPUMonitor(device_index=0)
+    sample = new_monitor.sample_once()
+    print(f"   ✅ New monitor works! GPU at {sample.gpu_utilization_percent}%")
+    
+    print("\n" + "=" * 60)
+    print("✅ All tests passed! GPU monitoring is stable.")
+    print("   NVML will shutdown automatically at process exit.")
+    print("=" * 60)
