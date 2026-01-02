@@ -128,7 +128,7 @@ class SWEPerfMeasurer:
         
         return repo_path
     
-   def install_dependencies(self, repo_path: Path, version: str) -> Optional[Path]:
+    def install_dependencies(self, repo_path: Path, version: str) -> Optional[Path]:
         """
         Create virtual environment and install package dependencies.
         
