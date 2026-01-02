@@ -23,6 +23,7 @@ COMPATIBLE_VERSIONS = {
     'setuptools': '<70',      # Keep dep_util module (removed in 70+)
     'numpy': '<2.0',          # Keep np.product, np.cumproduct (removed in 2.0)
     'matplotlib': '<3.9',     # Keep register_cmap (removed in 3.9)
+    'cython': '<3.0',         # Cython 3.0 breaks old .pyx syntax (nogil, except, etc.)
 }
 
 
@@ -164,11 +165,12 @@ class SWEPerfMeasurer:
             )
             
             # Install build dependencies for scientific Python projects
-            # These are needed when using --no-build-isolation
-            print(f"  📦 Installing build dependencies (numpy{COMPATIBLE_VERSIONS['numpy']})...")
+            # CRITICAL: cython<3.0 for old .pyx syntax compatibility
+            print(f"  📦 Installing build dependencies (numpy{COMPATIBLE_VERSIONS['numpy']}, cython{COMPATIBLE_VERSIONS['cython']})...")
             subprocess.run(
                 [venv_pip, 'install',
-                 'extension_helpers', 'setuptools_scm', 'cython', 
+                 'extension_helpers', 'setuptools_scm', 
+                 f"cython{COMPATIBLE_VERSIONS['cython']}", 
                  f"numpy{COMPATIBLE_VERSIONS['numpy']}"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
