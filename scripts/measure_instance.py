@@ -128,7 +128,7 @@ class SWEPerfMeasurer:
         
         return repo_path
     
-    def install_dependencies(self, repo_path: Path, version: str) -> Optional[Path]:
+   def install_dependencies(self, repo_path: Path, version: str) -> Optional[Path]:
         """
         Create virtual environment and install package dependencies.
         
@@ -166,15 +166,17 @@ class SWEPerfMeasurer:
             
             # Install build dependencies for scientific Python projects
             # CRITICAL: cython<3.0 for old .pyx syntax compatibility
-            print(f"  📦 Installing build dependencies (numpy{COMPATIBLE_VERSIONS['numpy']}, cython{COMPATIBLE_VERSIONS['cython']})...")
+            # FIX: Added scipy here because scikit-learn needs it for compilation (blas/lapack headers)
+            print(f"  📦 Installing build dependencies (numpy{COMPATIBLE_VERSIONS['numpy']}, cython{COMPATIBLE_VERSIONS['cython']}, scipy)...")
             subprocess.run(
                 [venv_pip, 'install',
                  'extension_helpers', 'setuptools_scm', 
                  f"cython{COMPATIBLE_VERSIONS['cython']}", 
-                 f"numpy{COMPATIBLE_VERSIONS['numpy']}"],
+                 f"numpy{COMPATIBLE_VERSIONS['numpy']}",
+                 "scipy"],  # <--- AGGIUNTO SCIPY
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                timeout=180
+                timeout=300  # <--- AUMENTATO TIMEOUT (scipy è pesante)
             )
             
             # Install package with dependencies
