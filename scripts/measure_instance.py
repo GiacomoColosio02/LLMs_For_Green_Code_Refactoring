@@ -233,19 +233,6 @@ class SWEPerfMeasurer:
                 timeout=300
             )
             
-            # For sklearn: install external joblib BEFORE fixing internal one
-            if is_sklearn:
-                print(f"  📦 Installing joblib (sklearn compatibility)...")
-                subprocess.run(
-                    [venv_pip, 'install', 'joblib'],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    timeout=60
-                )
-                
-                # Fix the internal joblib
-                self.fix_sklearn_joblib(repo_path)
-            
             # Install package with dependencies
             # Use --no-build-isolation to use our setuptools<70 instead of isolated env
             print(f"  📦 Installing project dependencies (version: {version})...")
@@ -255,6 +242,20 @@ class SWEPerfMeasurer:
                 check=True,
                 timeout=600  # 10 minutes timeout
             )
+            
+            # For sklearn: fix internal joblib AFTER installation
+            # The build needs the original structure, but runtime needs the fix
+            if is_sklearn:
+                print(f"  📦 Installing joblib (sklearn compatibility)...")
+                subprocess.run(
+                    [venv_pip, 'install', 'joblib'],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=60
+                )
+                
+                # Fix the internal joblib for Python 3.9 runtime compatibility
+                self.fix_sklearn_joblib(repo_path)
             
             # Install test dependencies with version constraints
             # CRITICAL: matplotlib<3.9 keeps register_cmap
