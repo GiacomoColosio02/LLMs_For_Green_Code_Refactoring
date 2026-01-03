@@ -1,6 +1,7 @@
 """
 Measure a single SWE-Perf instance with all metrics.
 Optimized for compatibility with legacy scientific Python projects.
+Supports multiple Python versions based on repository requirements.
 """
 import sys
 from pathlib import Path
@@ -11,37 +12,117 @@ import argparse
 import subprocess
 import tempfile
 import shutil
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
 from src.utils.config import load_config
 from src.measurement.collector import MetricsCollector
 
-# Python version to use for virtual environments (matching SWE-Perf paper)
-PYTHON_EXECUTABLE = "python3.9"
+# Default Python version
+DEFAULT_PYTHON = "python3.9"
 
-# Version constraints for compatibility with legacy scientific Python
-COMPATIBLE_VERSIONS = {
-    'setuptools': '<70',      # Keep dep_util module (removed in 70+)
-    'numpy': '<1.24',         # Keep np.int, np.float, np.bool (removed in 1.24+)
-    'matplotlib': '<3.9',     # Keep register_cmap (removed in 3.9)
-    'cython': '<3.0',         # Cython 3.0 breaks old .pyx syntax (nogil, except, etc.)
+# Python version mapping based on SWE-Perf constants.py
+# Format: (repo_lower, version) -> python_executable
+PYTHON_VERSION_MAP = {
+    # xarray requires Python 3.10
+    ('pydata/xarray', '0.18'): 'python3.10',
+    ('pydata/xarray', '0.19'): 'python3.10',
+    ('pydata/xarray', '0.2'): 'python3.10',
+    ('pydata/xarray', '0.20'): 'python3.10',
+    ('pydata/xarray', '2022.03'): 'python3.10',
+    ('pydata/xarray', '2022.06'): 'python3.10',
+    ('pydata/xarray', '2022.09'): 'python3.10',
+    ('pydata/xarray', '2023.04'): 'python3.10',
+    ('pydata/xarray', '2023.07'): 'python3.10',
+    ('pydata/xarray', '2024.05'): 'python3.10',
+    # sklearn 0.21 would need Python 3.6 but it's not available
+    # We'll use 3.9 with special handling
 }
 
-# Stub content for sklearn's internal joblib (incompatible with Python 3.9)
-SKLEARN_JOBLIB_STUB = '''# Redirect to external joblib (sklearn 0.21 internal joblib is incompatible with Python 3.9)
-from joblib import *
-from joblib import Parallel, delayed, Memory
-from joblib import parallel_backend, register_parallel_backend
-from joblib import cpu_count, effective_n_jobs
-from joblib import hash, dump, load
-from joblib import __version__
-from joblib import parallel
-try:
-    from joblib._utils import _Sentinel
-except ImportError:
-    _Sentinel = None
-import logging
-logger = logging.getLogger(__name__)
-'''
+# Repository-specific package constraints
+# These override the global constraints for specific repos
+REPO_PACKAGE_CONSTRAINTS = {
+    'scikit-learn/scikit-learn': {
+        'numpy': '<1.24',       # np.int removed in 1.24+
+        'cython': '<3.0',       # Old .pyx syntax
+        'setuptools': '<70',
+        'scipy': '>=1.0,<1.14', # Compatible scipy
+    },
+    'pydata/xarray': {
+        'numpy': '<2.0',
+        'setuptools': '<70',
+        'pandas': '<2.1',
+    },
+    'astropy/astropy': {
+        'numpy': '<2.0',
+        'setuptools': '<70',
+    },
+    # Default constraints for other repos
+    'default': {
+        'setuptools': '<70',
+        'numpy': '<2.0',
+        'matplotlib': '<3.9',
+        'cython': '<3.0',
+    }
+}
+
+# Special installation procedures for specific repos
+REPO_SPECIAL_INSTALL = {
+    'scikit-learn/scikit-learn': 'sklearn_install',
+}
+
+
+def get_python_executable(repo: str, version: str) -> str:
+    """
+    Get the appropriate Python executable for a repo/version.
+    
+    Args:
+        repo: Repository name (e.g., 'pydata/xarray')
+        version: Version string from SWE-Perf
+        
+    Returns:
+        Python executable path (e.g., 'python3.10')
+    """
+    repo_lower = repo.lower()
+    
+    # Check specific mapping
+    key = (repo_lower, version)
+    if key in PYTHON_VERSION_MAP:
+        py_exec = PYTHON_VERSION_MAP[key]
+        # Verify it exists
+        try:
+            subprocess.run([py_exec, '--version'], capture_output=True, check=True)
+            return py_exec
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print(f"  ⚠️ {py_exec} not available, falling back to {DEFAULT_PYTHON}")
+            return DEFAULT_PYTHON
+    
+    # Check if repo has a default Python version
+    for (r, v), py in PYTHON_VERSION_MAP.items():
+        if r == repo_lower and v == '*':  # Wildcard version
+            try:
+                subprocess.run([py, '--version'], capture_output=True, check=True)
+                return py
+            except:
+                pass
+    
+    return DEFAULT_PYTHON
+
+
+def get_package_constraints(repo: str) -> Dict[str, str]:
+    """
+    Get package version constraints for a repository.
+    
+    Args:
+        repo: Repository name
+        
+    Returns:
+        Dictionary of package -> version constraint
+    """
+    repo_lower = repo.lower()
+    
+    if repo_lower in REPO_PACKAGE_CONSTRAINTS:
+        return REPO_PACKAGE_CONSTRAINTS[repo_lower]
+    
+    return REPO_PACKAGE_CONSTRAINTS['default']
 
 
 class SWEPerfMeasurer:
@@ -59,20 +140,33 @@ class SWEPerfMeasurer:
         self.country_code = country_code
         self.config = load_config()
         
-        # Verify Python 3.9 is available
+        # Verify default Python is available
         try:
             result = subprocess.run(
-                [PYTHON_EXECUTABLE, '--version'],
+                [DEFAULT_PYTHON, '--version'],
                 capture_output=True,
                 text=True,
                 check=True
             )
-            print(f"✅ Using {result.stdout.strip()}")
+            print(f"✅ Default Python: {result.stdout.strip()}")
         except (subprocess.CalledProcessError, FileNotFoundError):
             raise RuntimeError(
-                f"❌ {PYTHON_EXECUTABLE} not found! "
+                f"❌ {DEFAULT_PYTHON} not found! "
                 "SWE-Perf requires Python 3.9 for compatibility."
             )
+        
+        # Check for additional Python versions
+        for py_version in ['python3.10', 'python3.11', 'python3.6']:
+            try:
+                result = subprocess.run(
+                    [py_version, '--version'],
+                    capture_output=True,
+                    text=True,
+                    check=True
+                )
+                print(f"✅ Available: {result.stdout.strip()}")
+            except:
+                pass
         
         # Load dataset
         print(f"📂 Loading dataset from {self.dataset_path}...")
@@ -145,88 +239,143 @@ class SWEPerfMeasurer:
         
         return repo_path
     
-    def fix_sklearn_joblib(self, repo_path: Path) -> bool:
+    def install_sklearn(self, repo_path: Path, venv_path: Path, constraints: Dict[str, str]) -> bool:
         """
-        Fix sklearn's internal joblib for Python 3.9 compatibility.
-        
-        sklearn 0.21 bundles an old joblib that's incompatible with Python 3.9.
-        We replace it with a stub that redirects to external joblib.
+        Special installation procedure for scikit-learn 0.21.
+        Handles joblib compatibility issues with Python 3.9.
         
         Args:
             repo_path: Path to sklearn repository
+            venv_path: Path to virtual environment
+            constraints: Package version constraints
             
         Returns:
-            True if fix was applied, False otherwise
+            True if successful, False otherwise
         """
-        joblib_path = repo_path / "sklearn" / "externals" / "joblib"
+        venv_pip = str(venv_path / 'bin' / 'pip')
+        venv_python = str(venv_path / 'bin' / 'python')
         
-        if not joblib_path.exists():
+        try:
+            # Step 1: Install build dependencies
+            print(f"  📦 [sklearn] Installing build dependencies...")
+            numpy_constraint = constraints.get('numpy', '<1.24')
+            cython_constraint = constraints.get('cython', '<3.0')
+            scipy_constraint = constraints.get('scipy', '>=1.0,<1.14')
+            
+            subprocess.run(
+                [venv_pip, 'install',
+                 f'numpy{numpy_constraint}',
+                 f'cython{cython_constraint}',
+                 f'scipy{scipy_constraint}',
+                 'joblib', 'pytest'],
+                check=True,
+                timeout=300
+            )
+            
+            # Step 2: Install sklearn (needs original structure for build)
+            print(f"  📦 [sklearn] Building sklearn...")
+            subprocess.run(
+                [venv_pip, 'install', '-e', '.', '--no-build-isolation'],
+                cwd=repo_path,
+                check=True,
+                timeout=600
+            )
+            
+            # Step 3: Fix joblib compatibility for Python 3.9
+            # The bundled joblib has cloudpickle issues with Python 3.8+
+            print(f"  🔧 [sklearn] Fixing joblib compatibility...")
+            
+            externals_joblib = repo_path / 'sklearn' / 'externals' / 'joblib'
+            if externals_joblib.exists():
+                # Remove the bundled joblib
+                shutil.rmtree(externals_joblib)
+                
+                # Create stub that redirects to external joblib
+                externals_joblib.mkdir(parents=True)
+                init_file = externals_joblib / '__init__.py'
+                init_file.write_text('''# Stub to redirect to external joblib (fixes Python 3.9 compatibility)
+from joblib import *
+from joblib import Parallel, delayed, Memory, parallel_backend
+from joblib import register_parallel_backend, cpu_count, effective_n_jobs
+from joblib import hash, dump, load, __version__
+try:
+    from joblib import parallel
+except ImportError:
+    pass
+import logging
+logger = logging.getLogger(__name__)
+''')
+            
+            print(f"  ✅ [sklearn] Installation complete")
+            return True
+            
+        except Exception as e:
+            print(f"  ❌ [sklearn] Installation failed: {e}")
             return False
-        
-        print(f"  🔧 Fixing sklearn internal joblib for Python 3.9 compatibility...")
-        
-        # Remove the old joblib
-        shutil.rmtree(joblib_path, ignore_errors=True)
-        
-        # Create new directory with stub
-        joblib_path.mkdir(parents=True, exist_ok=True)
-        
-        # Write the stub
-        init_file = joblib_path / "__init__.py"
-        with open(init_file, 'w') as f:
-            f.write(SKLEARN_JOBLIB_STUB)
-        
-        return True
     
-    def install_dependencies(self, repo_path: Path, version: str, repo_name: str) -> Optional[Path]:
+    def install_dependencies(self, repo_path: Path, repo: str, version: str) -> Optional[Path]:
         """
         Create virtual environment and install package dependencies.
         
         Args:
             repo_path: Path to repository
+            repo: Repository name
             version: Version string from SWE-Perf
-            repo_name: Repository name (e.g., 'scikit-learn/scikit-learn')
             
         Returns:
             Path to venv directory, or None if failed
         """
-        print(f"  📦 Creating virtual environment with {PYTHON_EXECUTABLE}...")
+        # Get appropriate Python version
+        python_exec = get_python_executable(repo, version)
+        constraints = get_package_constraints(repo)
+        
+        print(f"  📦 Creating virtual environment with {python_exec}...")
         
         venv_path = repo_path / "venv_sweperf"
         venv_pip = str(venv_path / 'bin' / 'pip')
         
-        # Check if this is sklearn (needs special handling)
-        is_sklearn = 'scikit-learn' in repo_name.lower()
-        
         try:
-            # Create virtual environment with Python 3.9
+            # Create virtual environment
             subprocess.run(
-                [PYTHON_EXECUTABLE, '-m', 'venv', str(venv_path)],
+                [python_exec, '-m', 'venv', str(venv_path)],
                 check=True,
                 timeout=60
             )
-            print(f"  ✅ Virtual environment created")
+            print(f"  ✅ Virtual environment created with {python_exec}")
             
             # Upgrade pip and install base packages with version constraints
-            # CRITICAL: setuptools<70 keeps dep_util module
-            print(f"  📦 Installing base packages (setuptools{COMPATIBLE_VERSIONS['setuptools']})...")
+            setuptools_constraint = constraints.get('setuptools', '<70')
+            print(f"  📦 Installing base packages (setuptools{setuptools_constraint})...")
             subprocess.run(
                 [venv_pip, 'install', '--upgrade', 
-                 'pip', f"setuptools{COMPATIBLE_VERSIONS['setuptools']}", 'wheel'],
+                 'pip', f"setuptools{setuptools_constraint}", 'wheel'],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=120
             )
             
-            # Install build dependencies for scientific Python projects
-            # CRITICAL: numpy<1.24 for np.int, np.float compatibility
-            # CRITICAL: cython<3.0 for old .pyx syntax compatibility
-            print(f"  📦 Installing build dependencies (numpy{COMPATIBLE_VERSIONS['numpy']}, cython{COMPATIBLE_VERSIONS['cython']}, scipy)...")
+            # Check for special installation procedures
+            repo_lower = repo.lower()
+            if repo_lower in REPO_SPECIAL_INSTALL:
+                special_method = REPO_SPECIAL_INSTALL[repo_lower]
+                if special_method == 'sklearn_install':
+                    success = self.install_sklearn(repo_path, venv_path, constraints)
+                    if success:
+                        return venv_path
+                    else:
+                        return None
+            
+            # Standard installation
+            # Install build dependencies
+            numpy_constraint = constraints.get('numpy', '<2.0')
+            cython_constraint = constraints.get('cython', '<3.0')
+            
+            print(f"  📦 Installing build dependencies (numpy{numpy_constraint}, cython{cython_constraint})...")
             subprocess.run(
                 [venv_pip, 'install',
                  'extension_helpers', 'setuptools_scm', 
-                 f"cython{COMPATIBLE_VERSIONS['cython']}", 
-                 f"numpy{COMPATIBLE_VERSIONS['numpy']}",
+                 f"cython{cython_constraint}", 
+                 f"numpy{numpy_constraint}",
                  "scipy"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -234,37 +383,22 @@ class SWEPerfMeasurer:
             )
             
             # Install package with dependencies
-            # Use --no-build-isolation to use our setuptools<70 instead of isolated env
             print(f"  📦 Installing project dependencies (version: {version})...")
             subprocess.run(
                 [venv_pip, 'install', '-e', '.', '--no-build-isolation'],
                 cwd=repo_path,
                 check=True,
-                timeout=600  # 10 minutes timeout
+                timeout=600
             )
             
-            # For sklearn: fix internal joblib AFTER installation
-            # The build needs the original structure, but runtime needs the fix
-            if is_sklearn:
-                print(f"  📦 Installing joblib (sklearn compatibility)...")
-                subprocess.run(
-                    [venv_pip, 'install', 'joblib'],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    timeout=60
-                )
-                
-                # Fix the internal joblib for Python 3.9 runtime compatibility
-                self.fix_sklearn_joblib(repo_path)
-            
-            # Install test dependencies with version constraints
-            # CRITICAL: matplotlib<3.9 keeps register_cmap
-            print(f"  📦 Installing test dependencies (matplotlib{COMPATIBLE_VERSIONS['matplotlib']})...")
+            # Install test dependencies
+            matplotlib_constraint = constraints.get('matplotlib', '<3.9')
+            print(f"  📦 Installing test dependencies (matplotlib{matplotlib_constraint})...")
             subprocess.run(
                 [venv_pip, 'install', 
                  'pytest', 'hypothesis', 'scipy', 'pytest-astropy', 'urllib3',
-                 f"matplotlib{COMPATIBLE_VERSIONS['matplotlib']}",
-                 f"numpy{COMPATIBLE_VERSIONS['numpy']}"],  # Re-enforce numpy constraint
+                 f"matplotlib{matplotlib_constraint}",
+                 f"numpy{numpy_constraint}"],  # Re-enforce numpy constraint
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=180
@@ -300,7 +434,7 @@ class SWEPerfMeasurer:
         """
         try:
             # Build pytest command using venv python
-            # Quote test_name to handle special characters like [ and ] in parametrized tests
+            # Quote test name to handle special characters like [] and ()
             pytest_bin = venv_path / 'bin' / 'python'
             test_command = f"cd {repo_path} && {pytest_bin} -m pytest '{test_name}' -v"
             
@@ -347,8 +481,12 @@ class SWEPerfMeasurer:
         # Setup repository
         repo_path = self.setup_repository(instance, temp_dir, commit)
         
-        # Install dependencies and get venv path (pass repo name for sklearn detection)
-        venv_path = self.install_dependencies(repo_path, instance['version'], instance['repo'])
+        # Install dependencies with repo-specific handling
+        venv_path = self.install_dependencies(
+            repo_path, 
+            instance['repo'], 
+            instance['version']
+        )
         
         if venv_path is None:
             print(f"  ⚠️  Skipping measurements - dependencies failed")
@@ -433,8 +571,13 @@ class SWEPerfMeasurer:
             print(f"❌ Instance '{instance_id}' not found in dataset!")
             return None
         
+        # Determine Python version to use
+        python_exec = get_python_executable(instance['repo'], instance['version'])
+        
         print(f"\n📊 Instance info:")
         print(f"  Repository: {instance['repo']}")
+        print(f"  Version: {instance['version']}")
+        print(f"  Python: {python_exec}")
         print(f"  Base commit: {instance['base_commit'][:8]}")
         print(f"  Head commit: {instance['head_commit'][:8]}")
         print(f"  Efficiency tests: {len(instance['efficiency_test'])}")
@@ -477,6 +620,7 @@ class SWEPerfMeasurer:
             'repo': instance['repo'],
             'base_commit': instance['base_commit'],
             'head_commit': instance['head_commit'],
+            'python_version': python_exec,
             'base_measurements': base_results,
             'head_measurements': head_results,
             'original_duration_changes': instance['duration_changes'],
