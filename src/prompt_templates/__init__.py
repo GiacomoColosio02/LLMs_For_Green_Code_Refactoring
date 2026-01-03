@@ -1,38 +1,28 @@
 """
-Prompt template system for LLM-based code optimization
+Prompt Templates package initialization.
+Exports the strategies used in the benchmark:
+- Single Turn: Zero-Shot, Few-Shot
+- Multi Turn: Self-Collaboration
 """
+
 from .base_template import (
     BasePromptTemplate,
+    PromptContext,
     PromptStrategy,
-    ProblemStatementType,
-    PromptContext
+    ProblemStatementType
 )
-from .zero_shot_template import (
-    ZeroShotTemplate,
-    ZeroShotOracleTemplate,
-    ZeroShotRealisticTemplate
-)
-from .self_collaboration_template import (
-    SelfCollaborationTemplate,
-    SelfCollaborationOracleTemplate,
-    SelfCollaborationRealisticTemplate
-)
-from .template_manager import PromptTemplateManager
+from .zero_shot_template import ZeroShotTemplate
+from .few_shot_template import FewShotTemplate
+from .self_collaboration_template import SelfCollaborationTemplate
+from .template_manager import TemplateManager
 
 __all__ = [
-    # Enums
+    'BasePromptTemplate',
+    'PromptContext',
     'PromptStrategy',
     'ProblemStatementType',
-    # Data classes
-    'PromptContext',
-    # Templates
-    'BasePromptTemplate',
     'ZeroShotTemplate',
-    'ZeroShotOracleTemplate',
-    'ZeroShotRealisticTemplate',
+    'FewShotTemplate',
     'SelfCollaborationTemplate',
-    'SelfCollaborationOracleTemplate',
-    'SelfCollaborationRealisticTemplate',
-    # Manager
-    'PromptTemplateManager',
+    'TemplateManager'
 ]

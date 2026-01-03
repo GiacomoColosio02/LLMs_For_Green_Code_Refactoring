@@ -1,154 +1,74 @@
 """
-Zero-Shot prompt template (single-turn optimization)
+Zero-Shot prompt template specialized for Green Code Refactoring.
+Based on SWE-perf 'prompt_efficiency' structure.
 """
 from typing import Dict, List
 import re
-
-from .base_template import (
-    BasePromptTemplate,
-    PromptStrategy,
-    PromptContext,
-    ProblemStatementType
-)
-
+from .base_template import BasePromptTemplate, PromptStrategy, PromptContext, ProblemStatementType
 
 class ZeroShotTemplate(BasePromptTemplate):
-    """Single-turn direct optimization request"""
+    """
+    Implementation of the Zero-Shot strategy.
+    Reference: Jimenez et al. (2024) - SWE-bench Baseline
+    """
     
     def __init__(self):
         super().__init__(PromptStrategy.ZERO_SHOT)
     
     def generate_prompt(self, context: PromptContext) -> str:
-        """Generate single comprehensive prompt"""
-        
-        system_prompt = self._get_system_prompt()
-        problem_statement = self._format_problem_statement(context)
-        task_instructions = self._get_task_instructions(context)
-        output_format = self._format_output_instructions()
-        
-        # Combine all sections
-        full_prompt = f"""
-{system_prompt}
+        # 1. PREMISE
+        premise = self._get_sweperf_header()
 
-{problem_statement}
+        # 2. PROBLEM STATEMENT (Green Adaptation)
+        green_guidelines = (
+            "\nGREEN OPTIMIZATION GOALS:\n"
+            "1. Reduce CPU Energy Consumption (Joules).\n"
+            "2. Reduce Wall-clock Execution Time.\n"
+            "3. Minimize Memory Spikes (Peak RAM).\n"
+            "4. Maintain 100% functional correctness (pass all tests).\n"
+        )
 
-{task_instructions}
-
-{output_format}
-
-Now, generate the optimized code patch.
-"""
-        
-        return full_prompt.strip()
-    
-    def _get_system_prompt(self) -> str:
-        """System-level instructions"""
-        return """
-# Code Performance Optimization Task
-
-You are an expert software engineer specializing in performance optimization and green software engineering.
-
-Your goal is to optimize the provided code to:
-- Reduce execution time
-- Minimize memory usage
-- Decrease energy consumption
-- Lower carbon emissions
-
-While maintaining:
-- Functional correctness (all tests must pass)
-- Code readability and maintainability
-- Existing API contracts
-"""
-    
-    def _get_task_instructions(self, context: PromptContext) -> str:
-        """Task-specific instructions"""
-        
         if context.problem_statement_type == ProblemStatementType.ORACLE:
-            focus = "Focus on optimizing the provided target functions."
+            targets = context.get_target_functions_str()
+            problem_body = (
+                f"{context.problem_description}\n"
+                f"{green_guidelines}\n"
+                f"Focus on optimizing these specific targets:\n{targets}"
+            )
         else:
-            focus = "Analyze the entire code context and identify the best optimization opportunities."
+            # Realistic: Focus on symptoms (tests)
+            problem_body = (
+                f"REALISTIC SETTING: The following tests are showing poor energy performance:\n"
+                f"{context.test_command}\n\n"
+                f"{green_guidelines}\n"
+                "Analyze the provided repository context (files retrieved via BM25), "
+                "identify the bottleneck causing the high consumption, and optimize it."
+            )
+
+        problem_block = f"<problem_statement>\n{problem_body}\n</problem_statement>"
+
+        # 3. CODE CONTEXT
+        code_block = f"<code>\n{context.get_formatted_code(add_line_numbers=False)}\n</code>"
+
+        # 4. FINAL ASSEMBLY
+        final_prompt = [
+            premise,
+            problem_block,
+            "",
+            code_block,
+            "",
+            self._get_search_replace_format_instruction()
+        ]
         
-        return f"""
-## Your Task
+        return "\n".join(final_prompt)
 
-{focus}
-
-Consider these optimization strategies:
-1. **Algorithmic improvements**: Better data structures, algorithms with lower complexity
-2. **Memory efficiency**: Reduce allocations, reuse objects, use generators
-3. **Computation reduction**: Eliminate redundant calculations, cache results
-4. **I/O optimization**: Batch operations, reduce disk/network access
-5. **Concurrency**: Use parallelization where appropriate
-
-**Test Command:**
-```bash
-{context.test_command}
-```
-
-Ensure your optimized code passes all existing tests.
-"""
-    
     def extract_code_from_response(self, response: str) -> str:
-        """
-        Extract unified diff patch from LLM response
-        
-        Looks for code blocks marked as 'diff' or between --- and +++
-        """
-        # Try to find diff code block
-        diff_pattern = r'```diff\n(.*?)```'
-        matches = re.findall(diff_pattern, response, re.DOTALL)
-        
-        if matches:
-            return matches[0].strip()
-        
-        # Try to find anything between --- and +++ (unified diff format)
-        diff_lines = []
-        in_diff = False
-        for line in response.split('\n'):
-            if line.startswith('---'):
-                in_diff = True
-            if in_diff:
-                diff_lines.append(line)
-            if line.startswith('+++') and len(diff_lines) > 1:
-                # Found start of diff, continue capturing
-                continue
-        
-        if diff_lines:
-            return '\n'.join(diff_lines).strip()
-        
-        # Fallback: return entire response if no clear diff found
-        return response.strip()
-
-
-class ZeroShotOracleTemplate(ZeroShotTemplate):
-    """Zero-Shot template specialized for ORACLE mode"""
-    
-    def generate_prompt(self, context: PromptContext) -> str:
-        # Override to add Oracle-specific hints
-        base_prompt = super().generate_prompt(context)
-        
-        oracle_hint = """
-**IMPORTANT**: You have been given the exact functions that experts identified as optimization targets. Focus your efforts on these specific functions.
-"""
-        # Insert hint after system prompt
-        return base_prompt.replace(
-            "# Your Task",
-            f"{oracle_hint}\n# Your Task"
-        )
-
-
-class ZeroShotRealisticTemplate(ZeroShotTemplate):
-    """Zero-Shot template specialized for REALISTIC mode"""
-    
-    def generate_prompt(self, context: PromptContext) -> str:
-        # Override to add Realistic-specific hints
-        base_prompt = super().generate_prompt(context)
-        
-        realistic_hint = """
-**IMPORTANT**: You have access to the full repository. The listed functions are executed during tests, but the performance bottleneck might be in functions they call or in data preparation steps. Analyze carefully before optimizing.
-"""
-        # Insert hint after system prompt
-        return base_prompt.replace(
-            "# Your Task",
-            f"{realistic_hint}\n# Your Task"
-        )
+        """Extracts the python code block containing the patch."""
+        if "```python" in response:
+            parts = response.split("```python")
+            # Return the last block or scan for SEARCH key
+            for part in reversed(parts):
+                if "<<<<<<< SEARCH" in part:
+                    return f"```python{part.split('```')[0]}```"
+            return f"```python{parts[-1].split('```')[0]}```"
+        return response
