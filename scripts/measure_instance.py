@@ -21,10 +21,27 @@ PYTHON_EXECUTABLE = "python3.9"
 # Version constraints for compatibility with legacy scientific Python
 COMPATIBLE_VERSIONS = {
     'setuptools': '<70',      # Keep dep_util module (removed in 70+)
-    'numpy': '<2.0',          # Keep np.product, np.cumproduct (removed in 2.0)
+    'numpy': '<1.24',         # Keep np.int, np.float, np.bool (removed in 1.24+)
     'matplotlib': '<3.9',     # Keep register_cmap (removed in 3.9)
     'cython': '<3.0',         # Cython 3.0 breaks old .pyx syntax (nogil, except, etc.)
 }
+
+# Stub content for sklearn's internal joblib (incompatible with Python 3.9)
+SKLEARN_JOBLIB_STUB = '''# Redirect to external joblib (sklearn 0.21 internal joblib is incompatible with Python 3.9)
+from joblib import *
+from joblib import Parallel, delayed, Memory
+from joblib import parallel_backend, register_parallel_backend
+from joblib import cpu_count, effective_n_jobs
+from joblib import hash, dump, load
+from joblib import __version__
+from joblib import parallel
+try:
+    from joblib._utils import _Sentinel
+except ImportError:
+    _Sentinel = None
+import logging
+logger = logging.getLogger(__name__)
+'''
 
 
 class SWEPerfMeasurer:
@@ -128,13 +145,47 @@ class SWEPerfMeasurer:
         
         return repo_path
     
-    def install_dependencies(self, repo_path: Path, version: str) -> Optional[Path]:
+    def fix_sklearn_joblib(self, repo_path: Path) -> bool:
+        """
+        Fix sklearn's internal joblib for Python 3.9 compatibility.
+        
+        sklearn 0.21 bundles an old joblib that's incompatible with Python 3.9.
+        We replace it with a stub that redirects to external joblib.
+        
+        Args:
+            repo_path: Path to sklearn repository
+            
+        Returns:
+            True if fix was applied, False otherwise
+        """
+        joblib_path = repo_path / "sklearn" / "externals" / "joblib"
+        
+        if not joblib_path.exists():
+            return False
+        
+        print(f"  🔧 Fixing sklearn internal joblib for Python 3.9 compatibility...")
+        
+        # Remove the old joblib
+        shutil.rmtree(joblib_path, ignore_errors=True)
+        
+        # Create new directory with stub
+        joblib_path.mkdir(parents=True, exist_ok=True)
+        
+        # Write the stub
+        init_file = joblib_path / "__init__.py"
+        with open(init_file, 'w') as f:
+            f.write(SKLEARN_JOBLIB_STUB)
+        
+        return True
+    
+    def install_dependencies(self, repo_path: Path, version: str, repo_name: str) -> Optional[Path]:
         """
         Create virtual environment and install package dependencies.
         
         Args:
             repo_path: Path to repository
             version: Version string from SWE-Perf
+            repo_name: Repository name (e.g., 'scikit-learn/scikit-learn')
             
         Returns:
             Path to venv directory, or None if failed
@@ -143,6 +194,9 @@ class SWEPerfMeasurer:
         
         venv_path = repo_path / "venv_sweperf"
         venv_pip = str(venv_path / 'bin' / 'pip')
+        
+        # Check if this is sklearn (needs special handling)
+        is_sklearn = 'scikit-learn' in repo_name.lower()
         
         try:
             # Create virtual environment with Python 3.9
@@ -165,19 +219,32 @@ class SWEPerfMeasurer:
             )
             
             # Install build dependencies for scientific Python projects
+            # CRITICAL: numpy<1.24 for np.int, np.float compatibility
             # CRITICAL: cython<3.0 for old .pyx syntax compatibility
-            # FIX: Added scipy here because scikit-learn needs it for compilation (blas/lapack headers)
             print(f"  📦 Installing build dependencies (numpy{COMPATIBLE_VERSIONS['numpy']}, cython{COMPATIBLE_VERSIONS['cython']}, scipy)...")
             subprocess.run(
                 [venv_pip, 'install',
                  'extension_helpers', 'setuptools_scm', 
                  f"cython{COMPATIBLE_VERSIONS['cython']}", 
                  f"numpy{COMPATIBLE_VERSIONS['numpy']}",
-                 "scipy"],  # <--- AGGIUNTO SCIPY
+                 "scipy"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                timeout=300  # <--- AUMENTATO TIMEOUT (scipy è pesante)
+                timeout=300
             )
+            
+            # For sklearn: install external joblib BEFORE fixing internal one
+            if is_sklearn:
+                print(f"  📦 Installing joblib (sklearn compatibility)...")
+                subprocess.run(
+                    [venv_pip, 'install', 'joblib'],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=60
+                )
+                
+                # Fix the internal joblib
+                self.fix_sklearn_joblib(repo_path)
             
             # Install package with dependencies
             # Use --no-build-isolation to use our setuptools<70 instead of isolated env
@@ -278,8 +345,8 @@ class SWEPerfMeasurer:
         # Setup repository
         repo_path = self.setup_repository(instance, temp_dir, commit)
         
-        # Install dependencies and get venv path
-        venv_path = self.install_dependencies(repo_path, instance['version'])
+        # Install dependencies and get venv path (pass repo name for sklearn detection)
+        venv_path = self.install_dependencies(repo_path, instance['version'], instance['repo'])
         
         if venv_path is None:
             print(f"  ⚠️  Skipping measurements - dependencies failed")
