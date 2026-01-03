@@ -300,8 +300,9 @@ class SWEPerfMeasurer:
         """
         try:
             # Build pytest command using venv python
+            # Quote test_name to handle special characters like [ and ] in parametrized tests
             pytest_bin = venv_path / 'bin' / 'python'
-            test_command = f"cd {repo_path} && {pytest_bin} -m pytest {test_name} -v"
+            test_command = f"cd {repo_path} && {pytest_bin} -m pytest '{test_name}' -v"
             
             # Measure test execution
             test_results = collector.measure_test_execution(
