@@ -1,16 +1,19 @@
 """
 GSMM Energy Monitor - GPU + CPU + Wattmeter energy monitoring with resource tracking.
 Implements the Green Software Maturity Model approach.
+
+FIXED: Wattmeter uses persistent session - no thread recreation between measurements.
 """
 from pathlib import Path
 from typing import Dict, Optional
 import time
 import threading
+import statistics
 import psutil
 
 from .gpu_monitor import GPUMonitor
 from .cpu_energy_monitor import CPUEnergyMonitor
-from .wattmeter_monitor import WattmeterMonitor, WattmeterMonitorThread
+from .wattmeter_monitor import WattmeterMonitor
 
 
 class SystemResourceTracker:
@@ -57,7 +60,6 @@ class SystemResourceTracker:
                 'ram_usage_peak_mb': 0.0
             }
         
-        import statistics
         return {
             'cpu_usage_mean_percent': statistics.mean(self.cpu_samples),
             'cpu_usage_peak_percent': max(self.cpu_samples),
@@ -112,10 +114,94 @@ class GPUMonitorThread:
         return renamed
 
 
+class PersistentWattmeterSampler:
+    """
+    Persistent wattmeter sampler that reuses a single thread.
+    
+    Unlike WattmeterMonitorThread, this class:
+    - Creates ONE thread that lives for the entire lifetime
+    - Uses events to control sampling start/stop
+    - Never closes/reopens the HTTP session
+    """
+    
+    def __init__(self, wattmeter: WattmeterMonitor):
+        self.wattmeter = wattmeter
+        self.power_samples = []
+        self._lock = threading.Lock()
+        
+        # Control flags
+        self._sampling = False
+        self._shutdown = False
+        
+        # Single persistent thread
+        self._thread = threading.Thread(target=self._sample_loop, daemon=True)
+        self._thread.start()
+    
+    def _sample_loop(self):
+        """
+        Persistent sampling loop.
+        Runs for the entire lifetime, but only collects samples when _sampling is True.
+        """
+        while not self._shutdown:
+            if self._sampling:
+                try:
+                    power = self.wattmeter.get_current_power()
+                    if power is not None:
+                        with self._lock:
+                            self.power_samples.append(power)
+                except Exception as e:
+                    print(f"Warning: Wattmeter sampling error: {e}")
+                
+                time.sleep(self.wattmeter.polling_interval)
+            else:
+                # Not sampling - sleep briefly to avoid busy waiting
+                time.sleep(0.1)
+    
+    def start(self):
+        """Start collecting samples."""
+        with self._lock:
+            self.power_samples = []
+        self._sampling = True
+    
+    def stop(self) -> Dict[str, float]:
+        """Stop collecting samples and return statistics."""
+        self._sampling = False
+        
+        # Small delay to ensure last sample is captured
+        time.sleep(0.1)
+        
+        with self._lock:
+            samples = self.power_samples.copy()
+        
+        if not samples:
+            return {}
+        
+        duration = len(samples) * self.wattmeter.polling_interval
+        
+        return {
+            'system_power_mean_watts': statistics.mean(samples),
+            'system_power_peak_watts': max(samples),
+            'system_power_min_watts': min(samples),
+            'system_energy_joules': statistics.mean(samples) * duration,
+            'samples_count': len(samples),
+            'duration_seconds': duration
+        }
+    
+    def shutdown(self):
+        """Shutdown the sampler and cleanup."""
+        self._shutdown = True
+        self._sampling = False
+        if self._thread:
+            self._thread.join(timeout=2.0)
+        self.wattmeter.shutdown()
+
+
 class EnergyMonitorGSMM:
     """
     Energy monitor following GSMM methodology.
     Supports GPU + CPU energy (~75-90% coverage) and optional Wattmeter (100% coverage).
+    
+    IMPORTANT: Wattmeter uses persistent HTTP session to avoid connection issues.
     """
     
     def __init__(self, config: dict):
@@ -151,20 +237,28 @@ class EnergyMonitorGSMM:
         except Exception as e:
             raise RuntimeError(f"CPU energy monitoring required but unavailable: {e}")
         
-        # Initialize Wattmeter (optional, provides 100% system coverage)
+        # Initialize Wattmeter with PERSISTENT sampler (optional, provides 100% system coverage)
         self.wattmeter_enabled = config.get('wattmeter', {}).get('enabled', False)
-        self.wattmeter_thread = None
+        self.wattmeter_sampler = None  # Persistent sampler
+        
         if self.wattmeter_enabled:
             try:
                 wattmeter_config = config.get('wattmeter', {})
+                
+                # Create wattmeter with persistent session
                 wattmeter = WattmeterMonitor(
                     ip=wattmeter_config.get('ip', '10.4.60.25'),
                     output_id=wattmeter_config.get('output_id', 1),
-                    timeout=wattmeter_config.get('timeout', 5),
-                    polling_interval=wattmeter_config.get('polling_interval', 0.1)
+                    timeout=wattmeter_config.get('timeout', 10),
+                    polling_interval=wattmeter_config.get('polling_interval', 1.0)  # Default 1s
                 )
-                self.wattmeter_thread = WattmeterMonitorThread(wattmeter)
+                
+                # Create PERSISTENT sampler (one thread for entire lifetime)
+                self.wattmeter_sampler = PersistentWattmeterSampler(wattmeter)
+                
                 print("✅ Wattmeter monitoring enabled (SYSTEM-LEVEL, 100% coverage)")
+                print(f"   Polling interval: {wattmeter.polling_interval}s")
+                
             except Exception as e:
                 print(f"⚠️  Wattmeter unavailable: {e}")
                 print("   Continuing with GPU+CPU measurements only (~75-90% coverage)")
@@ -195,9 +289,10 @@ class EnergyMonitorGSMM:
         """
         start_time = time.time()
         
-        # Start wattmeter thread FIRST (for complete system coverage)
-        if self.wattmeter_thread:
-            self.wattmeter_thread.start()
+        # Start wattmeter sampling FIRST (for complete system coverage)
+        # Uses persistent sampler - no new threads created!
+        if self.wattmeter_sampler:
+            self.wattmeter_sampler.start()
         
         # Start GPU monitoring thread if available
         if self.gpu_monitor_thread:
@@ -236,10 +331,10 @@ class EnergyMonitorGSMM:
         if self.gpu_monitor_thread:
             gpu_metrics = self.gpu_monitor_thread.stop()
         
-        # Stop wattmeter thread if available
+        # Stop wattmeter sampling (persistent sampler - just stops collecting)
         wattmeter_metrics = {}
-        if self.wattmeter_thread:
-            wattmeter_metrics = self.wattmeter_thread.stop()
+        if self.wattmeter_sampler:
+            wattmeter_metrics = self.wattmeter_sampler.stop()
         
         duration = time.time() - start_time
         
@@ -282,6 +377,7 @@ class EnergyMonitorGSMM:
             green_metrics['system_energy_joules'] = wattmeter_metrics.get('system_energy_joules', 0)
             green_metrics['system_power_mean_watts'] = wattmeter_metrics.get('system_power_mean_watts', 0)
             green_metrics['system_power_peak_watts'] = wattmeter_metrics.get('system_power_peak_watts', 0)
+            green_metrics['wattmeter_samples'] = wattmeter_metrics.get('samples_count', 0)
             
             # Recalculate carbon with system energy (more accurate, 100% coverage)
             if green_metrics['system_energy_joules'] > 0:
@@ -290,7 +386,7 @@ class EnergyMonitorGSMM:
         
         # Compile all metrics
         metrics = {
-            # GREEN metrics (6 core + 3 wattmeter if available)
+            # GREEN metrics (6 core + 4 wattmeter if available)
             **green_metrics,
             
             # EFFICIENCY metrics (7 total)
@@ -328,7 +424,15 @@ class EnergyMonitorGSMM:
         return self.measure_test_energy(baseline_command, wrap_with_pytest=False)
     
     def __del__(self):
-        """Cleanup NVML when EnergyMonitorGSMM is destroyed."""
+        """Cleanup when EnergyMonitorGSMM is destroyed."""
+        # Shutdown wattmeter sampler (closes HTTP session)
+        if self.wattmeter_sampler:
+            try:
+                self.wattmeter_sampler.shutdown()
+            except:
+                pass
+        
+        # Shutdown GPU monitor (closes NVML)
         if self.gpu_monitor_thread and self.gpu_monitor_thread.gpu_monitor:
             try:
                 self.gpu_monitor_thread.gpu_monitor.shutdown()
@@ -338,7 +442,8 @@ class EnergyMonitorGSMM:
 
 if __name__ == "__main__":
     # Test
-    print("Testing EnergyMonitorGSMM with Wattmeter...")
+    print("Testing EnergyMonitorGSMM with Persistent Wattmeter Session...")
+    print("=" * 60)
     
     config = {
         'gpu': {
@@ -352,8 +457,8 @@ if __name__ == "__main__":
             'enabled': True,
             'ip': '10.4.60.25',
             'output_id': 1,
-            'timeout': 5,
-            'polling_interval': 0.1
+            'timeout': 10,
+            'polling_interval': 1.0  # 1 sample per second
         },
         'energy': {
             'grid_intensity': 250  # Spain
@@ -362,12 +467,19 @@ if __name__ == "__main__":
     
     monitor = EnergyMonitorGSMM(config)
     
-    print("\n1. Testing baseline measurement (3s)...")
-    baseline = monitor.measure_baseline(3.0)
-    print(f"   Total Energy: {baseline['total_energy_joules']:.2f} J")
-    if 'system_energy_joules' in baseline:
-        print(f"   System Energy (Wattmeter): {baseline['system_energy_joules']:.2f} J")
-    print(f"   CPU Usage: {baseline['cpu_usage_mean_percent']:.1f}%")
-    print(f"   RAM Usage: {baseline['ram_usage_mean_mb']:.1f} MB")
+    # Test multiple measurements to verify persistent session works
+    print("\n📊 Running 3 consecutive measurements to test persistent session...")
     
-    print("\n✅ EnergyMonitorGSMM with Wattmeter working!")
+    for i in range(3):
+        print(f"\n--- Measurement {i+1} ---")
+        result = monitor.measure_baseline(3.0)
+        print(f"   Total Energy: {result['total_energy_joules']:.2f} J")
+        if 'system_energy_joules' in result:
+            print(f"   System Energy (Wattmeter): {result['system_energy_joules']:.2f} J")
+            print(f"   Wattmeter Samples: {result.get('wattmeter_samples', 0)}")
+        print(f"   CPU Usage: {result['cpu_usage_mean_percent']:.1f}%")
+        
+        # Small pause between measurements
+        time.sleep(1)
+    
+    print("\n✅ EnergyMonitorGSMM with persistent wattmeter session working!")
