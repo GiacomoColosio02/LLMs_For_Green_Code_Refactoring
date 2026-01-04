@@ -60,9 +60,9 @@ REPO_PACKAGE_CONSTRAINTS = {
         'pandas': '<2.1',
     },
     'astropy/astropy': {
-    'numpy': '==1.25.2',      # Fix: aggiunto == per versione esatta
-    'cython': '<3.0',
-    'setuptools': '==68.0.0', # Fix: aggiunto == per versione esatta
+        'numpy': '==1.25.2',      # Exact version from SWE-Perf specs
+        'cython': '<3.0',
+        'setuptools': '==68.0.0', # Exact version from SWE-Perf specs
     },
     # Default constraints for other repos
     'default': {
@@ -92,6 +92,7 @@ SKLEARN_CONDA_CONSTRAINTS = {
 # Special installation procedures for specific repos
 REPO_SPECIAL_INSTALL = {
     'scikit-learn/scikit-learn': 'sklearn_install',
+    'astropy/astropy': 'astropy_install',
 }
 
 
@@ -496,6 +497,41 @@ logger = logging.getLogger(__name__)
             print(f"  ❌ [sklearn] Installation failed: {e}")
             return False
     
+    def install_astropy(self, repo_path: Path, venv_path: Path, constraints: Dict[str, str]) -> bool:
+        """
+        Special installation procedure for astropy.
+        Uses build isolation to ensure correct numpy/cython versions during compilation.
+        Based on SWE-Perf constants.py: "install": "python -m pip install -e .[test] --verbose"
+        
+        Args:
+            repo_path: Path to astropy repository
+            venv_path: Path to virtual environment
+            constraints: Package version constraints
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        venv_pip = str(venv_path / 'bin' / 'pip')
+        
+        try:
+            # Install astropy WITH build isolation (let pip handle build deps)
+            # This is the key difference from other repos - astropy needs build isolation
+            # to use the correct numpy version during Cython compilation
+            print(f"  📦 [astropy] Installing with build isolation...")
+            subprocess.run(
+                [venv_pip, 'install', '-e', '.[test]', '--verbose'],
+                cwd=repo_path,
+                check=True,
+                timeout=900  # 15 min timeout for compilation
+            )
+            
+            print(f"  ✅ [astropy] Installation complete")
+            return True
+            
+        except Exception as e:
+            print(f"  ❌ [astropy] Installation failed: {e}")
+            return False
+    
     def install_dependencies(self, repo_path: Path, repo: str, version: str, commit: str) -> Tuple[Optional[str], Optional[str]]:
         """
         Create virtual environment and install package dependencies.
@@ -557,6 +593,12 @@ logger = logging.getLogger(__name__)
                 special_method = REPO_SPECIAL_INSTALL[repo_lower]
                 if special_method == 'sklearn_install':
                     success = self.install_sklearn(repo_path, venv_path, constraints)
+                    if success:
+                        return (str(venv_path / 'bin' / 'python'), None)
+                    else:
+                        return (None, None)
+                elif special_method == 'astropy_install':
+                    success = self.install_astropy(repo_path, venv_path, constraints)
                     if success:
                         return (str(venv_path / 'bin' / 'python'), None)
                     else:
