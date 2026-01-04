@@ -948,7 +948,7 @@ logger = logging.getLogger(__name__)
             json.dump(final_results, f, indent=2)
         
         print("\n" + "=" * 60)
-        print(f"✅ MEASUREMENT COMPLETE!")
+        print(f"✅ MEASUREMENT COMPLETE!!")
         print(f"  Base: {base_results.get('successful_tests', 0)} tests passed")
         print(f"  Head: {head_results.get('successful_tests', 0)} tests passed")
         print(f"💾 Results saved to: {output_file}")
