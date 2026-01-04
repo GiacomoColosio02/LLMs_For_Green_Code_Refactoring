@@ -36,6 +36,8 @@ PYTHON_VERSION_MAP = {
     ('pydata/xarray', '2023.04'): 'python3.10',
     ('pydata/xarray', '2023.07'): 'python3.10',
     ('pydata/xarray', '2024.05'): 'python3.10',
+    # astropy v5.3 requires Python 3.10
+    ('astropy/astropy', 'v5.3'): 'python3.10',
     # sklearn 0.21 would need Python 3.6 but it's not available
     # We'll use 3.9 with special handling
 }
@@ -58,9 +60,9 @@ REPO_PACKAGE_CONSTRAINTS = {
         'pandas': '<2.1',
     },
     'astropy/astropy': {
-        'numpy': '1.24.4',      # Fix: numpy 1.26+ broke PyArrayObject->nd
-        'cython': '0.29.37',    # Fix: older cython for compatibility
-        'setuptools': '<70',
+        'numpy': '1.25.2',      # Fix: exact version from SWE-Perf specs
+        'cython': '<3.0',
+        'setuptools': '68.0.0', # Fix: exact version from SWE-Perf specs
     },
     # Default constraints for other repos
     'default': {
@@ -69,6 +71,14 @@ REPO_PACKAGE_CONSTRAINTS = {
         'matplotlib': '<3.9',
         'cython': '<3.0',
     }
+}
+
+# Pre-install commands for specific repos (run before pip install)
+REPO_PRE_INSTALL = {
+    'astropy/astropy': [
+        # Fix setuptools version in pyproject.toml (from SWE-Perf constants.py)
+        'sed -i \'s/requires = \\["setuptools",/requires = \\["setuptools==68.0.0",/\' pyproject.toml'
+    ],
 }
 
 # Conda-specific constraints for sklearn with Python 3.6
@@ -157,6 +167,42 @@ def get_package_constraints(repo: str) -> Dict[str, str]:
         return REPO_PACKAGE_CONSTRAINTS[repo_lower]
     
     return REPO_PACKAGE_CONSTRAINTS['default']
+
+
+def run_pre_install_commands(repo: str, repo_path: Path) -> bool:
+    """
+    Run pre-install commands for a repository.
+    
+    Args:
+        repo: Repository name
+        repo_path: Path to the repository
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    repo_lower = repo.lower()
+    
+    if repo_lower not in REPO_PRE_INSTALL:
+        return True
+    
+    print(f"  🔧 Running pre-install commands for {repo}...")
+    
+    for cmd in REPO_PRE_INSTALL[repo_lower]:
+        try:
+            subprocess.run(
+                cmd,
+                shell=True,
+                cwd=repo_path,
+                check=True,
+                timeout=60
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"  ⚠️ Pre-install command failed: {cmd}")
+            # Continue anyway, some commands may fail if pattern not found
+        except subprocess.TimeoutExpired:
+            print(f"  ⚠️ Pre-install command timed out: {cmd}")
+    
+    return True
 
 
 class SWEPerfMeasurer:
@@ -501,6 +547,9 @@ logger = logging.getLogger(__name__)
                 stderr=subprocess.DEVNULL,
                 timeout=120
             )
+            
+            # Run pre-install commands (e.g., modify pyproject.toml for astropy)
+            run_pre_install_commands(repo, repo_path)
             
             # Check for special installation procedures
             repo_lower = repo.lower()
