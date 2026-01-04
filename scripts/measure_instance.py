@@ -58,7 +58,8 @@ REPO_PACKAGE_CONSTRAINTS = {
         'pandas': '<2.1',
     },
     'astropy/astropy': {
-        'numpy': '<2.0',
+        'numpy': '1.24.4',      # Fix: numpy 1.26+ broke PyArrayObject->nd
+        'cython': '0.29.37',    # Fix: older cython for compatibility
         'setuptools': '<70',
     },
     # Default constraints for other repos
