@@ -85,11 +85,33 @@ def get_repetition_count(test_data: dict) -> int:
     if not test_data or 'measurements' not in test_data:
         return 0
     
+    # Count measurements with return_code == 0
     valid_reps = sum(
         1 for m in test_data['measurements'] 
         if m and m.get('return_code') == 0
     )
     return valid_reps
+
+
+def is_test_valid(test_data: dict) -> bool:
+    """
+    Check if a test has valid measurements.
+    A test is valid if it has aggregated data and at least one measurement with return_code == 0.
+    """
+    if not test_data:
+        return False
+    
+    # Check if has aggregated data
+    if 'aggregated' not in test_data:
+        return False
+    
+    # Check if has measurements with return_code == 0
+    measurements = test_data.get('measurements', [])
+    if not measurements:
+        return False
+    
+    valid_measurements = [m for m in measurements if m and m.get('return_code') == 0]
+    return len(valid_measurements) > 0
 
 
 def process_instance(
@@ -104,7 +126,7 @@ def process_instance(
         measurements_dir: Path to measurements directory
         
     Returns:
-        Instance with green metrics or None if no valid measurements
+        Tuple of (instance_with_green_metrics, min_repetitions) or None if no valid measurements
     """
     instance_id = instance['instance_id']
     meas_file = measurements_dir / instance_id / "measurements.json"
@@ -124,7 +146,7 @@ def process_instance(
     min_repetitions = float('inf')
     valid_tests = 0
     
-    for test_name in efficiency_tests:
+    for idx, test_name in enumerate(efficiency_tests):
         test_metrics = {'base': None, 'head': None}
         test_reps = {'base': 0, 'head': 0}
         
@@ -132,24 +154,16 @@ def process_instance(
             commit_data = measurements.get(f'{commit_type}_measurements', {})
             tests = commit_data.get('tests', [])
             
-            # Find matching test
-            for i, test in enumerate(tests):
-                if test and test.get('test_name') == test_name:
-                    # Check if test passed
-                    if test.get('status') == 'success':
-                        metrics = get_aggregated_metrics(test)
-                        if metrics:
-                            test_metrics[commit_type] = metrics
-                            test_reps[commit_type] = get_repetition_count(test)
-                    break
-                # Fallback: match by index if test_name not set
-                elif i < len(efficiency_tests) and efficiency_tests[i] == test_name:
-                    if test and 'aggregated' in test:
-                        metrics = get_aggregated_metrics(test)
-                        if metrics:
-                            test_metrics[commit_type] = metrics
-                            test_reps[commit_type] = get_repetition_count(test)
-                    break
+            # Match by index (more reliable than name matching)
+            if idx < len(tests):
+                test = tests[idx]
+                
+                # Check if test is valid (has aggregated + valid measurements)
+                if is_test_valid(test):
+                    metrics = get_aggregated_metrics(test)
+                    if metrics:
+                        test_metrics[commit_type] = metrics
+                        test_reps[commit_type] = get_repetition_count(test)
         
         # Only include test if both base and head have valid metrics
         if test_metrics['base'] and test_metrics['head']:
@@ -206,7 +220,14 @@ def create_green_dataset(
     # Load reduced dataset
     print(f"\n📂 Loading reduced dataset: {reduced_dataset_path}")
     reduced_dataset = load_json(reduced_dataset_path)
-    print(f"   Found {len(reduced_dataset)} instances")
+    
+    # Handle both list and dict formats
+    if isinstance(reduced_dataset, list):
+        instances_list = reduced_dataset
+    else:
+        instances_list = reduced_dataset.get('instances', reduced_dataset)
+    
+    print(f"   Found {len(instances_list)} instances")
     
     # Print metrics info
     print(f"\n📊 METRICS CLASSIFICATION:")
@@ -222,12 +243,12 @@ def create_green_dataset(
     print(f"\n🔄 Processing instances...")
     print("-" * 100)
     
-    for i, instance in enumerate(reduced_dataset):
+    for i, instance in enumerate(instances_list):
         instance_id = instance['instance_id']
         
         # Progress indicator
-        progress = (i + 1) / len(reduced_dataset) * 100
-        print(f"\r   [{i+1:3d}/{len(reduced_dataset)}] ({progress:5.1f}%) Processing: {instance_id:<50}", end="", flush=True)
+        progress = (i + 1) / len(instances_list) * 100
+        print(f"\r   [{i+1:3d}/{len(instances_list)}] ({progress:5.1f}%) Processing: {instance_id:<50}", end="", flush=True)
         
         result = process_instance(instance, measurements_dir)
         
@@ -290,10 +311,10 @@ def create_green_dataset(
     print(f"✅ GREEN DATASET CREATION COMPLETE!")
     print("=" * 100)
     print(f"\n📊 SUMMARY:")
-    print(f"   Input instances:    {len(reduced_dataset)}")
+    print(f"   Input instances:    {len(instances_list)}")
     print(f"   Output instances:   {total_saved}")
     print(f"   Failed instances:   {len(failed_instances)}")
-    print(f"   Success rate:       {total_saved / len(reduced_dataset) * 100:.1f}%")
+    print(f"   Success rate:       {total_saved / len(instances_list) * 100:.1f}%")
     
     print(f"\n💾 SAVED FILES:")
     for k, count, tests, path in saved_files:
