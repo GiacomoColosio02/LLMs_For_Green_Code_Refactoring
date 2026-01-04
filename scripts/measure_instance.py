@@ -12,7 +12,6 @@ import argparse
 import subprocess
 import tempfile
 import shutil
-import os
 from typing import Dict, Optional, List, Tuple
 from src.utils.config import load_config
 from src.measurement.collector import MetricsCollector
@@ -39,6 +38,8 @@ PYTHON_VERSION_MAP = {
     ('pydata/xarray', '2024.05'): 'python3.10',
     # astropy v5.3 requires Python 3.10
     ('astropy/astropy', 'v5.3'): 'python3.10',
+    # sklearn 0.21 would need Python 3.6 but it's not available
+    # We'll use 3.9 with special handling
 }
 
 # Sklearn versions that require conda with Python 3.6
@@ -48,12 +49,13 @@ SKLEARN_CONDA_VERSIONS = ['0.2', '0.20', '0.21', '0.22']
 ASTROPY_CONDA_VERSIONS = ['v5.3']
 
 # Repository-specific package constraints
+# These override the global constraints for specific repos
 REPO_PACKAGE_CONSTRAINTS = {
     'scikit-learn/scikit-learn': {
-        'numpy': '<1.24',
-        'cython': '<3.0',
+        'numpy': '<1.24',       # np.int removed in 1.24+
+        'cython': '<3.0',       # Old .pyx syntax
         'setuptools': '<70',
-        'scipy': '>=1.0,<1.14',
+        'scipy': '>=1.0,<1.14', # Compatible scipy
     },
     'pydata/xarray': {
         'numpy': '<2.0',
@@ -61,10 +63,11 @@ REPO_PACKAGE_CONSTRAINTS = {
         'pandas': '<2.1',
     },
     'astropy/astropy': {
-        'numpy': '==1.25.2',
+        'numpy': '==1.25.2',      # Fix: versione esatta
         'cython': '<3.0',
-        'setuptools': '==68.0.0',
+        'setuptools': '==68.0.0', # Fix: versione esatta
     },
+    # Default constraints for other repos
     'default': {
         'setuptools': '<70',
         'numpy': '<2.0',
@@ -73,9 +76,10 @@ REPO_PACKAGE_CONSTRAINTS = {
     }
 }
 
-# Pre-install commands for specific repos
+# Pre-install commands for specific repos (run before pip install)
 REPO_PRE_INSTALL = {
     'astropy/astropy': [
+        # Fix setuptools version in pyproject.toml (from SWE-Perf constants.py)
         'sed -i \'s/requires = \\["setuptools",/requires = \\["setuptools==68.0.0",/\' pyproject.toml'
     ],
 }
@@ -102,24 +106,46 @@ REPO_SPECIAL_INSTALL = {
 
 
 def should_use_conda(repo: str, version: str) -> bool:
-    """Check if we should use conda for this repo/version."""
+    """
+    Check if we should use conda for this repo/version.
+    
+    Args:
+        repo: Repository name
+        version: Version string
+        
+    Returns:
+        True if conda should be used
+    """
     repo_lower = repo.lower()
     if 'scikit-learn' in repo_lower and version in SKLEARN_CONDA_VERSIONS:
+        # Check if conda is available
         if Path(CONDA_PATH).exists():
             return True
     if 'astropy' in repo_lower and version in ASTROPY_CONDA_VERSIONS:
+        # Check if conda is available
         if Path(CONDA_PATH).exists():
             return True
     return False
 
 
 def get_python_executable(repo: str, version: str) -> str:
-    """Get the appropriate Python executable for a repo/version."""
+    """
+    Get the appropriate Python executable for a repo/version.
+    
+    Args:
+        repo: Repository name (e.g., 'pydata/xarray')
+        version: Version string from SWE-Perf
+        
+    Returns:
+        Python executable path (e.g., 'python3.10')
+    """
     repo_lower = repo.lower()
     
+    # Check specific mapping
     key = (repo_lower, version)
     if key in PYTHON_VERSION_MAP:
         py_exec = PYTHON_VERSION_MAP[key]
+        # Verify it exists
         try:
             subprocess.run([py_exec, '--version'], capture_output=True, check=True)
             return py_exec
@@ -127,8 +153,9 @@ def get_python_executable(repo: str, version: str) -> str:
             print(f"  ⚠️ {py_exec} not available, falling back to {DEFAULT_PYTHON}")
             return DEFAULT_PYTHON
     
+    # Check if repo has a default Python version
     for (r, v), py in PYTHON_VERSION_MAP.items():
-        if r == repo_lower and v == '*':
+        if r == repo_lower and v == '*':  # Wildcard version
             try:
                 subprocess.run([py, '--version'], capture_output=True, check=True)
                 return py
@@ -139,7 +166,15 @@ def get_python_executable(repo: str, version: str) -> str:
 
 
 def get_package_constraints(repo: str) -> Dict[str, str]:
-    """Get package version constraints for a repository."""
+    """
+    Get package version constraints for a repository.
+    
+    Args:
+        repo: Repository name
+        
+    Returns:
+        Dictionary of package -> version constraint
+    """
     repo_lower = repo.lower()
     
     if repo_lower in REPO_PACKAGE_CONSTRAINTS:
@@ -149,7 +184,16 @@ def get_package_constraints(repo: str) -> Dict[str, str]:
 
 
 def run_pre_install_commands(repo: str, repo_path: Path) -> bool:
-    """Run pre-install commands for a repository."""
+    """
+    Run pre-install commands for a repository.
+    
+    Args:
+        repo: Repository name
+        repo_path: Path to the repository
+        
+    Returns:
+        True if successful, False otherwise
+    """
     repo_lower = repo.lower()
     
     if repo_lower not in REPO_PRE_INSTALL:
@@ -168,54 +212,24 @@ def run_pre_install_commands(repo: str, repo_path: Path) -> bool:
             )
         except subprocess.CalledProcessError as e:
             print(f"  ⚠️ Pre-install command failed: {cmd}")
+            # Continue anyway, some commands may fail if pattern not found
         except subprocess.TimeoutExpired:
             print(f"  ⚠️ Pre-install command timed out: {cmd}")
     
     return True
 
 
-def get_conda_env_python(env_name: str) -> Optional[str]:
-    """
-    Get the python path for a conda environment.
-    Tries multiple possible locations.
-    """
-    possible_paths = [
-        Path.home() / '.conda' / 'envs' / env_name / 'bin' / 'python',
-        Path('/opt/miniconda3/envs') / env_name / 'bin' / 'python',
-        Path.home() / 'miniconda3' / 'envs' / env_name / 'bin' / 'python',
-        Path.home() / 'anaconda3' / 'envs' / env_name / 'bin' / 'python',
-    ]
-    
-    for p in possible_paths:
-        if p.exists():
-            return str(p)
-    
-    # Try using conda to find it
-    try:
-        result = subprocess.run(
-            [CONDA_PATH, 'env', 'list'],
-            capture_output=True,
-            text=True
-        )
-        for line in result.stdout.split('\n'):
-            if env_name in line:
-                parts = line.split()
-                for part in parts:
-                    if '/' in part and env_name in part:
-                        python_path = Path(part) / 'bin' / 'python'
-                        if python_path.exists():
-                            return str(python_path)
-    except:
-        pass
-    
-    return None
-
-
 class SWEPerfMeasurer:
     """Measure SWE-Perf instance with green metrics."""
     
     def __init__(self, dataset_path: str, country_code: Optional[str] = None):
-        """Initialize measurer."""
+        """
+        Initialize measurer.
+        
+        Args:
+            dataset_path: Path to SWE-Perf JSON dataset
+            country_code: ISO country code for carbon intensity
+        """
         self.dataset_path = Path(dataset_path)
         self.country_code = country_code
         self.config = load_config()
@@ -266,21 +280,41 @@ class SWEPerfMeasurer:
         print(f"✅ Loaded {len(self.dataset)} instances")
     
     def get_instance(self, instance_id: str) -> Optional[Dict]:
-        """Get instance by ID."""
+        """
+        Get instance by ID.
+        
+        Args:
+            instance_id: Instance identifier (e.g., 'astropy__astropy-16065')
+            
+        Returns:
+            Instance dictionary or None if not found
+        """
         for instance in self.dataset:
             if instance['instance_id'] == instance_id:
                 return instance
         return None
     
     def setup_repository(self, instance: Dict, temp_dir: Path, commit: str) -> Path:
-        """Clone repository and checkout specific commit."""
+        """
+        Clone repository and checkout specific commit.
+        
+        Args:
+            instance: SWE-Perf instance
+            temp_dir: Temporary directory for cloning
+            commit: Commit hash to checkout
+            
+        Returns:
+            Path to repository
+        """
         repo_name = instance['repo']
         repo_url = f"https://github.com/{repo_name}.git"
         
+        # Use commit hash as subdirectory to avoid conflicts between base/head
         repo_path = temp_dir / f"{repo_name.split('/')[-1]}_{commit[:8]}"
         
         print(f"  📦 Cloning {repo_name}...")
         
+        # Clone repository (FULL clone to reach old commits)
         subprocess.run(
             ['git', 'clone', repo_url, str(repo_path)],
             stdout=subprocess.DEVNULL,
@@ -288,15 +322,17 @@ class SWEPerfMeasurer:
             check=True
         )
         
+        # Fetch specific commit (might not be in default branches)
         print(f"  🔀 Fetching commit {commit[:8]}...")
         subprocess.run(
             ['git', 'fetch', 'origin', commit],
             cwd=repo_path,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            check=False
+            check=False  # Don't fail if already present
         )
         
+        # Checkout specific commit
         print(f"  🔀 Checking out commit {commit[:8]}...")
         subprocess.run(
             ['git', 'checkout', commit],
@@ -309,8 +345,18 @@ class SWEPerfMeasurer:
         return repo_path
     
     def install_sklearn_conda(self, repo_path: Path, env_name: str) -> Optional[str]:
-        """Install sklearn using conda with Python 3.6."""
+        """
+        Install sklearn using conda with Python 3.6.
+        
+        Args:
+            repo_path: Path to sklearn repository
+            env_name: Name for the conda environment
+            
+        Returns:
+            Path to conda python executable, or None if failed
+        """
         try:
+            # Create conda environment with Python 3.6
             print(f"  📦 [conda] Creating environment {env_name} with Python 3.6...")
             subprocess.run(
                 [CONDA_PATH, 'create', '-n', env_name, 'python=3.6', '-y'],
@@ -320,13 +366,29 @@ class SWEPerfMeasurer:
                 stderr=subprocess.DEVNULL
             )
             
-            # Find the conda python
-            conda_python = get_conda_env_python(env_name)
-            if not conda_python:
-                raise RuntimeError(f"Could not find python for conda env {env_name}")
+            # Get conda env path
+            result = subprocess.run(
+                [CONDA_PATH, 'env', 'list'],
+                capture_output=True,
+                text=True
+            )
+            env_path = None
+            for line in result.stdout.split('\n'):
+                if env_name in line:
+                    parts = line.split()
+                    for p in parts:
+                        if '/' in p and env_name in p:
+                            env_path = Path(p)
+                            break
             
-            conda_pip = str(Path(conda_python).parent / 'pip')
+            if not env_path:
+                # Default path
+                env_path = Path.home() / '.conda' / 'envs' / env_name
             
+            conda_pip = str(env_path / 'bin' / 'pip')
+            conda_python = str(env_path / 'bin' / 'python')
+            
+            # Install build dependencies with exact versions for Python 3.6
             print(f"  📦 [conda] Installing build dependencies...")
             subprocess.run(
                 [conda_pip, 'install',
@@ -339,6 +401,7 @@ class SWEPerfMeasurer:
                 timeout=300
             )
             
+            # Build sklearn
             print(f"  📦 [conda] Building sklearn...")
             subprocess.run(
                 [conda_pip, 'install', '-e', '.', '--no-build-isolation'],
@@ -347,16 +410,12 @@ class SWEPerfMeasurer:
                 timeout=600
             )
             
-            # Verify python still exists
-            if not Path(conda_python).exists():
-                raise RuntimeError(f"Python disappeared: {conda_python}")
-            
             print(f"  ✅ [conda] sklearn installation complete")
-            print(f"  📍 Python path: {conda_python}")
             return conda_python
             
         except Exception as e:
             print(f"  ❌ [conda] Installation failed: {e}")
+            # Cleanup failed env
             subprocess.run(
                 [CONDA_PATH, 'env', 'remove', '-n', env_name, '-y'],
                 capture_output=True
@@ -364,8 +423,18 @@ class SWEPerfMeasurer:
             return None
     
     def install_astropy_conda(self, repo_path: Path, env_name: str) -> Optional[str]:
-        """Install astropy using conda with Python 3.10."""
+        """
+        Install astropy using conda with Python 3.10.
+        
+        Args:
+            repo_path: Path to astropy repository
+            env_name: Name for the conda environment
+            
+        Returns:
+            Path to conda python executable, or None if failed
+        """
         try:
+            # Create conda environment with Python 3.10
             print(f"  📦 [conda] Creating environment {env_name} with Python 3.10...")
             subprocess.run(
                 [CONDA_PATH, 'create', '-n', env_name, 'python=3.10', '-y'],
@@ -375,13 +444,29 @@ class SWEPerfMeasurer:
                 stderr=subprocess.DEVNULL
             )
             
-            # Find the conda python
-            conda_python = get_conda_env_python(env_name)
-            if not conda_python:
-                raise RuntimeError(f"Could not find python for conda env {env_name}")
+            # Get conda env path
+            result = subprocess.run(
+                [CONDA_PATH, 'env', 'list'],
+                capture_output=True,
+                text=True
+            )
+            env_path = None
+            for line in result.stdout.split('\n'):
+                if env_name in line:
+                    parts = line.split()
+                    for p in parts:
+                        if '/' in p and env_name in p:
+                            env_path = Path(p)
+                            break
             
-            conda_pip = str(Path(conda_python).parent / 'pip')
+            if not env_path:
+                # Default path
+                env_path = Path.home() / '.conda' / 'envs' / env_name
             
+            conda_pip = str(env_path / 'bin' / 'pip')
+            conda_python = str(env_path / 'bin' / 'python')
+            
+            # Upgrade pip and setuptools first
             print(f"  📦 [conda] Installing base packages...")
             subprocess.run(
                 [conda_pip, 'install', '--upgrade', 'pip', 
@@ -390,26 +475,25 @@ class SWEPerfMeasurer:
                 timeout=120
             )
             
+            # Run pre-install commands (modify pyproject.toml)
             run_pre_install_commands('astropy/astropy', repo_path)
             
+            # Install astropy with build isolation (as per SWE-Perf)
+            # This lets pip handle the build dependencies correctly
             print(f"  📦 [conda] Installing astropy with build isolation...")
             subprocess.run(
                 [conda_pip, 'install', '-e', '.[test]', '--verbose'],
                 cwd=repo_path,
                 check=True,
-                timeout=900
+                timeout=900  # 15 min for compilation
             )
             
-            # Verify python still exists
-            if not Path(conda_python).exists():
-                raise RuntimeError(f"Python disappeared: {conda_python}")
-            
             print(f"  ✅ [conda] astropy installation complete")
-            print(f"  📍 Python path: {conda_python}")
             return conda_python
             
         except Exception as e:
             print(f"  ❌ [conda] Installation failed: {e}")
+            # Cleanup failed env
             subprocess.run(
                 [CONDA_PATH, 'env', 'remove', '-n', env_name, '-y'],
                 capture_output=True
@@ -417,7 +501,12 @@ class SWEPerfMeasurer:
             return None
     
     def cleanup_conda_env(self, env_name: str):
-        """Remove a conda environment."""
+        """
+        Remove a conda environment.
+        
+        Args:
+            env_name: Name of the conda environment to remove
+        """
         if env_name:
             print(f"  🧹 Cleaning up conda env: {env_name}")
             subprocess.run(
@@ -426,11 +515,23 @@ class SWEPerfMeasurer:
             )
     
     def install_sklearn(self, repo_path: Path, venv_path: Path, constraints: Dict[str, str]) -> bool:
-        """Special installation procedure for scikit-learn 0.21."""
+        """
+        Special installation procedure for scikit-learn 0.21.
+        Handles joblib compatibility issues with Python 3.9.
+        
+        Args:
+            repo_path: Path to sklearn repository
+            venv_path: Path to virtual environment
+            constraints: Package version constraints
+            
+        Returns:
+            True if successful, False otherwise
+        """
         venv_pip = str(venv_path / 'bin' / 'pip')
         venv_python = str(venv_path / 'bin' / 'python')
         
         try:
+            # Step 1: Install build dependencies
             print(f"  📦 [sklearn] Installing build dependencies...")
             numpy_constraint = constraints.get('numpy', '<1.24')
             cython_constraint = constraints.get('cython', '<3.0')
@@ -446,6 +547,7 @@ class SWEPerfMeasurer:
                 timeout=300
             )
             
+            # Step 2: Install sklearn (needs original structure for build)
             print(f"  📦 [sklearn] Building sklearn...")
             subprocess.run(
                 [venv_pip, 'install', '-e', '.', '--no-build-isolation'],
@@ -454,11 +556,16 @@ class SWEPerfMeasurer:
                 timeout=600
             )
             
+            # Step 3: Fix joblib compatibility for Python 3.9
+            # The bundled joblib has cloudpickle issues with Python 3.8+
             print(f"  🔧 [sklearn] Fixing joblib compatibility...")
             
             externals_joblib = repo_path / 'sklearn' / 'externals' / 'joblib'
             if externals_joblib.exists():
+                # Remove the bundled joblib
                 shutil.rmtree(externals_joblib)
+                
+                # Create stub that redirects to external joblib
                 externals_joblib.mkdir(parents=True)
                 init_file = externals_joblib / '__init__.py'
                 init_file.write_text('''# Stub to redirect to external joblib (fixes Python 3.9 compatibility)
@@ -482,7 +589,18 @@ logger = logging.getLogger(__name__)
             return False
     
     def install_dependencies(self, repo_path: Path, repo: str, version: str, commit: str) -> Tuple[Optional[str], Optional[str]]:
-        """Create virtual environment and install package dependencies."""
+        """
+        Create virtual environment and install package dependencies.
+        
+        Args:
+            repo_path: Path to repository
+            repo: Repository name
+            version: Version string from SWE-Perf
+            commit: Commit hash (used for conda env naming)
+            
+        Returns:
+            Tuple of (python_path, conda_env_name or None)
+        """
         repo_lower = repo.lower()
         
         # Check if we should use conda for sklearn
@@ -515,6 +633,7 @@ logger = logging.getLogger(__name__)
         venv_pip = str(venv_path / 'bin' / 'pip')
         
         try:
+            # Create virtual environment
             subprocess.run(
                 [python_exec, '-m', 'venv', str(venv_path)],
                 check=True,
@@ -522,6 +641,7 @@ logger = logging.getLogger(__name__)
             )
             print(f"  ✅ Virtual environment created with {python_exec}")
             
+            # Upgrade pip and install base packages with version constraints
             setuptools_constraint = constraints.get('setuptools', '<70')
             print(f"  📦 Installing base packages (setuptools{setuptools_constraint})...")
             subprocess.run(
@@ -532,8 +652,10 @@ logger = logging.getLogger(__name__)
                 timeout=120
             )
             
+            # Run pre-install commands (e.g., modify pyproject.toml for astropy)
             run_pre_install_commands(repo, repo_path)
             
+            # Check for special installation procedures
             if repo_lower in REPO_SPECIAL_INSTALL:
                 special_method = REPO_SPECIAL_INSTALL[repo_lower]
                 if special_method == 'sklearn_install':
@@ -543,6 +665,8 @@ logger = logging.getLogger(__name__)
                     else:
                         return (None, None)
             
+            # Standard installation
+            # Install build dependencies
             numpy_constraint = constraints.get('numpy', '<2.0')
             cython_constraint = constraints.get('cython', '<3.0')
             
@@ -558,6 +682,7 @@ logger = logging.getLogger(__name__)
                 timeout=300
             )
             
+            # Install package with dependencies
             print(f"  📦 Installing project dependencies (version: {version})...")
             subprocess.run(
                 [venv_pip, 'install', '-e', '.', '--no-build-isolation'],
@@ -566,13 +691,14 @@ logger = logging.getLogger(__name__)
                 timeout=600
             )
             
+            # Install test dependencies
             matplotlib_constraint = constraints.get('matplotlib', '<3.9')
             print(f"  📦 Installing test dependencies (matplotlib{matplotlib_constraint})...")
             subprocess.run(
                 [venv_pip, 'install', 
                  'pytest', 'hypothesis', 'scipy', 'pytest-astropy', 'urllib3',
                  f"matplotlib{matplotlib_constraint}",
-                 f"numpy{numpy_constraint}"],
+                 f"numpy{numpy_constraint}"],  # Re-enforce numpy constraint
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=180
@@ -585,28 +711,6 @@ logger = logging.getLogger(__name__)
             print(f"  ⚠️  Warning: Could not install dependencies: {e}")
             return (None, None)
     
-    def verify_python_path(self, python_path: str) -> bool:
-        """Verify that a python path exists and works."""
-        if not python_path:
-            return False
-        
-        if not Path(python_path).exists():
-            print(f"  ⚠️ Python path does not exist: {python_path}")
-            return False
-        
-        try:
-            result = subprocess.run(
-                [python_path, '--version'],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            print(f"  📍 Python verified: {result.stdout.strip()}")
-            return True
-        except Exception as e:
-            print(f"  ⚠️ Python verification failed: {e}")
-            return False
-    
     def measure_single_test(
         self,
         collector: MetricsCollector,
@@ -615,15 +719,23 @@ logger = logging.getLogger(__name__)
         python_path: str,
         repetitions: int
     ) -> Optional[Dict]:
-        """Measure a single test with error handling."""
-        try:
-            # Verify python exists before running
-            if not Path(python_path).exists():
-                raise RuntimeError(f"Python not found: {python_path}")
+        """
+        Measure a single test with error handling.
+        
+        Args:
+            collector: MetricsCollector instance
+            test_name: Name of the test to run
+            repo_path: Path to repository
+            python_path: Path to python executable
+            repetitions: Number of repetitions
             
-            # Build pytest command - use absolute paths
-            repo_abs = str(repo_path.absolute())
-            test_command = f"cd {repo_abs} && {python_path} -m pytest '{test_name}' -v"
+        Returns:
+            Test results dict or None if failed
+        """
+        try:
+            # Build pytest command using python path
+            # Quote test name to handle special characters like [] and ()
+            test_command = f"cd {repo_path} && {python_path} -m pytest '{test_name}' -v"
             
             # Measure test execution
             test_results = collector.measure_test_execution(
@@ -649,10 +761,18 @@ logger = logging.getLogger(__name__)
         commit: str,
         commit_type: str,
         temp_dir: Path
-    ) -> Tuple[Dict, Optional[str]]:
+    ) -> Dict:
         """
         Measure metrics for a specific commit.
-        Returns tuple of (results, conda_env_name) so cleanup can happen later.
+        
+        Args:
+            instance: SWE-Perf instance
+            commit: Commit hash
+            commit_type: 'base' or 'head'
+            temp_dir: Temporary directory
+            
+        Returns:
+            Dictionary with all measurements
         """
         print(f"\n🔬 Measuring {commit_type} commit...")
         print("=" * 60)
@@ -670,19 +790,16 @@ logger = logging.getLogger(__name__)
         
         if python_path is None:
             print(f"  ⚠️  Skipping measurements - dependencies failed")
-            return ({'status': 'dependency_failed'}, conda_env)
-        
-        # Verify python path
-        if not self.verify_python_path(python_path):
-            print(f"  ⚠️  Python path invalid - skipping measurements")
-            return ({'status': 'python_invalid'}, conda_env)
+            return {'status': 'dependency_failed'}
         
         # Get test commands
         efficiency_tests = instance['efficiency_test']
         
         if not efficiency_tests:
             print(f"  ⚠️  No efficiency tests found!")
-            return ({'status': 'no_tests'}, conda_env)
+            if conda_env:
+                self.cleanup_conda_env(conda_env)
+            return {'status': 'no_tests'}
         
         print(f"  🧪 Found {len(efficiency_tests)} efficiency tests")
         
@@ -704,17 +821,6 @@ logger = logging.getLogger(__name__)
         
         for i, test_name in enumerate(efficiency_tests):
             print(f"\n  📝 Test {i+1}/{len(efficiency_tests)}: {test_name}")
-            
-            # Verify python still exists before each test
-            if not Path(python_path).exists():
-                print(f"    ⚠️ Python disappeared: {python_path}")
-                failed_tests += 1
-                all_test_results.append({
-                    'test_name': test_name,
-                    'status': 'failed',
-                    'error': 'Python environment was removed'
-                })
-                continue
             
             result = self.measure_single_test(
                 collector=collector,
@@ -741,15 +847,24 @@ logger = logging.getLogger(__name__)
             'tests': all_test_results,
             'successful_tests': successful_tests,
             'failed_tests': failed_tests,
-            'status': 'success' if successful_tests > 0 else 'all_tests_failed',
-            'repo_path': str(repo_path)  # Keep for cleanup
+            'status': 'success' if successful_tests > 0 else 'all_tests_failed'
         }
         
-        # NOTE: Don't cleanup here - let measure_instance handle it
-        return (results, conda_env)
+        # Cleanup
+        shutil.rmtree(repo_path, ignore_errors=True)
+        if conda_env:
+            self.cleanup_conda_env(conda_env)
+        
+        return results
     
     def measure_instance(self, instance_id: str, output_dir: str = "data/raw/measurements"):
-        """Measure a single SWE-Perf instance."""
+        """
+        Measure a single SWE-Perf instance.
+        
+        Args:
+            instance_id: Instance identifier
+            output_dir: Directory to save measurements
+        """
         print("=" * 60)
         print(f"🎯 MEASURING INSTANCE: {instance_id}")
         print("=" * 60)
@@ -776,46 +891,25 @@ logger = logging.getLogger(__name__)
         temp_dir = tempfile.mkdtemp()
         temp_path = Path(temp_dir)
         
-        # Track conda envs for cleanup
-        conda_envs_to_cleanup = []
-        repo_paths_to_cleanup = []
-        
         try:
             # Measure base commit
-            base_results, base_conda_env = self.measure_commit(
+            base_results = self.measure_commit(
                 instance=instance,
                 commit=instance['base_commit'],
                 commit_type='base',
                 temp_dir=temp_path
             )
-            if base_conda_env:
-                conda_envs_to_cleanup.append(base_conda_env)
-            if 'repo_path' in base_results:
-                repo_paths_to_cleanup.append(base_results.pop('repo_path'))
             
             # Measure head commit
-            head_results, head_conda_env = self.measure_commit(
+            head_results = self.measure_commit(
                 instance=instance,
                 commit=instance['head_commit'],
                 commit_type='head',
                 temp_dir=temp_path
             )
-            if head_conda_env:
-                conda_envs_to_cleanup.append(head_conda_env)
-            if 'repo_path' in head_results:
-                repo_paths_to_cleanup.append(head_results.pop('repo_path'))
-                
         finally:
-            # Cleanup repos
-            for repo_path in repo_paths_to_cleanup:
-                shutil.rmtree(repo_path, ignore_errors=True)
-            
-            # Cleanup temp dir
+            # Cleanup with ignore_errors (survives permission errors)
             shutil.rmtree(temp_dir, ignore_errors=True)
-            
-            # Cleanup conda envs LAST
-            for env_name in conda_envs_to_cleanup:
-                self.cleanup_conda_env(env_name)
         
         # Check if we have any valid results
         base_ok = base_results.get('status') == 'success'
@@ -854,7 +948,7 @@ logger = logging.getLogger(__name__)
             json.dump(final_results, f, indent=2)
         
         print("\n" + "=" * 60)
-        print(f"✅ MEASUREMENT COMPLETE!")
+        print(f"✅ MEASUREMENT COMPLETE!!")
         print(f"  Base: {base_results.get('successful_tests', 0)} tests passed")
         print(f"  Head: {head_results.get('successful_tests', 0)} tests passed")
         print(f"💾 Results saved to: {output_file}")
