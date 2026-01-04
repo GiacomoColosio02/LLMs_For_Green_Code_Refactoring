@@ -46,6 +46,11 @@ FIELDS_TO_REMOVE = [
     'duration_changes'
 ]
 
+# Repos to skip (known issues)
+SKIP_REPOS = [
+    'astropy',  # EnergiBridge issue with conda env
+]
+
 
 def load_json(path: Path) -> dict:
     """Load JSON file."""
@@ -89,6 +94,15 @@ def get_repetition_count(test_data: dict) -> int:
         if m and m.get('return_code') == 0
     )
     return valid_reps
+
+
+def should_skip_instance(instance_id: str) -> bool:
+    """Check if instance should be skipped due to known issues."""
+    instance_lower = instance_id.lower()
+    for skip_repo in SKIP_REPOS:
+        if skip_repo.lower() in instance_lower:
+            return True
+    return False
 
 
 def is_instance_in_green_dataset(green_dataset: dict, instance_id: str) -> bool:
@@ -195,6 +209,7 @@ def measure_and_create_green_dataset(
     print(f"📂 Measurements: {measurements_dir}")
     print(f"📄 Green output: {green_output_path}")
     print(f"🔄 Force remeasure: {force_remeasure}")
+    print(f"⏭️  Skipping repos: {', '.join(SKIP_REPOS)}")
     print("=" * 100)
     
     # Paths
@@ -255,6 +270,7 @@ def measure_and_create_green_dataset(
     successes = []
     failures = []
     skipped = []
+    skipped_repos = []
     
     total_instances = len(instances_list)
     
@@ -269,6 +285,13 @@ def measure_and_create_green_dataset(
             print(f"\n⭐ [{idx+1}/{total_instances}] {instance_id}")
             print(f"   Already in green dataset, skipping...")
             skipped.append(instance_id)
+            continue
+        
+        # Check if should skip due to known issues (e.g., astropy)
+        if should_skip_instance(instance_id):
+            print(f"\n⏭️  [{idx+1}/{total_instances}] {instance_id}")
+            print(f"   Skipping (known issue - will fix later)...")
+            skipped_repos.append(instance_id)
             continue
         
         print(f"\n{'='*100}")
@@ -344,13 +367,14 @@ def measure_and_create_green_dataset(
         
         # Progress summary
         total_processed = len(successes) + len(failures)
-        total_done = total_processed + len(skipped)
+        total_done = total_processed + len(skipped) + len(skipped_repos)
         success_rate = len(successes) / total_processed * 100 if total_processed > 0 else 0
         
         print(f"\n📊 Progress: {total_done}/{total_instances}")
         print(f"   ✅ New successes: {len(successes)}")
         print(f"   ❌ Failures: {len(failures)}")
-        print(f"   ⭐ Skipped: {len(skipped)}")
+        print(f"   ⭐ Skipped (done): {len(skipped)}")
+        print(f"   ⏭️  Skipped (repos): {len(skipped_repos)}")
         print(f"   📈 Success rate: {success_rate:.1f}%")
         
         if successes:
@@ -375,8 +399,17 @@ def measure_and_create_green_dataset(
     print(f"   🧪 Total tests: {total_tests}")
     print(f"   ✅ New successes: {len(successes)}")
     print(f"   ❌ Failures: {len(failures)}")
-    print(f"   ⭐ Skipped: {len(skipped)}")
+    print(f"   ⭐ Skipped (done): {len(skipped)}")
+    print(f"   ⏭️  Skipped (repos): {len(skipped_repos)}")
     print(f"   ⏰ Finished at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # List skipped repos
+    if skipped_repos:
+        print(f"\n⏭️  SKIPPED REPOS ({len(skipped_repos)}):")
+        for inst_id in skipped_repos[:10]:
+            print(f"   - {inst_id}")
+        if len(skipped_repos) > 10:
+            print(f"   ... and {len(skipped_repos) - 10} more")
     
     # Save failure log
     if failures:
