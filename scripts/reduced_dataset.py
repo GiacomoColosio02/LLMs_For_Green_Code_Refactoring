@@ -210,8 +210,10 @@ def create_reduced_dataset(
 
 
 def main():
-    # Paths
-    base_dir = Path("/home/giacomo/LLMs_For_Green_Code_Refactoring")
+    # Auto-detect base directory (works both local and server)
+    script_path = Path(__file__).resolve()
+    base_dir = script_path.parent.parent  # scripts/ -> project root
+    
     original_dataset_path = base_dir / "data" / "original" / "swe_perf_original_20251124.json"
     measurements_dir = base_dir / "data" / "raw" / "measurements"
     output_path = base_dir / "data" / "processed" / "swe_perf_reduced.json"
