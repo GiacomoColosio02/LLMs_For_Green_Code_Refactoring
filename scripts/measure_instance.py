@@ -45,6 +45,9 @@ PYTHON_VERSION_MAP = {
 # Sklearn versions that require conda with Python 3.6
 SKLEARN_CONDA_VERSIONS = ['0.2', '0.20', '0.21', '0.22']
 
+# Astropy versions that require conda with Python 3.10
+ASTROPY_CONDA_VERSIONS = ['v5.3']
+
 # Repository-specific package constraints
 # These override the global constraints for specific repos
 REPO_PACKAGE_CONSTRAINTS = {
@@ -60,9 +63,9 @@ REPO_PACKAGE_CONSTRAINTS = {
         'pandas': '<2.1',
     },
     'astropy/astropy': {
-    'numpy': '==1.25.2',      # Fix: aggiunto == per versione esatta
-    'cython': '<3.0',
-    'setuptools': '==68.0.0', # Fix: aggiunto == per versione esatta
+        'numpy': '==1.25.2',      # Fix: versione esatta
+        'cython': '<3.0',
+        'setuptools': '==68.0.0', # Fix: versione esatta
     },
     # Default constraints for other repos
     'default': {
@@ -89,6 +92,13 @@ SKLEARN_CONDA_CONSTRAINTS = {
     'scipy': '1.5.2',
 }
 
+# Conda-specific constraints for astropy with Python 3.10
+ASTROPY_CONDA_CONSTRAINTS = {
+    'numpy': '1.25.2',
+    'cython': '0.29.37',
+    'setuptools': '68.0.0',
+}
+
 # Special installation procedures for specific repos
 REPO_SPECIAL_INSTALL = {
     'scikit-learn/scikit-learn': 'sklearn_install',
@@ -108,6 +118,10 @@ def should_use_conda(repo: str, version: str) -> bool:
     """
     repo_lower = repo.lower()
     if 'scikit-learn' in repo_lower and version in SKLEARN_CONDA_VERSIONS:
+        # Check if conda is available
+        if Path(CONDA_PATH).exists():
+            return True
+    if 'astropy' in repo_lower and version in ASTROPY_CONDA_VERSIONS:
         # Check if conda is available
         if Path(CONDA_PATH).exists():
             return True
@@ -408,6 +422,84 @@ class SWEPerfMeasurer:
             )
             return None
     
+    def install_astropy_conda(self, repo_path: Path, env_name: str) -> Optional[str]:
+        """
+        Install astropy using conda with Python 3.10.
+        
+        Args:
+            repo_path: Path to astropy repository
+            env_name: Name for the conda environment
+            
+        Returns:
+            Path to conda python executable, or None if failed
+        """
+        try:
+            # Create conda environment with Python 3.10
+            print(f"  📦 [conda] Creating environment {env_name} with Python 3.10...")
+            subprocess.run(
+                [CONDA_PATH, 'create', '-n', env_name, 'python=3.10', '-y'],
+                check=True,
+                timeout=300,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            
+            # Get conda env path
+            result = subprocess.run(
+                [CONDA_PATH, 'env', 'list'],
+                capture_output=True,
+                text=True
+            )
+            env_path = None
+            for line in result.stdout.split('\n'):
+                if env_name in line:
+                    parts = line.split()
+                    for p in parts:
+                        if '/' in p and env_name in p:
+                            env_path = Path(p)
+                            break
+            
+            if not env_path:
+                # Default path
+                env_path = Path.home() / '.conda' / 'envs' / env_name
+            
+            conda_pip = str(env_path / 'bin' / 'pip')
+            conda_python = str(env_path / 'bin' / 'python')
+            
+            # Upgrade pip and setuptools first
+            print(f"  📦 [conda] Installing base packages...")
+            subprocess.run(
+                [conda_pip, 'install', '--upgrade', 'pip', 
+                 f"setuptools=={ASTROPY_CONDA_CONSTRAINTS['setuptools']}", 'wheel'],
+                check=True,
+                timeout=120
+            )
+            
+            # Run pre-install commands (modify pyproject.toml)
+            run_pre_install_commands('astropy/astropy', repo_path)
+            
+            # Install astropy with build isolation (as per SWE-Perf)
+            # This lets pip handle the build dependencies correctly
+            print(f"  📦 [conda] Installing astropy with build isolation...")
+            subprocess.run(
+                [conda_pip, 'install', '-e', '.[test]', '--verbose'],
+                cwd=repo_path,
+                check=True,
+                timeout=900  # 15 min for compilation
+            )
+            
+            print(f"  ✅ [conda] astropy installation complete")
+            return conda_python
+            
+        except Exception as e:
+            print(f"  ❌ [conda] Installation failed: {e}")
+            # Cleanup failed env
+            subprocess.run(
+                [CONDA_PATH, 'env', 'remove', '-n', env_name, '-y'],
+                capture_output=True
+            )
+            return None
+    
     def cleanup_conda_env(self, env_name: str):
         """
         Remove a conda environment.
@@ -509,15 +601,27 @@ logger = logging.getLogger(__name__)
         Returns:
             Tuple of (python_path, conda_env_name or None)
         """
-        # Check if we should use conda for this repo/version
-        if should_use_conda(repo, version):
-            env_name = f"sklearn_{commit[:8]}"
-            python_path = self.install_sklearn_conda(repo_path, env_name)
-            if python_path:
-                return (python_path, env_name)
-            else:
-                # Fallback to venv if conda fails
-                print(f"  ⚠️ Conda failed, falling back to venv...")
+        repo_lower = repo.lower()
+        
+        # Check if we should use conda for sklearn
+        if 'scikit-learn' in repo_lower and version in SKLEARN_CONDA_VERSIONS:
+            if Path(CONDA_PATH).exists():
+                env_name = f"sklearn_{commit[:8]}"
+                python_path = self.install_sklearn_conda(repo_path, env_name)
+                if python_path:
+                    return (python_path, env_name)
+                else:
+                    print(f"  ⚠️ Conda failed, falling back to venv...")
+        
+        # Check if we should use conda for astropy
+        if 'astropy' in repo_lower and version in ASTROPY_CONDA_VERSIONS:
+            if Path(CONDA_PATH).exists():
+                env_name = f"astropy_{commit[:8]}"
+                python_path = self.install_astropy_conda(repo_path, env_name)
+                if python_path:
+                    return (python_path, env_name)
+                else:
+                    print(f"  ⚠️ Conda failed, falling back to venv...")
         
         # Get appropriate Python version
         python_exec = get_python_executable(repo, version)
@@ -552,7 +656,6 @@ logger = logging.getLogger(__name__)
             run_pre_install_commands(repo, repo_path)
             
             # Check for special installation procedures
-            repo_lower = repo.lower()
             if repo_lower in REPO_SPECIAL_INSTALL:
                 special_method = REPO_SPECIAL_INSTALL[repo_lower]
                 if special_method == 'sklearn_install':
