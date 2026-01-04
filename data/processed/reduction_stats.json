@@ -1,0 +1,380 @@
+{
+  "original_instances": 140,
+  "original_tests": 1130,
+  "reduced_instances": 131,
+  "reduced_tests": 878,
+  "removed_instances": [
+    {
+      "instance_id": "matplotlib__matplotlib-23712",
+      "reason": "no_valid_tests",
+      "original_tests": 13
+    },
+    {
+      "instance_id": "mwaskom__seaborn-2224",
+      "reason": "no_valid_tests",
+      "original_tests": 1
+    },
+    {
+      "instance_id": "mwaskom__seaborn-2205",
+      "reason": "no_valid_tests",
+      "original_tests": 1
+    },
+    {
+      "instance_id": "pydata__xarray-8294",
+      "reason": "no_valid_tests",
+      "original_tests": 3
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11861",
+      "reason": "no_valid_tests",
+      "original_tests": 2
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-11489",
+      "reason": "no_valid_tests",
+      "original_tests": 2
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-6422",
+      "reason": "no_valid_tests",
+      "original_tests": 1
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-8537",
+      "reason": "no_valid_tests",
+      "original_tests": 63
+    },
+    {
+      "instance_id": "sympy__sympy-25614",
+      "reason": "no_valid_tests",
+      "original_tests": 4
+    }
+  ],
+  "instances_with_removed_tests": [
+    {
+      "instance_id": "pydata__xarray-9782",
+      "original_tests": 6,
+      "valid_tests": 5,
+      "removed_tests": [
+        "xarray/tests/test_duck_array_ops.py::test_min_count[None-True-None-prod-True-bool-1]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-9688",
+      "original_tests": 4,
+      "valid_tests": 3,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::test_token_identical[obj1-<lambda>0]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-9520",
+      "original_tests": 3,
+      "valid_tests": 2,
+      "removed_tests": [
+        "xarray/tests/test_duck_array_ops.py::test_argmin_max[x-False-min-True-False-bool-2]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-9509",
+      "original_tests": 20,
+      "valid_tests": 18,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::TestDataArrayAndDataset::test_concat_loads_variables",
+        "xarray/tests/test_duck_array_ops.py::test_min_count[False-True-x-sum-True-bool-1]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-9482",
+      "original_tests": 14,
+      "valid_tests": 12,
+      "removed_tests": [
+        "xarray/tests/test_duck_array_ops.py::test_argmin_max[x-False-min-True-False-bool-2]",
+        "xarray/tests/test_duck_array_ops.py::test_min_count[None-True-None-sum-True-bool-2]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-9453",
+      "original_tests": 6,
+      "valid_tests": 4,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::TestVariable::test_setitem_dask_array[expected_data1-index1]",
+        "xarray/tests/test_dask.py::test_dataarray_with_dask_coords"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-9451",
+      "original_tests": 13,
+      "valid_tests": 9,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::TestVariable::test_setitem_dask_array[expected_data3-index3]",
+        "xarray/tests/test_dask.py::test_map_blocks_hlg_layers",
+        "xarray/tests/test_duck_array_ops.py::test_min_count[False-True-x-prod-True-bool-1]",
+        "xarray/tests/test_duck_array_ops.py::test_min_count_nd[prod-True-bool]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-9407",
+      "original_tests": 10,
+      "valid_tests": 9,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::test_lazy_array_equiv_variables[identical]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-9243",
+      "original_tests": 11,
+      "valid_tests": 10,
+      "removed_tests": [
+        "xarray/tests/test_duck_array_ops.py::test_min_count[None-False-x-sum-True-bool-1]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-8711",
+      "original_tests": 32,
+      "valid_tests": 27,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::test_token_identical[obj1-<lambda>0]",
+        "xarray/tests/test_dask.py::test_token_identical[obj1-<lambda>2]",
+        "xarray/tests/test_duck_array_ops.py::test_min_count[False-False-x-sum-True-bool-1]",
+        "xarray/tests/test_duck_array_ops.py::test_min_count[None-False-None-prod-True-bool-2]",
+        "xarray/tests/test_duck_array_ops.py::test_min_count[True-False-None-prod-True-bool-2]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-8684",
+      "original_tests": 27,
+      "valid_tests": 21,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::TestDataArrayAndDataset::test_stack",
+        "xarray/tests/test_dask.py::test_map_blocks_mixed_type_inputs[obj1]",
+        "xarray/tests/test_duck_array_ops.py::test_argmin_max[y-True-max-True-False-bool-2]",
+        "xarray/tests/test_duck_array_ops.py::test_min_count[False-False-x-prod-True-bool-2]",
+        "xarray/tests/test_duck_array_ops.py::test_min_count[True-False-x-sum-True-bool-1]",
+        "xarray/tests/test_duck_array_ops.py::test_min_count[True-True-x-prod-True-bool-2]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-8668",
+      "original_tests": 23,
+      "valid_tests": 20,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::test_more_transforms_pass_lazy_array_equiv",
+        "xarray/tests/test_duck_array_ops.py::test_argmin_max[x-False-min-True-False-bool-2]",
+        "xarray/tests/test_duck_array_ops.py::test_argmin_max[x-True-max-True-True-bool-1]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-8627",
+      "original_tests": 11,
+      "valid_tests": 7,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::test_lazy_array_equiv_variables[broadcast_equals]",
+        "xarray/tests/test_dask.py::test_map_blocks_hlg_layers",
+        "xarray/tests/test_dask.py::test_token_identical[obj1-<lambda>0]",
+        "xarray/tests/test_duck_array_ops.py::test_argmin_max[x-True-max-True-True-bool-1]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-8575",
+      "original_tests": 22,
+      "valid_tests": 14,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::test_map_blocks_da_transformations[<lambda>7]",
+        "xarray/tests/test_dask.py::test_map_blocks_kwargs[obj1]",
+        "xarray/tests/test_dask.py::test_unify_chunks_shallow_copy[<lambda>0-obj0]",
+        "xarray/tests/test_distributed.py::test_serializable_locks",
+        "xarray/tests/test_duck_array_ops.py::test_min_count[True-True-x-sum-True-bool-1]",
+        "xarray/tests/test_duck_array_ops.py::test_multiple_dims[sum-False-True-bool]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_rename_vars]",
+        "xarray/tests/test_units.py::TestPlots::test_units_facetgrid_2d_contourf_plot_colorbar_labels"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-8527",
+      "original_tests": 55,
+      "valid_tests": 54,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::TestDataArrayAndDataset::test_concat_loads_variables"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-8512",
+      "original_tests": 19,
+      "valid_tests": 16,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::TestToDaskDataFrame::test_to_dask_dataframe_2D",
+        "xarray/tests/test_dask.py::test_auto_chunk_da[obj0]",
+        "xarray/tests/test_units.py::TestDataset::test_computation[float64-data-method_map]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-8507",
+      "original_tests": 21,
+      "valid_tests": 17,
+      "removed_tests": [
+        "xarray/tests/test_dask.py::TestToDaskDataFrame::test_to_dask_dataframe_2D",
+        "xarray/tests/test_dask.py::TestToDaskDataFrame::test_to_dask_dataframe_no_coordinate",
+        "xarray/tests/test_dask.py::TestVariable::test_setitem_dask_array[expected_data2-index2]",
+        "xarray/tests/test_duck_array_ops.py::test_argmin_max[x-False-min-True-False-bool-1]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-7209",
+      "original_tests": 68,
+      "valid_tests": 34,
+      "removed_tests": [
+        "xarray/tests/test_units.py::TestDataArray::test_broadcast_like[float64-coords-no_unit]",
+        "xarray/tests/test_units.py::TestDataArray::test_broadcast_like[float64-data-incompatible_unit]",
+        "xarray/tests/test_units.py::TestDataArray::test_broadcast_like[float64-data-no_unit]",
+        "xarray/tests/test_units.py::TestDataArray::test_broadcast_like[int64-data-identical_unit]",
+        "xarray/tests/test_units.py::TestDataset::test_computation[float64-coords-method_map]",
+        "xarray/tests/test_units.py::TestDataset::test_computation[float64-data-method_map]",
+        "xarray/tests/test_units.py::TestDataset::test_computation[int64-data-method_map]",
+        "xarray/tests/test_units.py::TestDataset::test_computation_objects[float64-coords-method_coarsen]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_assign_attrs]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_copy]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_rename]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_assign_attrs]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_copy]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_pipe]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_rename_vars]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_set_coords]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_assign_attrs]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_copy]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_rename]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_rename_dims]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_set_coords]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_assign_attrs]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_copy]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_rename_vars]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_set_coords]",
+        "xarray/tests/test_units.py::TestDataset::test_stacking_reordering[float64-method_roll]",
+        "xarray/tests/test_units.py::TestDataset::test_stacking_reordering[float64-method_shift]",
+        "xarray/tests/test_units.py::TestDataset::test_stacking_reordering[float64-method_transpose]",
+        "xarray/tests/test_units.py::TestDataset::test_stacking_reordering[int64-method_shift]",
+        "xarray/tests/test_units.py::TestDataset::test_stacking_reordering[int64-method_transpose]",
+        "xarray/tests/test_units.py::test_combine_by_coords[float64-coords-identical_unit]",
+        "xarray/tests/test_units.py::test_combine_by_coords[int64-coords-compatible_unit]",
+        "xarray/tests/test_units.py::test_combine_by_coords[int64-data-identical_unit]",
+        "xarray/tests/test_units.py::test_concat_dataset[int64-coords-compatible_unit]"
+      ]
+    },
+    {
+      "instance_id": "pydata__xarray-5571",
+      "original_tests": 57,
+      "valid_tests": 13,
+      "removed_tests": [
+        "xarray/tests/test_cftimeindex_resample.py::test_resample[31-left-right-3AS-MAR->AS-MAR]",
+        "xarray/tests/test_computation.py::test_apply_groupby_add",
+        "xarray/tests/test_computation.py::test_corr[None-da_a2-da_b2]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[None-da_a1-da_b1]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[None-da_a3-da_b3]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[None-da_a4-da_b4]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[None-da_a5-da_b5]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[None-da_a6-da_b6]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[None-da_a7-da_b7]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[time-da_a3-da_b3]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[time-da_a4-da_b4]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[time-da_a5-da_b5]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[time-da_a7-da_b7]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[x-da_a2-da_b2]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[x-da_a3-da_b3]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[x-da_a5-da_b5]",
+        "xarray/tests/test_computation.py::test_covcorr_consistency[x-da_a6-da_b6]",
+        "xarray/tests/test_groupby.py::TestDataArrayGroupBy::test_groupby_math_not_aligned",
+        "xarray/tests/test_groupby.py::TestDataArrayResample::test_resample",
+        "xarray/tests/test_groupby.py::TestDatasetResample::test_resample_by_last_discarding_attrs",
+        "xarray/tests/test_groupby.py::TestDatasetResample::test_resample_min_count",
+        "xarray/tests/test_groupby.py::test_multi_index_groupby_sum",
+        "xarray/tests/test_units.py::TestDataArray::test_computation_objects[float64-method_groupby_bins-data]",
+        "xarray/tests/test_units.py::TestDataArray::test_computation_objects[int64-method_groupby_bins-data]",
+        "xarray/tests/test_units.py::TestDataArray::test_computation_objects[int64-method_weighted-data]",
+        "xarray/tests/test_units.py::TestDataArray::test_resample[float64]",
+        "xarray/tests/test_units.py::TestDataArray::test_resample[int64]",
+        "xarray/tests/test_units.py::TestDataset::test_comparisons[float64-method_equals-coords-identical_unit]",
+        "xarray/tests/test_units.py::TestDataset::test_computation_objects[int64-coords-method_groupby_bins]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-coords-method_assign]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[float64-data-method_assign]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-coords-method_assign_coords]",
+        "xarray/tests/test_units.py::TestDataset::test_content_manipulation[int64-data-method_assign]",
+        "xarray/tests/test_units.py::TestDataset::test_grouped_operations[float64-data-method_assign_coords]",
+        "xarray/tests/test_units.py::TestDataset::test_head_tail_thin[float64-coords-method_thin]",
+        "xarray/tests/test_units.py::TestDataset::test_head_tail_thin[int64-coords-method_tail]",
+        "xarray/tests/test_units.py::TestDataset::test_head_tail_thin[int64-coords-method_thin]",
+        "xarray/tests/test_units.py::TestDataset::test_merge[float64-coords-identical_unit]",
+        "xarray/tests/test_units.py::TestDataset::test_merge[int64-coords-identical_unit]",
+        "xarray/tests/test_units.py::TestDataset::test_resample[int64-coords]",
+        "xarray/tests/test_units.py::test_combine_by_coords[float64-data-identical_unit]",
+        "xarray/tests/test_units.py::test_combine_by_coords[int64-data-identical_unit]",
+        "xarray/tests/test_units.py::test_combine_nested[float64-data-no_unit]",
+        "xarray/tests/test_units.py::test_combine_nested[int64-data-no_unit]"
+      ]
+    },
+    {
+      "instance_id": "pylint-dev__pylint-7747",
+      "original_tests": 4,
+      "valid_tests": 3,
+      "removed_tests": [
+        "tests/benchmark/test_baseline_benchmarks.py::TestEstablishBaselineBenchmarks::test_baseline_lots_of_files_j2_empty_checker"
+      ]
+    },
+    {
+      "instance_id": "pylint-dev__pylint-6181",
+      "original_tests": 2,
+      "valid_tests": 1,
+      "removed_tests": [
+        "tests/test_self.py::TestRunTC::test_getdefaultencoding_crashes_with_lc_ctype_utf8"
+      ]
+    },
+    {
+      "instance_id": "pylint-dev__pylint-5596",
+      "original_tests": 37,
+      "valid_tests": 7,
+      "removed_tests": [
+        "tests/test_self.py::TestRunTC::test_duplicate_code_raw_strings",
+        "tests/test_self.py::TestRunTC::test_enable_all_works",
+        "tests/test_self.py::TestRunTC::test_fail_on[-10-C-fail_under_plus7_5.py-16]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-10-C0115-fail_under_plus7_5.py-0]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-10-C0116-fail_under_plus7_5.py-16]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-10-broad-except-fail_under_minus10.py-0]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-10-broad-except-fail_under_plus7_5.py-0]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-10-fake1,C,fake2-fail_under_plus7_5.py-16]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-10-missing-function-docstring-fail_under_minus10.py-22]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-10-missing-function-docstring-fail_under_plus7_5.py-16]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-11-broad-except-fail_under_minus10.py-0]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-11-missing-function-docstring-fail_under_minus10.py-22]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-5-broad-except-fail_under_minus10.py-22]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-5-missing-function-docstring-fail_under_minus10.py-22]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-9-broad-except-fail_under_minus10.py-22]",
+        "tests/test_self.py::TestRunTC::test_fail_on[-9-missing-function-docstring-fail_under_minus10.py-22]",
+        "tests/test_self.py::TestRunTC::test_fail_on[6-broad-except-fail_under_plus7_5.py-0]",
+        "tests/test_self.py::TestRunTC::test_fail_on[6-missing-function-docstring-fail_under_plus7_5.py-16]",
+        "tests/test_self.py::TestRunTC::test_fail_on[7.5-broad-except-fail_under_plus7_5.py-0]",
+        "tests/test_self.py::TestRunTC::test_fail_on[7.5-missing-function-docstring-fail_under_plus7_5.py-16]",
+        "tests/test_self.py::TestRunTC::test_fail_on[7.6-broad-except-fail_under_plus7_5.py-16]",
+        "tests/test_self.py::TestRunTC::test_fail_on[7.6-missing-function-docstring-fail_under_plus7_5.py-16]",
+        "tests/test_self.py::TestRunTC::test_fail_under",
+        "tests/test_self.py::TestRunTC::test_no_out_encoding",
+        "tests/test_self.py::TestRunTC::test_pylintrc_comments_in_values",
+        "tests/test_self.py::TestRunTC::test_relative_imports[False]",
+        "tests/test_self.py::TestRunTC::test_relative_imports[True]",
+        "tests/test_self.py::TestRunTC::test_stdin[mymodule.py-mymodule-mymodule.py]",
+        "tests/test_self.py::TestRunTC::test_stdin_syntaxerror",
+        "tests/test_self.py::TestRunTC::test_wrong_import_position_when_others_disabled"
+      ]
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-10807",
+      "original_tests": 5,
+      "valid_tests": 2,
+      "removed_tests": [
+        "tests/test_build_html.py::test_numfig_disabled[foo.html-expect13]",
+        "tests/test_build_latex.py::test_latex_table_longtable",
+        "tests/test_build_latex.py::test_numref_with_language_ja"
+      ]
+    }
+  ],
+  "fully_valid_instances": 108,
+  "partially_valid_instances": 23
+}
