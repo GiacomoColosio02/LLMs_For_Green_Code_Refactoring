@@ -60,9 +60,9 @@ REPO_PACKAGE_CONSTRAINTS = {
         'pandas': '<2.1',
     },
     'astropy/astropy': {
-        'numpy': '1.25.2',      # Fix: exact version from SWE-Perf specs
-        'cython': '<3.0',
-        'setuptools': '68.0.0', # Fix: exact version from SWE-Perf specs
+    'numpy': '==1.25.2',      # Fix: aggiunto == per versione esatta
+    'cython': '<3.0',
+    'setuptools': '==68.0.0', # Fix: aggiunto == per versione esatta
     },
     # Default constraints for other repos
     'default': {
