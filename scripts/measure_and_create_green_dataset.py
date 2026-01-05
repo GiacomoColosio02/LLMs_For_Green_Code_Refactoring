@@ -2,6 +2,7 @@
 Measure all SWE-Perf instances and create the Green Extended dataset.
 For each instance: measures with measure_instance.py, then adds to green dataset.
 Automatically skips already completed instances.
+AUTO-CLEANS reduced dataset: removes failed instances and failed tests.
 """
 import sys
 from pathlib import Path
@@ -111,15 +112,23 @@ def is_instance_in_green_dataset(green_dataset: dict, instance_id: str) -> bool:
     return any(inst.get('instance_id') == instance_id for inst in instances)
 
 
+def is_test_valid(test_data: dict) -> bool:
+    """Check if a test has valid measurements (return_code == 0)."""
+    if not test_data or 'measurements' not in test_data:
+        return False
+    return any(m.get('return_code') == 0 for m in test_data['measurements'])
+
+
 def process_instance_to_green(
     instance: dict,
     measurements_dir: Path
 ) -> Optional[tuple]:
     """
     Process a single instance and create green metrics entry.
+    Uses test_name matching for accuracy.
     
     Returns:
-        Tuple of (green_instance, repetitions) or None if invalid
+        Tuple of (green_instance, repetitions, valid_test_names) or None if invalid
     """
     instance_id = instance['instance_id']
     meas_file = measurements_dir / instance_id / "measurements.json"
@@ -133,32 +142,42 @@ def process_instance_to_green(
     if not efficiency_tests:
         return None
     
+    # Build lookup dictionaries by test_name
+    def build_test_lookup(commit_data):
+        lookup = {}
+        for test in commit_data.get('tests', []):
+            if test and 'test_name' in test:
+                lookup[test['test_name']] = test
+        return lookup
+    
+    base_lookup = build_test_lookup(measurements.get('base_measurements', {}))
+    head_lookup = build_test_lookup(measurements.get('head_measurements', {}))
+    
     green_metrics = {}
     min_repetitions = float('inf')
     valid_tests = 0
+    valid_test_names = []  # Track which tests are valid
     
-    for idx, test_name in enumerate(efficiency_tests):
+    for test_name in efficiency_tests:
         test_metrics = {'base': None, 'head': None}
         test_reps = {'base': 0, 'head': 0}
         
-        for commit_type in ['base', 'head']:
-            commit_data = measurements.get(f'{commit_type}_measurements', {})
-            tests = commit_data.get('tests', [])
+        for commit_type, lookup in [('base', base_lookup), ('head', head_lookup)]:
+            test = lookup.get(test_name)
             
-            # Match by index (more reliable)
-            if idx < len(tests):
-                test = tests[idx]
-                if test and test.get('status') == 'success':
-                    metrics = get_aggregated_metrics(test)
-                    if metrics:
-                        test_metrics[commit_type] = metrics
-                        test_reps[commit_type] = get_repetition_count(test)
+            if test and is_test_valid(test):
+                metrics = get_aggregated_metrics(test)
+                if metrics:
+                    test_metrics[commit_type] = metrics
+                    test_reps[commit_type] = get_repetition_count(test)
         
+        # Only include test if both base and head have valid metrics
         if test_metrics['base'] and test_metrics['head']:
             green_metrics[test_name] = test_metrics
             min_reps = min(test_reps['base'], test_reps['head'])
             min_repetitions = min(min_repetitions, min_reps)
             valid_tests += 1
+            valid_test_names.append(test_name)
     
     if not green_metrics or min_repetitions == float('inf'):
         return None
@@ -169,6 +188,9 @@ def process_instance_to_green(
     for key, value in instance.items():
         if key not in FIELDS_TO_REMOVE and key != '_reduction_metadata':
             new_instance[key] = value
+    
+    # Update efficiency_test to only include valid tests
+    new_instance['efficiency_test'] = valid_test_names
     
     new_instance['green_metrics'] = green_metrics
     new_instance['_green_metadata'] = {
@@ -181,7 +203,53 @@ def process_instance_to_green(
         'creation_date': datetime.now().isoformat()
     }
     
-    return new_instance, min_repetitions
+    return new_instance, min_repetitions, valid_test_names
+
+
+def update_reduced_dataset(
+    reduced_path: Path,
+    instances_list: List[Dict],
+    failed_instances: List[str],
+    test_updates: Dict[str, List[str]]
+) -> int:
+    """
+    Update reduced dataset by removing failed instances and invalid tests.
+    
+    Args:
+        reduced_path: Path to reduced dataset
+        instances_list: Current instances list
+        failed_instances: List of instance_ids that completely failed
+        test_updates: Dict mapping instance_id -> list of valid test names
+        
+    Returns:
+        Number of changes made
+    """
+    changes = 0
+    
+    # Remove failed instances
+    original_count = len(instances_list)
+    instances_list[:] = [
+        inst for inst in instances_list 
+        if inst['instance_id'] not in failed_instances
+    ]
+    removed_instances = original_count - len(instances_list)
+    changes += removed_instances
+    
+    # Update test lists for instances with partial failures
+    for instance in instances_list:
+        inst_id = instance['instance_id']
+        if inst_id in test_updates:
+            valid_tests = test_updates[inst_id]
+            original_tests = instance.get('efficiency_test', [])
+            if set(valid_tests) != set(original_tests):
+                instance['efficiency_test'] = valid_tests
+                changes += 1
+    
+    # Save updated reduced dataset
+    if changes > 0:
+        save_json(instances_list, reduced_path)
+    
+    return changes
 
 
 def measure_and_create_green_dataset(
@@ -193,6 +261,7 @@ def measure_and_create_green_dataset(
 ):
     """
     Measure all instances and create green dataset incrementally.
+    Auto-cleans reduced dataset by removing failed instances/tests.
     
     Args:
         reduced_dataset_path: Path to reduced dataset JSON
@@ -210,6 +279,7 @@ def measure_and_create_green_dataset(
     print(f"📄 Green output: {green_output_path}")
     print(f"🔄 Force remeasure: {force_remeasure}")
     print(f"⏭️  Skipping repos: {', '.join(SKIP_REPOS)}")
+    print(f"🧹 Auto-clean reduced dataset: ENABLED")
     print("=" * 100)
     
     # Paths
@@ -272,6 +342,10 @@ def measure_and_create_green_dataset(
     skipped = []
     skipped_repos = []
     
+    # Track for reduced dataset cleanup
+    failed_instances = []  # Instances to remove completely
+    test_updates = {}  # instance_id -> valid_test_names
+    
     total_instances = len(instances_list)
     
     print(f"\n🔄 Processing {total_instances} instances...")
@@ -313,7 +387,14 @@ def measure_and_create_green_dataset(
             result = process_instance_to_green(instance, meas_dir)
             
             if result:
-                green_instance, repetitions = result
+                green_instance, repetitions, valid_test_names = result
+                
+                # Track valid tests for reduced dataset update
+                original_tests = instance.get('efficiency_test', [])
+                if len(valid_test_names) < len(original_tests):
+                    test_updates[instance_id] = valid_test_names
+                    removed_count = len(original_tests) - len(valid_test_names)
+                    print(f"   🧹 {removed_count} invalid tests will be removed from reduced dataset")
                 
                 # Step 3: Add to green dataset
                 print(f"\n💾 Step 3: Adding to green dataset...")
@@ -353,7 +434,9 @@ def measure_and_create_green_dataset(
                     'error': 'Could not extract green metrics',
                     'elapsed_seconds': elapsed
                 })
+                failed_instances.append(instance_id)
                 print(f"\n⚠️  Could not extract green metrics")
+                print(f"   🧹 Instance will be removed from reduced dataset")
                 
         except Exception as e:
             elapsed = time.time() - start_time
@@ -362,7 +445,9 @@ def measure_and_create_green_dataset(
                 'error': str(e),
                 'elapsed_seconds': elapsed
             })
+            failed_instances.append(instance_id)
             print(f"\n❌ Error: {str(e)[:100]}")
+            print(f"   🧹 Instance will be removed from reduced dataset")
             print(f"   Continuing with next instance...")
         
         # Progress summary
@@ -383,6 +468,26 @@ def measure_and_create_green_dataset(
             eta_hours = (remaining * avg_time) / 3600
             print(f"   ⏱️  Avg time: {avg_time:.1f}s | ETA: {eta_hours:.1f}h")
     
+    # Step 4: Update reduced dataset (remove failed instances/tests)
+    print(f"\n{'='*100}")
+    print("🧹 UPDATING REDUCED DATASET")
+    print("=" * 100)
+    
+    if failed_instances or test_updates:
+        changes = update_reduced_dataset(
+            reduced_path,
+            instances_list,
+            failed_instances,
+            test_updates
+        )
+        print(f"   Removed {len(failed_instances)} failed instances")
+        print(f"   Updated tests for {len(test_updates)} instances")
+        print(f"   Total changes: {changes}")
+        print(f"   💾 Reduced dataset saved: {reduced_path}")
+        print(f"   📦 New instance count: {len(instances_list)}")
+    else:
+        print("   No changes needed - all instances/tests valid")
+    
     # Final summary
     print("\n" + "=" * 100)
     print("🎉 MEASUREMENT & GREEN DATASET CREATION COMPLETE!")
@@ -402,6 +507,13 @@ def measure_and_create_green_dataset(
     print(f"   ⭐ Skipped (done): {len(skipped)}")
     print(f"   ⏭️  Skipped (repos): {len(skipped_repos)}")
     print(f"   ⏰ Finished at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # Reduced dataset cleanup summary
+    if failed_instances or test_updates:
+        print(f"\n🧹 REDUCED DATASET CLEANUP:")
+        print(f"   Instances removed: {len(failed_instances)}")
+        print(f"   Instances with tests removed: {len(test_updates)}")
+        print(f"   Final instance count: {len(instances_list)}")
     
     # List skipped repos
     if skipped_repos:
