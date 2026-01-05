@@ -683,15 +683,22 @@ logger = logging.getLogger(__name__)
                 timeout=300
             )
             
-            # Install package with dependencies
-            print(f"  📦 Installing project dependencies (version: {version})...")
-            subprocess.run(
-                [venv_pip, 'install', '-e', '.', '--no-build-isolation'],
-                cwd=repo_path,
-                check=True,
-                timeout=600
-            )
-            
+            if 'matplotlib' in repo_lower:
+                print(f"  📦 Installing project with build isolation...")
+                subprocess.run(
+                    [venv_pip, 'install', '-e', '.'],  # SENZA --no-build-isolation
+                    cwd=repo_path,
+                    check=True,
+                    timeout=900  # più tempo per compilazione
+                )
+            else:
+                # Altri repo: senza build isolation (come prima)
+                subprocess.run(
+                    [venv_pip, 'install', '-e', '.', '--no-build-isolation'],
+                    cwd=repo_path,
+                    check=True,
+                    timeout=600
+    )
             # Install test dependencies
             matplotlib_constraint = constraints.get('matplotlib', '<3.9')
             print(f"  📦 Installing test dependencies (matplotlib{matplotlib_constraint})...")
