@@ -701,14 +701,39 @@ logger = logging.getLogger(__name__)
                     check=True,
                     timeout=600
                 ) 
-            # Install test dependencies
+                        # Install test dependencies
             matplotlib_constraint = constraints.get('matplotlib', '<3.9')
             print(f"  📦 Installing test dependencies...")
-            
+
             test_deps = [
                 'pytest', 'hypothesis', 'scipy', 'pytest-astropy', 'urllib3',
                 f"numpy{numpy_constraint}"
             ]
+
+            # Aggiungi dipendenze specifiche per astropy
+            if 'astropy' in repo_lower:
+                test_deps.extend([
+                    'pytest-doctestplus',
+                    'pytest-astropy-header',
+                    'pytest-remotedata',
+                    'pytest-arraydiff',
+                    'pytest-filter-subpackage',
+                    'pytest-cov',
+                    'pytest-mock',
+                    'h5py',
+                    'beautifulsoup4',
+                    'html5lib',
+                    'bleach',
+                    'PyYAML',
+                    'certifi'
+                ])
+
+            # Special: matplotlib needs older pyparsing, not matplotlib itself
+            if 'matplotlib' in repo_lower:
+                test_deps.append('pyparsing<3.2')
+            else:
+                test_deps.append(f"matplotlib{matplotlib_constraint}")
+            
             
             # Special: matplotlib needs older pyparsing, not matplotlib itself
             if 'matplotlib' in repo_lower:
