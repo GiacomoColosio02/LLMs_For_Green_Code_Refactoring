@@ -67,6 +67,13 @@ REPO_PACKAGE_CONSTRAINTS = {
         'cython': '<3.0',
         'setuptools': '==68.0.0', # Fix: versione esatta
     },
+    'matplotlib/matplotlib': {
+        'numpy': '==1.25.2',
+        'setuptools': '<70',
+        'meson-python': '>=0.13.1,<0.17.0',
+        'pybind11': '>=2.13.2',
+        'setuptools_scm': '>=7',
+    },
     # Default constraints for other repos
     'default': {
         'setuptools': '<70',
@@ -79,8 +86,10 @@ REPO_PACKAGE_CONSTRAINTS = {
 # Pre-install commands for specific repos (run before pip install)
 REPO_PRE_INSTALL = {
     'astropy/astropy': [
-        # Fix setuptools version in pyproject.toml (from SWE-Perf constants.py)
         'sed -i \'s/requires = \\["setuptools",/requires = \\["setuptools==68.0.0",/\' pyproject.toml'
+    ],
+    'matplotlib/matplotlib': [
+        # Nessun pre-install necessario
     ],
 }
 
@@ -671,6 +680,19 @@ logger = logging.getLogger(__name__)
             cython_constraint = constraints.get('cython', '<3.0')
             
             print(f"  📦 Installing build dependencies (numpy{numpy_constraint}, cython{cython_constraint})...")
+            # Special handling for matplotlib (needs meson build system)
+            if 'matplotlib' in repo_lower:
+                print(f"  📦 Installing meson build dependencies for matplotlib...")
+                subprocess.run(
+                    [venv_pip, 'install',
+                     'meson-python>=0.13.1,<0.17.0',
+                     'pybind11>=2.13.2',
+                     'setuptools_scm>=7',
+                     'certifi'],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=120
+                )
             subprocess.run(
                 [venv_pip, 'install',
                  'extension_helpers', 'setuptools_scm', 
