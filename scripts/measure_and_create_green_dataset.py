@@ -48,9 +48,7 @@ FIELDS_TO_REMOVE = [
 ]
 
 # Repos to skip (known issues)
-SKIP_REPOS = [
-    'astropy',  # EnergiBridge issue with conda env
-]
+SKIP_REPOS = []
 
 
 def load_json(path: Path) -> dict:
