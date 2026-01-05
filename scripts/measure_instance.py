@@ -698,20 +698,28 @@ logger = logging.getLogger(__name__)
                     cwd=repo_path,
                     check=True,
                     timeout=600
-    )
+    )       
             # Install test dependencies
             matplotlib_constraint = constraints.get('matplotlib', '<3.9')
-            print(f"  📦 Installing test dependencies (matplotlib{matplotlib_constraint})...")
+            print(f"  📦 Installing test dependencies...")
+            
+            test_deps = [
+                'pytest', 'hypothesis', 'scipy', 'pytest-astropy', 'urllib3',
+                f"numpy{numpy_constraint}"
+            ]
+            
+            # Special: matplotlib needs older pyparsing, not matplotlib itself
+            if 'matplotlib' in repo_lower:
+                test_deps.append('pyparsing<3.2')
+            else:
+                test_deps.append(f"matplotlib{matplotlib_constraint}")
+            
             subprocess.run(
-                [venv_pip, 'install', 
-                 'pytest', 'hypothesis', 'scipy', 'pytest-astropy', 'urllib3',
-                 f"matplotlib{matplotlib_constraint}",
-                 f"numpy{numpy_constraint}"],  # Re-enforce numpy constraint
+                [venv_pip, 'install'] + test_deps,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 timeout=180
             )
-            
             print(f"  ✅ Dependencies installed")
             return (str(venv_path / 'bin' / 'python'), None)
             
