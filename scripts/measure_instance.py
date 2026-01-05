@@ -616,14 +616,14 @@ logger = logging.getLogger(__name__)
                     print(f"  ⚠️ Conda failed, falling back to venv...")
         
         # Check if we should use conda for astropy
-       # if 'astropy' in repo_lower and version in ASTROPY_CONDA_VERSIONS:
-        #    if Path(CONDA_PATH).exists():
-        #        env_name = f"astropy_{commit[:8]}"
-         #       python_path = self.install_astropy_conda(repo_path, env_name)
-          #      if python_path:
-           #         return (python_path, env_name)
-            #    else:
-              #      print(f"  ⚠️ Conda failed, falling back to venv...")
+        if 'astropy' in repo_lower and version in ASTROPY_CONDA_VERSIONS:
+            if Path(CONDA_PATH).exists():
+                env_name = f"astropy_{commit[:8]}"
+                python_path = self.install_astropy_conda(repo_path, env_name)
+                if python_path:
+                    return (python_path, env_name)
+                else:
+                    print(f"  ⚠️ Conda failed, falling back to venv...")
         
         # Get appropriate Python version
         python_exec = get_python_executable(repo, version)
