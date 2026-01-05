@@ -66,7 +66,7 @@ REPO_PACKAGE_CONSTRAINTS = {
     },
     'astropy/astropy': {
         'numpy': '==1.25.2',      # Fix: versione esatta
-        'cython': '<3.0',
+        'cython': '>3.0',
         'setuptools': '==68.0.0', # Fix: versione esatta
     },
     # Default constraints for other repos
