@@ -1,6 +1,7 @@
 """
 Script to create the reduced SWE-Perf dataset.
 Removes instances without valid tests and removes invalid tests from partial instances.
+Uses test_name matching instead of index matching for accuracy.
 """
 import json
 from pathlib import Path
@@ -18,6 +19,7 @@ def get_valid_tests_for_instance(measurements_dir: Path, instance_id: str, expec
     """
     Get the set of valid tests for an instance.
     A test is valid if it passes (return_code == 0) in both base and head commits.
+    Uses test_name matching instead of index matching.
     
     Args:
         measurements_dir: Path to measurements directory
@@ -38,22 +40,27 @@ def get_valid_tests_for_instance(measurements_dir: Path, instance_id: str, expec
     base_tests = data.get('base_measurements', {}).get('tests', [])
     head_tests = data.get('head_measurements', {}).get('tests', [])
     
-    def get_passed_tests(tests: List, expected: List[str]) -> Set[str]:
-        """Get set of test names that passed."""
+    def get_passed_tests_by_name(tests: List) -> Set[str]:
+        """Get set of test names that passed, using test_name field."""
         passed = set()
-        for i, t in enumerate(tests):
+        for t in tests:
             if t and 'measurements' in t:
                 # Check if at least one repetition passed
                 if any(m.get('return_code') == 0 for m in t['measurements']):
-                    if i < len(expected):
-                        passed.add(expected[i])
+                    # Use test_name if available, otherwise skip
+                    test_name = t.get('test_name')
+                    if test_name:
+                        passed.add(test_name)
         return passed
     
-    base_passed = get_passed_tests(base_tests, expected_tests)
-    head_passed = get_passed_tests(head_tests, expected_tests)
+    base_passed = get_passed_tests_by_name(base_tests)
+    head_passed = get_passed_tests_by_name(head_tests)
     
-    # Valid tests = passed in BOTH base and head
-    return base_passed & head_passed
+    # Valid tests = passed in BOTH base and head AND in expected_tests
+    expected_set = set(expected_tests)
+    valid_in_both = base_passed & head_passed
+    
+    return valid_in_both & expected_set
 
 
 def create_reduced_dataset(
@@ -101,7 +108,7 @@ def create_reduced_dataset(
         expected_tests = instance.get('efficiency_test', [])
         stats['original_tests'] += len(expected_tests)
         
-        # Get valid tests for this instance
+        # Get valid tests for this instance (using test_name matching)
         valid_tests = get_valid_tests_for_instance(
             measurements_dir, instance_id, expected_tests
         )
