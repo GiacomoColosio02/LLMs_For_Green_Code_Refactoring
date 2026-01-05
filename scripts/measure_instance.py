@@ -47,7 +47,7 @@ PYTHON_VERSION_MAP = {
 SKLEARN_CONDA_VERSIONS = ['0.2', '0.20', '0.21', '0.22']
 
 # Astropy versions that require conda with Python 3.10
-### ASTROPY_CONDA_VERSIONS = []
+ASTROPY_CONDA_VERSIONS = []
 
 
 # Repository-specific package constraints
