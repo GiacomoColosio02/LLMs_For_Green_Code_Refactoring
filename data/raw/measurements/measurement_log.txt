@@ -1,0 +1,1361 @@
+✅ 1/140 | astropy__astropy-16065 | 153.3s
+✅ 2/140 | astropy__astropy-16058 | 149.7s
+✅ 3/140 | astropy__astropy-15948 | 145.1s
+✅ 4/140 | astropy__astropy-15710 | 145.4s
+✅ 5/140 | astropy__astropy-15228 | 47.5s
+✅ 6/140 | astropy__astropy-14590 | 47.4s
+✅ 7/140 | astropy__astropy-14413 | 47.5s
+✅ 8/140 | astropy__astropy-13817 | 47.3s
+✅ 9/140 | astropy__astropy-13745 | 47.2s
+✅ 10/140 | astropy__astropy-13734 | 47.3s
+✅ 11/140 | astropy__astropy-13496 | 47.3s
+✅ 12/140 | astropy__astropy-12842 | 47.3s
+✅ 13/140 | matplotlib__matplotlib-28104 | 259.3s
+✅ 14/140 | matplotlib__matplotlib-24250 | 201.4s
+ 15/140 | matplotlib__matplotlib-23712 | ERROR: EnergiBridge failed: 
+ 16/140 | mwaskom__seaborn-2458 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmp3_7nyj5k/seaborn_ba086c20/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:17: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+ 17/140 | mwaskom__seaborn-2449 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpgaxnmi4l/seaborn_80fc0a8e/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:17: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+ 18/140 | mwaskom__seaborn-2389 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmp7509ik87/seaborn_bcdac541/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+ 19/140 | mwaskom__seaborn-2313 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpnipac2c7/seaborn_211cabb0/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+ 20/140 | mwaskom__seaborn-2224 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpuan9n6d3/seaborn_f62a4a51/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1055: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+ 21/140 | mwaskom__seaborn-2205 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpwn72482r/seaborn_9d96d8f6/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1055: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+✅ 22/140 | psf__requests-1891 | 12.4s
+ 23/140 | psf__requests-3036 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpdry6quh5/requests_4f378b0e/tests/conftest.py'.
+tests/conftest.py:3: in <module>
+    from requests.compat import urljoin
+requests/__init__.py:58: in <module>
+    from . import utils
+requests/utils.py:30: in <module>
+    from .cookies import RequestsCookieJar, cookiejar_from_dict
+requests/cookies.py:164: in <module>
+    class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'collections' has no attribute 'MutableMapping'
+
+✅ 24/140 | pydata__xarray-9977 | 63.9s
+✅ 25/140 | pydata__xarray-9881 | 109.2s
+ 26/140 | pydata__xarray-9782 | ERROR: EnergiBridge failed: ERROR: not found: /tmp/tmpn0wrfewx/xarray_4c8b03bd/xarray/tests/test_duck_array_ops.py::test_min_count
+(no match in any of [<Module test_duck_array_ops.py>])
+
+
+✅ 27/140 | pydata__xarray-9766 | 138.7s
+✅ 28/140 | pydata__xarray-9720 | 132.6s
+✅ 29/140 | pydata__xarray-9719 | 127.8s
+ 30/140 | pydata__xarray-9688 | ERROR: EnergiBridge failed: energibridge_script_284666.sh: line 3: lambda: No such file or directory
+
+✅ 31/140 | pydata__xarray-9687 | 78.1s
+✅ 32/140 | pydata__xarray-9684 | 149.3s
+✅ 33/140 | pydata__xarray-9666 | 66.9s
+✅ 34/140 | pydata__xarray-9651 | 97.4s
+✅ 35/140 | pydata__xarray-9619 | 158.7s
+✅ 36/140 | pydata__xarray-9586 | 106.9s
+✅ 37/140 | pydata__xarray-9561 | 96.2s
+✅ 38/140 | pydata__xarray-9552 | 100.1s
+ 39/140 | pydata__xarray-9520 | ERROR: EnergiBridge failed: ERROR: not found: /tmp/tmpcpkhgo9c/xarray_3c74509c/xarray/tests/test_duck_array_ops.py::test_argmin_max
+(no match in any of [<Module test_duck_array_ops.py>])
+
+
+ 39/140 | pydata__xarray-9520 | ERROR: EnergiBridge failed: None
+ 40/140 | pydata__xarray-9517 | ERROR: EnergiBridge failed: None
+ 41/140 | pydata__xarray-9509 | ERROR: EnergiBridge failed: None
+ 42/140 | pydata__xarray-9482 | ERROR: EnergiBridge failed: None
+ 43/140 | pydata__xarray-9457 | ERROR: EnergiBridge failed: None
+ 44/140 | pydata__xarray-9453 | ERROR: EnergiBridge failed: None
+ 45/140 | pydata__xarray-9451 | ERROR: EnergiBridge failed: None
+ 46/140 | pydata__xarray-9415 | ERROR: EnergiBridge failed: None
+ 47/140 | pydata__xarray-9407 | ERROR: EnergiBridge failed: None
+ 48/140 | pydata__xarray-9393 | ERROR: EnergiBridge failed: None
+ 49/140 | pydata__xarray-9369 | ERROR: EnergiBridge failed: None
+ 50/140 | pydata__xarray-9243 | ERROR: EnergiBridge failed: None
+ 51/140 | pydata__xarray-9116 | ERROR: EnergiBridge failed: None
+ 39/140 | pydata__xarray-9520 | ERROR: EnergiBridge failed: ERROR: not found: /tmp/tmpig2vfd_8/xarray_3c74509c/xarray/tests/test_duck_array_ops.py::test_argmin_max
+(no match in any of [<Module test_duck_array_ops.py>])
+
+
+✅ 40/140 | pydata__xarray-9517 | 89.8s
+ 41/140 | pydata__xarray-9509 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpgwqpbm70/xarray_0063a51d/xarray/tests/test_dask.py::TestDataArrayAndDataset::test_concat_loads_variables
+
+
+ 42/140 | pydata__xarray-9482 | ERROR: EnergiBridge failed: ERROR: not found: /tmp/tmp3hrs5ogm/xarray_aeaa0820/xarray/tests/test_duck_array_ops.py::test_argmin_max
+(no match in any of [<Module test_duck_array_ops.py>])
+
+
+✅ 43/140 | pydata__xarray-9457 | 76.5s
+ 44/140 | pydata__xarray-9453 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmp9pzvnt0_/xarray_0af19798/xarray/tests/test_dask.py::TestVariable::test_setitem_dask_array
+
+
+ 45/140 | pydata__xarray-9451 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmp20oxh_ta/xarray_fac2c89e/xarray/tests/test_dask.py::TestVariable::test_setitem_dask_array
+
+
+✅ 46/140 | pydata__xarray-9415 | 84.8s
+ 47/140 | pydata__xarray-9407 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmp237rpgxz/xarray_12d8cfa3/xarray/tests/test_dask.py::test_lazy_array_equiv_variables
+
+
+✅ 48/140 | pydata__xarray-9393 | 82.6s
+✅ 49/140 | pydata__xarray-9369 | 91.9s
+ 50/140 | pydata__xarray-9243 | ERROR: EnergiBridge failed: ERROR: not found: /tmp/tmpbtqygrdh/xarray_28dfea76/xarray/tests/test_duck_array_ops.py::test_min_count
+(no match in any of [<Module test_duck_array_ops.py>])
+
+
+✅ 51/140 | pydata__xarray-9116 | 85.9s
+✅ 52/140 | pydata__xarray-9109 | 82.1s
+✅ 53/140 | pydata__xarray-9079 | 64.6s
+✅ 54/140 | pydata__xarray-9014 | 287.4s
+✅ 55/140 | pydata__xarray-8946 | 130.8s
+✅ 56/140 | pydata__xarray-8737 | 143.6s
+ 57/140 | pydata__xarray-8711 | ERROR: EnergiBridge failed: energibridge_script_372252.sh: line 3: lambda: No such file or directory
+
+ 58/140 | pydata__xarray-8684 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpgfbctm1j/xarray_f33a632b/xarray/tests/test_dask.py::TestDataArrayAndDataset::test_stack
+
+
+ 59/140 | pydata__xarray-8668 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmp9c5_vmvs/xarray_037a39e2/xarray/tests/test_dask.py::test_more_transforms_pass_lazy_array_equiv
+
+
+ 60/140 | pydata__xarray-8627 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpz2er9h8l/xarray_fffb03c8/xarray/tests/test_dask.py::test_lazy_array_equiv_variables
+
+
+ 61/140 | pydata__xarray-8575 | ERROR: EnergiBridge failed: energibridge_script_372252.sh: line 3: lambda: No such file or directory
+
+ 62/140 | pydata__xarray-8527 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpssf3nonn/xarray_8ad0b832/xarray/tests/test_dask.py::TestDataArrayAndDataset::test_concat_loads_variables
+
+
+ 63/140 | pydata__xarray-8512 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpbgo4bide/xarray_da082887/xarray/tests/test_dask.py::TestToDaskDataFrame::test_to_dask_dataframe_2D
+
+
+ 64/140 | pydata__xarray-8507 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmp7ftae5wh/xarray_492aa076/xarray/tests/test_dask.py::TestToDaskDataFrame::test_to_dask_dataframe_2D
+
+
+✅ 65/140 | pydata__xarray-8415 | 109.6s
+✅ 66/140 | pydata__xarray-8412 | 71.8s
+ 67/140 | pydata__xarray-8294 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmp1b5j1o4k/xarray_c25c825f/xarray/tests/test_units.py::TestDataset::test_content_manipulation
+
+
+✅ 68/140 | pydata__xarray-8277 | 81.5s
+✅ 69/140 | pydata__xarray-7809 | 346.4s
+✅ 70/140 | pydata__xarray-7578 | 115.6s
+ 71/140 | pydata__xarray-7209 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpokq5g9px/xarray_891285ee/xarray/tests/test_units.py::TestDataArray::test_broadcast_like
+
+
+✅ 72/140 | pydata__xarray-7206 | 95.3s
+✅ 73/140 | pydata__xarray-6834 | 73.1s
+✅ 74/140 | pydata__xarray-6160 | 153.0s
+✅ 75/140 | pydata__xarray-6109 | 80.3s
+✅ 76/140 | pydata__xarray-5845 | 71.2s
+ 77/140 | pydata__xarray-5571 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpob7wpo19/xarray_43409090/xarray/tests/test_cftimeindex_resample.py::test_resample
+
+
+✅ 78/140 | pylint-dev__pylint-7747 | 19.7s
+ 79/140 | pylint-dev__pylint-6181 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpogpyrc1g/pylint_7a9234f6/tests/test_self.py::TestRunTC::test_getdefaultencoding_crashes_with_lc_ctype_utf8
+
+
+✅ 80/140 | pylint-dev__pylint-5596 | 21.7s
+✅ 81/140 | scikit-learn__scikit-learn-13253 | 46.0s
+✅ 82/140 | scikit-learn__scikit-learn-13243 | 46.0s
+✅ 83/140 | scikit-learn__scikit-learn-13186 | 45.3s
+✅ 84/140 | scikit-learn__scikit-learn-13174 | 46.0s
+✅ 85/140 | scikit-learn__scikit-learn-13151 | 46.0s
+✅ 86/140 | scikit-learn__scikit-learn-13124 | 46.1s
+✅ 87/140 | scikit-learn__scikit-learn-12989 | 46.0s
+✅ 88/140 | scikit-learn__scikit-learn-12931 | 46.4s
+✅ 89/140 | scikit-learn__scikit-learn-12859 | 46.0s
+✅ 90/140 | scikit-learn__scikit-learn-12822 | 46.0s
+✅ 91/140 | scikit-learn__scikit-learn-12760 | 46.1s
+✅ 92/140 | scikit-learn__scikit-learn-12701 | 46.1s
+✅ 93/140 | scikit-learn__scikit-learn-12656 | 46.1s
+✅ 94/140 | scikit-learn__scikit-learn-12625 | 46.7s
+✅ 95/140 | scikit-learn__scikit-learn-12581 | 46.0s
+✅ 96/140 | scikit-learn__scikit-learn-12567 | 46.2s
+✅ 97/140 | scikit-learn__scikit-learn-12543 | 56.0s
+✅ 98/140 | scikit-learn__scikit-learn-12514 | 46.3s
+✅ 99/140 | scikit-learn__scikit-learn-12446 | 46.1s
+✅ 100/140 | scikit-learn__scikit-learn-12379 | 46.1s
+✅ 101/140 | scikit-learn__scikit-learn-12246 | 46.0s
+✅ 102/140 | scikit-learn__scikit-learn-12230 | 46.1s
+✅ 103/140 | scikit-learn__scikit-learn-12211 | 46.1s
+✅ 104/140 | scikit-learn__scikit-learn-12172 | 46.1s
+✅ 105/140 | scikit-learn__scikit-learn-12155 | 46.0s
+✅ 106/140 | scikit-learn__scikit-learn-12117 | 47.2s
+✅ 107/140 | scikit-learn__scikit-learn-12116 | 46.1s
+✅ 108/140 | scikit-learn__scikit-learn-11754 | 45.9s
+✅ 109/140 | scikit-learn__scikit-learn-11674 | 46.1s
+✅ 110/140 | scikit-learn__scikit-learn-11526 | 46.0s
+✅ 111/140 | scikit-learn__scikit-learn-11364 | 46.0s
+✅ 112/140 | scikit-learn__scikit-learn-11179 | 46.1s
+✅ 113/140 | sphinx-doc__sphinx-12615 | 126.7s
+✅ 114/140 | sphinx-doc__sphinx-12598 | 83.7s
+ 115/140 | sphinx-doc__sphinx-11861 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmp6_ov_l6a/sphinx_ea9c61fb/tests/test_build_linkcheck.py::test_linkcheck_request_headers
+
+
+✅ 116/140 | sphinx-doc__sphinx-11489 | 85.8s
+ 117/140 | sphinx-doc__sphinx-10807 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmp06wzz8zr/sphinx_ded734d5/tests/test_build_html.py::test_numfig_disabled
+
+
+✅ 118/140 | sphinx-doc__sphinx-9547 | 77.6s
+ 119/140 | sphinx-doc__sphinx-6422 | ERROR: EnergiBridge failed: Traceback (most recent call last):
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 879, in import_plugin
+    __import__(importspec)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/assertion/rewrite.py", line 197, in exec_module
+    exec(co, module.__dict__)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/testing/fixtures.py", line 20, in <module>
+    from . import util
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/testing/util.py", line 19, in <module>
+    from sphinx import application, locale
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/application.py", line 34, in <module>
+    from sphinx.registry import SphinxComponentRegistry
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/registry.py", line 22, in <module>
+    from sphinx.parsers import Parser as SphinxParser
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/parsers.py", line 17, in <module>
+    from sphinx.util.rst import append_epilog, prepend_prolog
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/util/rst.py", line 22, in <module>
+    from jinja2 import environmentfilter
+ImportError: cannot import name 'environmentfilter' from 'jinja2' (/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/jinja2/__init__.py)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+                     ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 223, in console_main
+    code = main()
+           ^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 193, in main
+    config = _prepareconfig(new_args, plugins)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 361, in _prepareconfig
+    config: Config = pluginmanager.hook.pytest_cmdline_parse(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/helpconfig.py", line 124, in pytest_cmdline_parse
+    config = yield
+             ^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1186, in pytest_cmdline_parse
+    self.parse(args)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1556, in parse
+    self.hook.pytest_load_initial_conftests(
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/warnings.py", line 128, in pytest_load_initial_conftests
+    return (yield)
+            ^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/capture.py", line 173, in pytest_load_initial_conftests
+    yield
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1270, in pytest_load_initial_conftests
+    self.pluginmanager._set_initial_conftests(
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 602, in _set_initial_conftests
+    self._try_load_conftest(
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 640, in _try_load_conftest
+    self._loadconftestmodules(
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 680, in _loadconftestmodules
+    mod = self._importconftest(
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 756, in _importconftest
+    self.consider_conftest(mod, registration_name=conftestpath_plugin_name)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 837, in consider_conftest
+    self.register(conftestmodule, name=registration_name)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 533, in register
+    self.consider_module(plugin)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 845, in consider_module
+    self._import_plugin_specs(getattr(mod, "pytest_plugins", []))
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 852, in _import_plugin_specs
+    self.import_plugin(import_spec)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 881, in import_plugin
+    raise ImportError(
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 879, in import_plugin
+    __import__(importspec)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/_pytest/assertion/rewrite.py", line 197, in exec_module
+    exec(co, module.__dict__)
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/testing/fixtures.py", line 20, in <module>
+    from . import util
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/testing/util.py", line 19, in <module>
+    from sphinx import application, locale
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/application.py", line 34, in <module>
+    from sphinx.registry import SphinxComponentRegistry
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/registry.py", line 22, in <module>
+    from sphinx.parsers import Parser as SphinxParser
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/parsers.py", line 17, in <module>
+    from sphinx.util.rst import append_epilog, prepend_prolog
+  File "/tmp/tmpfchwqkuv/sphinx_08904697/sphinx/util/rst.py", line 22, in <module>
+    from jinja2 import environmentfilter
+ImportError: Error importing plugin "sphinx.testing.fixtures": cannot import name 'environmentfilter' from 'jinja2' (/tmp/tmpfchwqkuv/sphinx_08904697/venv_sweperf/lib/python3.12/site-packages/jinja2/__init__.py)
+
+ 120/140 | sphinx-doc__sphinx-8537 | ERROR: EnergiBridge failed: Traceback (most recent call last):
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 879, in import_plugin
+    __import__(importspec)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/assertion/rewrite.py", line 197, in exec_module
+    exec(co, module.__dict__)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/testing/fixtures.py", line 20, in <module>
+    from sphinx.testing import util
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/testing/util.py", line 23, in <module>
+    from sphinx import application, locale
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/application.py", line 41, in <module>
+    from sphinx.registry import SphinxComponentRegistry
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/registry.py", line 24, in <module>
+    from sphinx.builders import Builder
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/builders/__init__.py", line 26, in <module>
+    from sphinx.util import import_object, logging, progress_message, rst, status_iterator
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/util/rst.py", line 21, in <module>
+    from jinja2 import Environment, environmentfilter
+ImportError: cannot import name 'environmentfilter' from 'jinja2' (/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/jinja2/__init__.py)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+                     ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 223, in console_main
+    code = main()
+           ^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 193, in main
+    config = _prepareconfig(new_args, plugins)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 361, in _prepareconfig
+    config: Config = pluginmanager.hook.pytest_cmdline_parse(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/helpconfig.py", line 124, in pytest_cmdline_parse
+    config = yield
+             ^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1186, in pytest_cmdline_parse
+    self.parse(args)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1556, in parse
+    self.hook.pytest_load_initial_conftests(
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/warnings.py", line 128, in pytest_load_initial_conftests
+    return (yield)
+            ^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/capture.py", line 173, in pytest_load_initial_conftests
+    yield
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1270, in pytest_load_initial_conftests
+    self.pluginmanager._set_initial_conftests(
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 602, in _set_initial_conftests
+    self._try_load_conftest(
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 640, in _try_load_conftest
+    self._loadconftestmodules(
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 680, in _loadconftestmodules
+    mod = self._importconftest(
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 756, in _importconftest
+    self.consider_conftest(mod, registration_name=conftestpath_plugin_name)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 837, in consider_conftest
+    self.register(conftestmodule, name=registration_name)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 533, in register
+    self.consider_module(plugin)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 845, in consider_module
+    self._import_plugin_specs(getattr(mod, "pytest_plugins", []))
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 852, in _import_plugin_specs
+    self.import_plugin(import_spec)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 881, in import_plugin
+    raise ImportError(
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 879, in import_plugin
+    __import__(importspec)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/assertion/rewrite.py", line 197, in exec_module
+    exec(co, module.__dict__)
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/testing/fixtures.py", line 20, in <module>
+    from sphinx.testing import util
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/testing/util.py", line 23, in <module>
+    from sphinx import application, locale
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/application.py", line 41, in <module>
+    from sphinx.registry import SphinxComponentRegistry
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/registry.py", line 24, in <module>
+    from sphinx.builders import Builder
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/builders/__init__.py", line 26, in <module>
+    from sphinx.util import import_object, logging, progress_message, rst, status_iterator
+  File "/tmp/tmpm1hfdewf/sphinx_5ba344d6/sphinx/util/rst.py", line 21, in <module>
+    from jinja2 import Environment, environmentfilter
+ImportError: Error importing plugin "sphinx.testing.fixtures": cannot import name 'environmentfilter' from 'jinja2' (/tmp/tmpm1hfdewf/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/jinja2/__init__.py)
+
+ 121/140 | sympy__sympy-14331 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpz6x0jxzb/sympy_84a58dd3/sympy/conftest.py'.
+sympy/__init__.py:57: in <module>
+    from .core import *
+sympy/core/__init__.py:6: in <module>
+    from .basic import Basic, Atom, preorder_traversal
+sympy/core/basic.py:3: in <module>
+    from collections import Mapping, defaultdict
+E   ImportError: cannot import name 'Mapping' from 'collections' (/usr/lib/python3.12/collections/__init__.py)
+
+ 122/140 | sympy__sympy-14278 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpmw9c2s7x/sympy_9986b381/sympy/conftest.py'.
+sympy/__init__.py:57: in <module>
+    from .core import *
+sympy/core/__init__.py:6: in <module>
+    from .basic import Basic, Atom, preorder_traversal
+sympy/core/basic.py:3: in <module>
+    from collections import Mapping, defaultdict
+E   ImportError: cannot import name 'Mapping' from 'collections' (/usr/lib/python3.12/collections/__init__.py)
+
+✅ 123/140 | sympy__sympy-27666 | 123.3s
+✅ 124/140 | sympy__sympy-27347 | 99.0s
+✅ 125/140 | sympy__sympy-27085 | 96.1s
+✅ 126/140 | sympy__sympy-26989 | 113.6s
+✅ 127/140 | sympy__sympy-26940 | 97.5s
+✅ 128/140 | sympy__sympy-26935 | 99.2s
+✅ 129/140 | sympy__sympy-26848 | 193.3s
+✅ 130/140 | sympy__sympy-26693 | 135.8s
+✅ 131/140 | sympy__sympy-26546 | 100.7s
+ 132/140 | sympy__sympy-26358 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmpke_vpumg/sympy_ca874843']' returned non-zero exit status 128.
+ 133/140 | sympy__sympy-26036 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmp1g454y0a/sympy_b354658b']' returned non-zero exit status 128.
+ 134/140 | sympy__sympy-26004 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmpcjgayvp2/sympy_2811142f']' returned non-zero exit status 128.
+✅ 135/140 | sympy__sympy-25852 | 230.7s
+✅ 136/140 | sympy__sympy-25758 | 122.2s
+ 137/140 | sympy__sympy-25614 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmpgo7fc518/sympy_bdc95a90']' returned non-zero exit status 128.
+✅ 138/140 | sympy__sympy-25591 | 392.4s
+ 139/140 | sympy__sympy-25205 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmp0sxbywhl/sympy_ffb5a3f0']' returned non-zero exit status 128.
+ 140/140 | sympy__sympy-24665 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmp0tjh9qef/sympy_c12282dd']' returned non-zero exit status 128.
+ 100/140 | scikit-learn__scikit-learn-12379 | ERROR: Command '['git', 'clone', 'https://github.com/scikit-learn/scikit-learn.git', '/tmp/tmp7bi5s8p3/scikit-learn_ebe77d69']' returned non-zero exit status 128.
+✅ 101/140 | scikit-learn__scikit-learn-12246 | 45.9s
+✅ 102/140 | scikit-learn__scikit-learn-12230 | 46.0s
+✅ 103/140 | scikit-learn__scikit-learn-12211 | 45.9s
+✅ 104/140 | scikit-learn__scikit-learn-12172 | 45.9s
+ 105/140 | scikit-learn__scikit-learn-12155 | ERROR: Command '['git', 'clone', 'https://github.com/scikit-learn/scikit-learn.git', '/tmp/tmpooh1_r6_/scikit-learn_16290cdb']' returned non-zero exit status 128.
+✅ 106/140 | scikit-learn__scikit-learn-12117 | 46.0s
+✅ 107/140 | scikit-learn__scikit-learn-12116 | 45.8s
+✅ 108/140 | scikit-learn__scikit-learn-11754 | 46.5s
+ 109/140 | scikit-learn__scikit-learn-11674 | ERROR: Command '['git', 'checkout', 'cf3ff10dceda5db0a69a8246834c5a98c1b0567d']' returned non-zero exit status 128.
+ 110/140 | scikit-learn__scikit-learn-11526 | ERROR: Command '['git', 'clone', 'https://github.com/scikit-learn/scikit-learn.git', '/tmp/tmpcrj9zc07/scikit-learn_dbd28e70']' returned non-zero exit status 128.
+ 111/140 | scikit-learn__scikit-learn-11364 | ERROR: Command '['git', 'clone', 'https://github.com/scikit-learn/scikit-learn.git', '/tmp/tmp6ix8qkjt/scikit-learn_28d97b37']' returned non-zero exit status 128.
+ 112/140 | scikit-learn__scikit-learn-11179 | ERROR: Command '['git', 'checkout', '5b6fca8d642c72b54e0b96f1319a175357272958']' returned non-zero exit status 128.
+ 113/140 | sphinx-doc__sphinx-12615 | ERROR: Command '['git', 'checkout', '8e44fa716544383e017051193d7ab84ee5eaa598']' returned non-zero exit status 128.
+✅ 114/140 | sphinx-doc__sphinx-12598 | 73.6s
+ 115/140 | sphinx-doc__sphinx-11861 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpsaqcah9d/sphinx_ea9c61fb/tests/test_build_linkcheck.py::test_linkcheck_request_headers
+
+
+ 116/140 | sphinx-doc__sphinx-11489 | ERROR: Command '['git', 'clone', 'https://github.com/sphinx-doc/sphinx.git', '/tmp/tmpl48fgicr/sphinx_d15a837c']' returned non-zero exit status 128.
+ 117/140 | sphinx-doc__sphinx-10807 | ERROR: Command '['git', 'clone', 'https://github.com/sphinx-doc/sphinx.git', '/tmp/tmpo5xp38xq/sphinx_ded734d5']' returned non-zero exit status 128.
+ 118/140 | sphinx-doc__sphinx-9547 | ERROR: Command '['git', 'clone', 'https://github.com/sphinx-doc/sphinx.git', '/tmp/tmpjt1409_t/sphinx_4b62b6cb']' returned non-zero exit status 128.
+ 119/140 | sphinx-doc__sphinx-6422 | ERROR: Command '['git', 'clone', 'https://github.com/sphinx-doc/sphinx.git', '/tmp/tmp0flflbbi/sphinx_08904697']' returned non-zero exit status 128.
+ 120/140 | sphinx-doc__sphinx-8537 | ERROR: EnergiBridge failed: Traceback (most recent call last):
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 879, in import_plugin
+    __import__(importspec)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/assertion/rewrite.py", line 197, in exec_module
+    exec(co, module.__dict__)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/testing/fixtures.py", line 20, in <module>
+    from sphinx.testing import util
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/testing/util.py", line 23, in <module>
+    from sphinx import application, locale
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/application.py", line 41, in <module>
+    from sphinx.registry import SphinxComponentRegistry
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/registry.py", line 24, in <module>
+    from sphinx.builders import Builder
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/builders/__init__.py", line 26, in <module>
+    from sphinx.util import import_object, logging, progress_message, rst, status_iterator
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/util/rst.py", line 21, in <module>
+    from jinja2 import Environment, environmentfilter
+ImportError: cannot import name 'environmentfilter' from 'jinja2' (/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/jinja2/__init__.py)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+                     ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 223, in console_main
+    code = main()
+           ^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 193, in main
+    config = _prepareconfig(new_args, plugins)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 361, in _prepareconfig
+    config: Config = pluginmanager.hook.pytest_cmdline_parse(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/helpconfig.py", line 124, in pytest_cmdline_parse
+    config = yield
+             ^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1186, in pytest_cmdline_parse
+    self.parse(args)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1556, in parse
+    self.hook.pytest_load_initial_conftests(
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/warnings.py", line 128, in pytest_load_initial_conftests
+    return (yield)
+            ^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/capture.py", line 173, in pytest_load_initial_conftests
+    yield
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 1270, in pytest_load_initial_conftests
+    self.pluginmanager._set_initial_conftests(
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 602, in _set_initial_conftests
+    self._try_load_conftest(
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 640, in _try_load_conftest
+    self._loadconftestmodules(
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 680, in _loadconftestmodules
+    mod = self._importconftest(
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 756, in _importconftest
+    self.consider_conftest(mod, registration_name=conftestpath_plugin_name)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 837, in consider_conftest
+    self.register(conftestmodule, name=registration_name)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 533, in register
+    self.consider_module(plugin)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 845, in consider_module
+    self._import_plugin_specs(getattr(mod, "pytest_plugins", []))
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 852, in _import_plugin_specs
+    self.import_plugin(import_spec)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 881, in import_plugin
+    raise ImportError(
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/config/__init__.py", line 879, in import_plugin
+    __import__(importspec)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/_pytest/assertion/rewrite.py", line 197, in exec_module
+    exec(co, module.__dict__)
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/testing/fixtures.py", line 20, in <module>
+    from sphinx.testing import util
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/testing/util.py", line 23, in <module>
+    from sphinx import application, locale
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/application.py", line 41, in <module>
+    from sphinx.registry import SphinxComponentRegistry
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/registry.py", line 24, in <module>
+    from sphinx.builders import Builder
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/builders/__init__.py", line 26, in <module>
+    from sphinx.util import import_object, logging, progress_message, rst, status_iterator
+  File "/tmp/tmpnqhm14cl/sphinx_5ba344d6/sphinx/util/rst.py", line 21, in <module>
+    from jinja2 import Environment, environmentfilter
+ImportError: Error importing plugin "sphinx.testing.fixtures": cannot import name 'environmentfilter' from 'jinja2' (/tmp/tmpnqhm14cl/sphinx_5ba344d6/venv_sweperf/lib/python3.12/site-packages/jinja2/__init__.py)
+
+ 121/140 | sympy__sympy-14331 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmp0441jhz2/sympy_84a58dd3/sympy/conftest.py'.
+sympy/__init__.py:57: in <module>
+    from .core import *
+sympy/core/__init__.py:6: in <module>
+    from .basic import Basic, Atom, preorder_traversal
+sympy/core/basic.py:3: in <module>
+    from collections import Mapping, defaultdict
+E   ImportError: cannot import name 'Mapping' from 'collections' (/usr/lib/python3.12/collections/__init__.py)
+
+ 122/140 | sympy__sympy-14278 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmp2ncqje76/sympy_9986b381/sympy/conftest.py'.
+sympy/__init__.py:57: in <module>
+    from .core import *
+sympy/core/__init__.py:6: in <module>
+    from .basic import Basic, Atom, preorder_traversal
+sympy/core/basic.py:3: in <module>
+    from collections import Mapping, defaultdict
+E   ImportError: cannot import name 'Mapping' from 'collections' (/usr/lib/python3.12/collections/__init__.py)
+
+ 123/140 | sympy__sympy-27666 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmp3lpbqri8/sympy_ee3c38ae']' returned non-zero exit status 128.
+ 124/140 | sympy__sympy-27347 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmpyj426ltk/sympy_138cdf3b']' returned non-zero exit status 128.
+ 125/140 | sympy__sympy-27085 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmpcp8l2i0j/sympy_c870d17c']' returned non-zero exit status 128.
+ 126/140 | sympy__sympy-26989 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmprkcmyzkz/sympy_042ed421']' returned non-zero exit status 128.
+✅ 127/140 | sympy__sympy-26940 | 90.4s
+✅ 128/140 | sympy__sympy-26935 | 90.4s
+✅ 129/140 | sympy__sympy-26848 | 295.7s
+ 130/140 | sympy__sympy-26693 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmpyv7cq9i1/sympy_73ae5e99']' returned non-zero exit status 128.
+✅ 131/140 | sympy__sympy-26546 | 89.0s
+ 132/140 | sympy__sympy-26358 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmpzjet0kc3/sympy_ca874843']' returned non-zero exit status 128.
+✅ 133/140 | sympy__sympy-26036 | 256.0s
+✅ 134/140 | sympy__sympy-26004 | 127.4s
+✅ 135/140 | sympy__sympy-25852 | 220.8s
+✅ 136/140 | sympy__sympy-25758 | 108.7s
+ 137/140 | sympy__sympy-25614 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmpgkm5n0mx/sympy_ce5bf0ff']' returned non-zero exit status 128.
+ 138/140 | sympy__sympy-25591 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmp5rfe4s8z/sympy_2f80497c']' returned non-zero exit status 128.
+ 139/140 | sympy__sympy-25205 | ERROR: Command '['git', 'clone', 'https://github.com/sympy/sympy.git', '/tmp/tmp9_bpol26/sympy_ffb5a3f0']' returned non-zero exit status 128.
+✅ 140/140 | sympy__sympy-24665 | 767.3s
+✅ 1/81 | astropy__astropy-15228 | 47.3s
+✅ 2/81 | astropy__astropy-14590 | 47.3s
+✅ 3/81 | astropy__astropy-14413 | 47.1s
+✅ 4/81 | astropy__astropy-13817 | 47.2s
+ 1/20 | pydata__xarray-9782 | ERROR: EnergiBridge failed: ERROR: not found: /tmp/tmpmqy9z8ii/xarray_4c8b03bd/xarray/tests/test_duck_array_ops.py::test_min_count
+(no match in any of [<Module test_duck_array_ops.py>])
+
+
+ 2/20 | pydata__xarray-9688 | ERROR: EnergiBridge failed: energibridge_script_133144.sh: line 3: lambda: No such file or directory
+
+ 3/20 | pydata__xarray-9520 | ERROR: EnergiBridge failed: ERROR: not found: /tmp/tmpcp_frojc/xarray_3c74509c/xarray/tests/test_duck_array_ops.py::test_argmin_max
+(no match in any of [<Module test_duck_array_ops.py>])
+
+
+⚠️  5/140 | astropy__astropy-15228 | INCOMPLETE
+⚠️  6/140 | astropy__astropy-14590 | INCOMPLETE
+⚠️  7/140 | astropy__astropy-14413 | INCOMPLETE
+⚠️  8/140 | astropy__astropy-13817 | INCOMPLETE
+⚠️  9/140 | astropy__astropy-13745 | INCOMPLETE
+⚠️  10/140 | astropy__astropy-13734 | INCOMPLETE
+⚠️  11/140 | astropy__astropy-13496 | INCOMPLETE
+⚠️  12/140 | astropy__astropy-12842 | INCOMPLETE
+❌ 15/140 | matplotlib__matplotlib-23712 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpnhdkaop_/matplotlib_5773bf9a/lib/matplotlib/tests/test_axes.py::test_arrow_simple
+
+
+❌ 16/140 | mwaskom__seaborn-2458 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpkl0jxhqp/seaborn_ba086c20/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:17: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 17/140 | mwaskom__seaborn-2449 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmp46cdt8ni/seaborn_80fc0a8e/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:17: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 18/140 | mwaskom__seaborn-2389 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpc75odkib/seaborn_bcdac541/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 19/140 | mwaskom__seaborn-2313 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmp7j4yu5k5/seaborn_211cabb0/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 20/140 | mwaskom__seaborn-2224 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpipupcdhn/seaborn_f62a4a51/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1055: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 21/140 | mwaskom__seaborn-2205 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpvzwlb_wg/seaborn_9d96d8f6/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+    ^^^^^^^^^^^^^^^^^^^^^
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1055: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+    ^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+⚠️  22/140 | psf__requests-1891 | INCOMPLETE
+❌ 23/140 | psf__requests-3036 | ERROR: EnergiBridge failed: ImportError while loading conftest '/tmp/tmpgouza97r/requests_4f378b0e/tests/conftest.py'.
+tests/conftest.py:3: in <module>
+    from requests.compat import urljoin
+requests/__init__.py:58: in <module>
+    from . import utils
+requests/utils.py:30: in <module>
+    from .cookies import RequestsCookieJar, cookiejar_from_dict
+requests/cookies.py:164: in <module>
+    class RequestsCookieJar(cookielib.CookieJar, collections.MutableMapping):
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'collections' has no attribute 'MutableMapping'
+
+❌ 26/140 | pydata__xarray-9782 | ERROR: EnergiBridge failed: ERROR: not found: /tmp/tmpqjf6c86t/xarray_4c8b03bd/xarray/tests/test_duck_array_ops.py::test_min_count
+(no match in any of [<Module test_duck_array_ops.py>])
+
+
+⚠️  5/140 | astropy__astropy-15228 | INCOMPLETE
+⚠️  6/140 | astropy__astropy-14590 | INCOMPLETE
+⚠️  7/140 | astropy__astropy-14413 | INCOMPLETE
+⚠️  8/140 | astropy__astropy-13817 | INCOMPLETE
+⚠️  9/140 | astropy__astropy-13745 | INCOMPLETE
+⚠️  10/140 | astropy__astropy-13734 | INCOMPLETE
+⚠️  11/140 | astropy__astropy-13496 | INCOMPLETE
+⚠️  5/140 | astropy__astropy-15228 | INCOMPLETE
+⚠️  6/140 | astropy__astropy-14590 | INCOMPLETE
+⚠️  5/140 | astropy__astropy-15228 | INCOMPLETE
+⚠️  6/140 | astropy__astropy-14590 | INCOMPLETE
+⚠️  7/140 | astropy__astropy-14413 | INCOMPLETE
+❌ 5/140 | astropy__astropy-15228 | ERROR: EnergiBridge failed: INTERNALERROR> Traceback (most recent call last):
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/_pytest/main.py", line 285, in wrap_session
+INTERNALERROR>     config._do_configure()
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/_pytest/config/__init__.py", line 1119, in _do_configure
+INTERNALERROR>     self.hook.pytest_configure.call_historic(kwargs=dict(config=self))
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_hooks.py", line 534, in call_historic
+INTERNALERROR>     res = self._hookexec(self.name, self._hookimpls.copy(), kwargs, False)
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_manager.py", line 120, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_callers.py", line 167, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_callers.py", line 121, in _multicall
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/conftest.py", line 71, in pytest_configure
+INTERNALERROR>     from astropy.utils.iers import conf as iers_conf
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/utils/iers/__init__.py", line 1, in <module>
+INTERNALERROR>     from .iers import *
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/utils/iers/iers.py", line 34, in <module>
+INTERNALERROR>     from astropy import units as u
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/units/__init__.py", line 23, in <module>
+INTERNALERROR>     from .quantity import *
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/units/quantity.py", line 35, in <module>
+INTERNALERROR>     from .quantity_helper import can_have_arbitrary_unit, check_output, converters_and_unit
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/units/quantity_helper/__init__.py", line 16, in <module>
+INTERNALERROR>     from . import erfa, function_helpers, helpers, scipy_special
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/units/quantity_helper/function_helpers.py", line 96, in <module>
+INTERNALERROR>     np.product, np.cumproduct,  # noqa: NPY003
+INTERNALERROR>   File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/numpy/__init__.py", line 410, in __getattr__
+INTERNALERROR>     raise AttributeError("module {!r} has no attribute "
+INTERNALERROR> AttributeError: module 'numpy' has no attribute 'product'
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(pytest.console_main())
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/_pytest/main.py", line 336, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/_pytest/main.py", line 331, in wrap_session
+    config._ensure_unconfigure()
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/_pytest/config/__init__.py", line 1126, in _ensure_unconfigure
+    self.hook.pytest_unconfigure(config=self)
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/conftest.py", line 108, in pytest_unconfigure
+    from astropy.utils.iers import conf as iers_conf
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/utils/iers/__init__.py", line 1, in <module>
+    from .iers import *
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/utils/iers/iers.py", line 34, in <module>
+    from astropy import units as u
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/units/__init__.py", line 23, in <module>
+    from .quantity import *
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/units/quantity.py", line 35, in <module>
+    from .quantity_helper import can_have_arbitrary_unit, check_output, converters_and_unit
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/units/quantity_helper/__init__.py", line 16, in <module>
+    from . import erfa, function_helpers, helpers, scipy_special
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/astropy/units/quantity_helper/function_helpers.py", line 96, in <module>
+    np.product, np.cumproduct,  # noqa: NPY003
+  File "/tmp/tmp7cz8s88f/astropy_1d11e15e/venv_sweperf/lib/python3.9/site-packages/numpy/__init__.py", line 410, in __getattr__
+    raise AttributeError("module {!r} has no attribute "
+AttributeError: module 'numpy' has no attribute 'product'
+
+✅ 5/140 | astropy__astropy-15228 | 129.6s
+✅ 6/140 | astropy__astropy-14590 | 152.9s
+✅ 7/140 | astropy__astropy-14413 | 129.9s
+✅ 8/140 | astropy__astropy-13817 | 156.0s
+✅ 9/140 | astropy__astropy-13745 | 157.4s
+✅ 10/140 | astropy__astropy-13734 | 164.3s
+✅ 11/140 | astropy__astropy-13496 | 173.7s
+✅ 12/140 | astropy__astropy-12842 | 157.0s
+❌ 15/140 | matplotlib__matplotlib-23712 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmp06tidl9h/matplotlib_5773bf9a/lib/matplotlib/tests/test_axes.py::test_arrow_simple[png]
+
+
+❌ 16/140 | mwaskom__seaborn-2458 | ERROR: EnergiBridge failed: In /tmp/tmpdm56kx10/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdm56kx10/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpdm56kx10/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdm56kx10/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpdm56kx10/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdm56kx10/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpdm56kx10/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdm56kx10/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmpdm56kx10/seaborn_ba086c20/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:17: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 17/140 | mwaskom__seaborn-2449 | ERROR: EnergiBridge failed: In /tmp/tmphdzphtpr/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmphdzphtpr/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmphdzphtpr/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmphdzphtpr/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmphdzphtpr/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmphdzphtpr/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmphdzphtpr/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmphdzphtpr/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmphdzphtpr/seaborn_80fc0a8e/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:17: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 18/140 | mwaskom__seaborn-2389 | ERROR: EnergiBridge failed: In /tmp/tmpukqewfg1/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpukqewfg1/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpukqewfg1/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpukqewfg1/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpukqewfg1/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpukqewfg1/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpukqewfg1/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpukqewfg1/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmpukqewfg1/seaborn_bcdac541/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 19/140 | mwaskom__seaborn-2313 | ERROR: EnergiBridge failed: In /tmp/tmp8wbf2hls/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp8wbf2hls/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmp8wbf2hls/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp8wbf2hls/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmp8wbf2hls/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp8wbf2hls/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmp8wbf2hls/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp8wbf2hls/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmp8wbf2hls/seaborn_211cabb0/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 20/140 | mwaskom__seaborn-2224 | ERROR: EnergiBridge failed: In /tmp/tmpd50umrei/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpd50umrei/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpd50umrei/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpd50umrei/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpd50umrei/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpd50umrei/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpd50umrei/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpd50umrei/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmpd50umrei/seaborn_f62a4a51/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1055: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 21/140 | mwaskom__seaborn-2205 | ERROR: EnergiBridge failed: In /tmp/tmppc_pqm0p/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmppc_pqm0p/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmppc_pqm0p/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmppc_pqm0p/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmppc_pqm0p/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmppc_pqm0p/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmppc_pqm0p/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmppc_pqm0p/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmppc_pqm0p/seaborn_9d96d8f6/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1055: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+✅ 22/140 | psf__requests-1891 | 56.9s
+❌ 15/140 | matplotlib__matplotlib-23712 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmpb0a5zmby/matplotlib_5773bf9a/lib/matplotlib/tests/test_axes.py::test_arrow_simple[png]
+
+
+❌ 16/140 | mwaskom__seaborn-2458 | ERROR: EnergiBridge failed: In /tmp/tmp2_0eufe3/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp2_0eufe3/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmp2_0eufe3/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp2_0eufe3/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmp2_0eufe3/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp2_0eufe3/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmp2_0eufe3/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp2_0eufe3/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmp2_0eufe3/seaborn_ba086c20/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:17: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 17/140 | mwaskom__seaborn-2449 | ERROR: EnergiBridge failed: In /tmp/tmpdoy4845c/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdoy4845c/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpdoy4845c/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdoy4845c/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpdoy4845c/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdoy4845c/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpdoy4845c/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdoy4845c/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmpdoy4845c/seaborn_80fc0a8e/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:17: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 18/140 | mwaskom__seaborn-2389 | ERROR: EnergiBridge failed: In /tmp/tmpt2lgq2aq/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpt2lgq2aq/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpt2lgq2aq/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpt2lgq2aq/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpt2lgq2aq/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpt2lgq2aq/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpt2lgq2aq/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpt2lgq2aq/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmpt2lgq2aq/seaborn_bcdac541/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 19/140 | mwaskom__seaborn-2313 | ERROR: EnergiBridge failed: In /tmp/tmp77g9o7fh/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp77g9o7fh/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmp77g9o7fh/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp77g9o7fh/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmp77g9o7fh/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp77g9o7fh/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmp77g9o7fh/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmp77g9o7fh/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmp77g9o7fh/seaborn_211cabb0/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 20/140 | mwaskom__seaborn-2224 | ERROR: EnergiBridge failed: In /tmp/tmpdgqp2k97/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdgqp2k97/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpdgqp2k97/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdgqp2k97/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpdgqp2k97/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdgqp2k97/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpdgqp2k97/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpdgqp2k97/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmpdgqp2k97/seaborn_f62a4a51/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1055: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 15/140 | matplotlib__matplotlib-23712 | ERROR: EnergiBridge failed: ERROR: found no collectors for /tmp/tmp7y7wewj7/matplotlib_5773bf9a/lib/matplotlib/tests/test_axes.py::test_arrow_simple[png]
+
+
+❌ 16/140 | mwaskom__seaborn-2458 | ERROR: EnergiBridge failed: In /tmp/tmppevljvo9/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmppevljvo9/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmppevljvo9/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmppevljvo9/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmppevljvo9/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmppevljvo9/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmppevljvo9/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmppevljvo9/seaborn_ba086c20/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmppevljvo9/seaborn_ba086c20/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:17: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 17/140 | mwaskom__seaborn-2449 | ERROR: EnergiBridge failed: In /tmp/tmpmyki7s7q/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpmyki7s7q/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpmyki7s7q/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpmyki7s7q/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpmyki7s7q/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpmyki7s7q/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpmyki7s7q/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpmyki7s7q/seaborn_80fc0a8e/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmpmyki7s7q/seaborn_80fc0a8e/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:17: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 18/140 | mwaskom__seaborn-2389 | ERROR: EnergiBridge failed: In /tmp/tmpgnrrvx8m/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpgnrrvx8m/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpgnrrvx8m/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpgnrrvx8m/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpgnrrvx8m/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpgnrrvx8m/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpgnrrvx8m/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpgnrrvx8m/seaborn_bcdac541/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmpgnrrvx8m/seaborn_bcdac541/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 19/140 | mwaskom__seaborn-2313 | ERROR: EnergiBridge failed: In /tmp/tmpn1jkmoqq/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpn1jkmoqq/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpn1jkmoqq/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpn1jkmoqq/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpn1jkmoqq/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpn1jkmoqq/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpn1jkmoqq/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpn1jkmoqq/seaborn_211cabb0/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmpn1jkmoqq/seaborn_211cabb0/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1582: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 20/140 | mwaskom__seaborn-2224 | ERROR: EnergiBridge failed: In /tmp/tmpnp3_r2y0/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpnp3_r2y0/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpnp3_r2y0/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpnp3_r2y0/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpnp3_r2y0/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpnp3_r2y0/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmpnp3_r2y0/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmpnp3_r2y0/seaborn_f62a4a51/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmpnp3_r2y0/seaborn_f62a4a51/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1055: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+❌ 21/140 | mwaskom__seaborn-2205 | ERROR: EnergiBridge failed: In /tmp/tmph2h0878d/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmph2h0878d/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmph2h0878d/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmph2h0878d/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmph2h0878d/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmph2h0878d/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+In /tmp/tmph2h0878d/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'parseString' deprecated - use 'parse_string'
+In /tmp/tmph2h0878d/seaborn_9d96d8f6/venv_sweperf/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/classic.mplstyle: 'resetCache' deprecated - use 'reset_cache'
+ImportError while loading conftest '/tmp/tmph2h0878d/seaborn_9d96d8f6/seaborn/conftest.py'.
+seaborn/__init__.py:9: in <module>
+    from .matrix import *  # noqa: F401,F403
+seaborn/matrix.py:13: in <module>
+    from . import cm
+seaborn/cm.py:1055: in <module>
+    mpl_cm.register_cmap(_name, _cmap)
+E   AttributeError: module 'matplotlib.cm' has no attribute 'register_cmap'
+
+✅ 23/140 | psf__requests-3036 | 43.4s
+⚠️  26/140 | pydata__xarray-9782 | INCOMPLETE
+⚠️  30/140 | pydata__xarray-9688 | INCOMPLETE
+⚠️  39/140 | pydata__xarray-9520 | INCOMPLETE
+⚠️  41/140 | pydata__xarray-9509 | INCOMPLETE
+⚠️  42/140 | pydata__xarray-9482 | INCOMPLETE
+⚠️  44/140 | pydata__xarray-9453 | INCOMPLETE
+⚠️  15/140 | matplotlib__matplotlib-23712 | INCOMPLETE
+✅ 16/140 | mwaskom__seaborn-2458 | 86.5s
+✅ 17/140 | mwaskom__seaborn-2449 | 82.4s
+✅ 18/140 | mwaskom__seaborn-2389 | 79.7s
+✅ 19/140 | mwaskom__seaborn-2313 | 82.8s
+⚠️  20/140 | mwaskom__seaborn-2224 | INCOMPLETE
+⚠️  21/140 | mwaskom__seaborn-2205 | INCOMPLETE
+⚠️  26/140 | pydata__xarray-9782 | INCOMPLETE
+⚠️  30/140 | pydata__xarray-9688 | INCOMPLETE
+⚠️  39/140 | pydata__xarray-9520 | INCOMPLETE
+⚠️  41/140 | pydata__xarray-9509 | INCOMPLETE
+⚠️  42/140 | pydata__xarray-9482 | INCOMPLETE
+⚠️  44/140 | pydata__xarray-9453 | INCOMPLETE
+⚠️  45/140 | pydata__xarray-9451 | INCOMPLETE
+⚠️  47/140 | pydata__xarray-9407 | INCOMPLETE
+⚠️  50/140 | pydata__xarray-9243 | INCOMPLETE
+✅ 57/140 | pydata__xarray-8711 | 393.7s
+✅ 58/140 | pydata__xarray-8684 | 338.6s
+⚠️  15/140 | matplotlib__matplotlib-23712 | INCOMPLETE
+⚠️  20/140 | mwaskom__seaborn-2224 | INCOMPLETE
+⚠️  21/140 | mwaskom__seaborn-2205 | INCOMPLETE
+⚠️  26/140 | pydata__xarray-9782 | INCOMPLETE
+⚠️  30/140 | pydata__xarray-9688 | INCOMPLETE
+⚠️  39/140 | pydata__xarray-9520 | INCOMPLETE
+⚠️  41/140 | pydata__xarray-9509 | INCOMPLETE
+⚠️  42/140 | pydata__xarray-9482 | INCOMPLETE
+⚠️  44/140 | pydata__xarray-9453 | INCOMPLETE
+⚠️  45/140 | pydata__xarray-9451 | INCOMPLETE
+⚠️  47/140 | pydata__xarray-9407 | INCOMPLETE
+⚠️  50/140 | pydata__xarray-9243 | INCOMPLETE
+⚠️  15/140 | matplotlib__matplotlib-23712 | INCOMPLETE
+⚠️  20/140 | mwaskom__seaborn-2224 | INCOMPLETE
+⚠️  21/140 | mwaskom__seaborn-2205 | INCOMPLETE
+⚠️  15/140 | matplotlib__matplotlib-23712 | INCOMPLETE
+⚠️  20/140 | mwaskom__seaborn-2224 | INCOMPLETE
+⚠️  21/140 | mwaskom__seaborn-2205 | INCOMPLETE
+⚠️  26/140 | pydata__xarray-9782 | INCOMPLETE
+⚠️  30/140 | pydata__xarray-9688 | INCOMPLETE
+⚠️  39/140 | pydata__xarray-9520 | INCOMPLETE
+⚠️  41/140 | pydata__xarray-9509 | INCOMPLETE
+⚠️  42/140 | pydata__xarray-9482 | INCOMPLETE
+⚠️  44/140 | pydata__xarray-9453 | INCOMPLETE
+⚠️  45/140 | pydata__xarray-9451 | INCOMPLETE
+⚠️  47/140 | pydata__xarray-9407 | INCOMPLETE
+⚠️  50/140 | pydata__xarray-9243 | INCOMPLETE
+✅ 59/140 | pydata__xarray-8668 | 283.8s
+✅ 60/140 | pydata__xarray-8627 | 144.6s
+✅ 61/140 | pydata__xarray-8575 | 235.0s
+✅ 62/140 | pydata__xarray-8527 | 695.1s
+✅ 63/140 | pydata__xarray-8512 | 254.7s
+✅ 64/140 | pydata__xarray-8507 | 273.3s
+⚠️  67/140 | pydata__xarray-8294 | INCOMPLETE
+✅ 71/140 | pydata__xarray-7209 | 451.8s
+✅ 77/140 | pydata__xarray-5571 | 296.6s
+✅ 78/140 | pylint-dev__pylint-7747 | 96.7s
+✅ 79/140 | pylint-dev__pylint-6181 | 66.0s
+⚠️  15/140 | matplotlib__matplotlib-23712 | INCOMPLETE
+⚠️  15/140 | matplotlib__matplotlib-23712 | INCOMPLETE
+⚠️  20/140 | mwaskom__seaborn-2224 | INCOMPLETE
+⚠️  21/140 | mwaskom__seaborn-2205 | INCOMPLETE
+⚠️  26/140 | pydata__xarray-9782 | INCOMPLETE
+⚠️  30/140 | pydata__xarray-9688 | INCOMPLETE
+⚠️  39/140 | pydata__xarray-9520 | INCOMPLETE
+⚠️  41/140 | pydata__xarray-9509 | INCOMPLETE
+⚠️  42/140 | pydata__xarray-9482 | INCOMPLETE
+⚠️  44/140 | pydata__xarray-9453 | INCOMPLETE
+⚠️  45/140 | pydata__xarray-9451 | INCOMPLETE
+⚠️  47/140 | pydata__xarray-9407 | INCOMPLETE
+⚠️  50/140 | pydata__xarray-9243 | INCOMPLETE
+⚠️  67/140 | pydata__xarray-8294 | INCOMPLETE
+✅ 80/140 | pylint-dev__pylint-5596 | 227.3s
+⚠️  81/140 | scikit-learn__scikit-learn-13253 | INCOMPLETE
+⚠️  82/140 | scikit-learn__scikit-learn-13243 | INCOMPLETE
+⚠️  83/140 | scikit-learn__scikit-learn-13186 | INCOMPLETE
+⚠️  84/140 | scikit-learn__scikit-learn-13174 | INCOMPLETE
+⚠️  85/140 | scikit-learn__scikit-learn-13151 | INCOMPLETE
+⚠️  86/140 | scikit-learn__scikit-learn-13124 | INCOMPLETE
+⚠️  87/140 | scikit-learn__scikit-learn-12989 | INCOMPLETE
+⚠️  88/140 | scikit-learn__scikit-learn-12931 | INCOMPLETE
+⚠️  89/140 | scikit-learn__scikit-learn-12859 | INCOMPLETE
+⚠️  90/140 | scikit-learn__scikit-learn-12822 | INCOMPLETE
+⚠️  91/140 | scikit-learn__scikit-learn-12760 | INCOMPLETE
+⚠️  92/140 | scikit-learn__scikit-learn-12701 | INCOMPLETE
+⚠️  93/140 | scikit-learn__scikit-learn-12656 | INCOMPLETE
+⚠️  94/140 | scikit-learn__scikit-learn-12625 | INCOMPLETE
+⚠️  95/140 | scikit-learn__scikit-learn-12581 | INCOMPLETE
+⚠️  96/140 | scikit-learn__scikit-learn-12567 | INCOMPLETE
+⚠️  97/140 | scikit-learn__scikit-learn-12543 | INCOMPLETE
+⚠️  98/140 | scikit-learn__scikit-learn-12514 | INCOMPLETE
+⚠️  99/140 | scikit-learn__scikit-learn-12446 | INCOMPLETE
+⚠️  100/140 | scikit-learn__scikit-learn-12379 | INCOMPLETE
+⚠️  101/140 | scikit-learn__scikit-learn-12246 | INCOMPLETE
+⚠️  102/140 | scikit-learn__scikit-learn-12230 | INCOMPLETE
+⚠️  103/140 | scikit-learn__scikit-learn-12211 | INCOMPLETE
+⚠️  104/140 | scikit-learn__scikit-learn-12172 | INCOMPLETE
+⚠️  105/140 | scikit-learn__scikit-learn-12155 | INCOMPLETE
+⚠️  106/140 | scikit-learn__scikit-learn-12117 | INCOMPLETE
+⚠️  107/140 | scikit-learn__scikit-learn-12116 | INCOMPLETE
+⚠️  108/140 | scikit-learn__scikit-learn-11754 | INCOMPLETE
+⚠️  109/140 | scikit-learn__scikit-learn-11674 | INCOMPLETE
+⚠️  15/140 | matplotlib__matplotlib-23712 | INCOMPLETE
+⚠️  20/140 | mwaskom__seaborn-2224 | INCOMPLETE
+⚠️  21/140 | mwaskom__seaborn-2205 | INCOMPLETE
+⚠️  26/140 | pydata__xarray-9782 | INCOMPLETE
+⚠️  30/140 | pydata__xarray-9688 | INCOMPLETE
+⚠️  39/140 | pydata__xarray-9520 | INCOMPLETE
+⚠️  41/140 | pydata__xarray-9509 | INCOMPLETE
+⚠️  42/140 | pydata__xarray-9482 | INCOMPLETE
+⚠️  44/140 | pydata__xarray-9453 | INCOMPLETE
+⚠️  45/140 | pydata__xarray-9451 | INCOMPLETE
+⚠️  47/140 | pydata__xarray-9407 | INCOMPLETE
+⚠️  50/140 | pydata__xarray-9243 | INCOMPLETE
+⚠️  67/140 | pydata__xarray-8294 | INCOMPLETE
+⚠️  81/140 | scikit-learn__scikit-learn-13253 | INCOMPLETE
+⚠️  82/140 | scikit-learn__scikit-learn-13243 | INCOMPLETE
+⚠️  83/140 | scikit-learn__scikit-learn-13186 | INCOMPLETE
+⚠️  84/140 | scikit-learn__scikit-learn-13174 | INCOMPLETE
+⚠️  85/140 | scikit-learn__scikit-learn-13151 | INCOMPLETE
+⚠️  86/140 | scikit-learn__scikit-learn-13124 | INCOMPLETE
+⚠️  87/140 | scikit-learn__scikit-learn-12989 | INCOMPLETE
+⚠️  88/140 | scikit-learn__scikit-learn-12931 | INCOMPLETE
+⚠️  89/140 | scikit-learn__scikit-learn-12859 | INCOMPLETE
+⚠️  90/140 | scikit-learn__scikit-learn-12822 | INCOMPLETE
+⚠️  91/140 | scikit-learn__scikit-learn-12760 | INCOMPLETE
+⚠️  92/140 | scikit-learn__scikit-learn-12701 | INCOMPLETE
+⚠️  93/140 | scikit-learn__scikit-learn-12656 | INCOMPLETE
+⚠️  94/140 | scikit-learn__scikit-learn-12625 | INCOMPLETE
+⚠️  95/140 | scikit-learn__scikit-learn-12581 | INCOMPLETE
+⚠️  96/140 | scikit-learn__scikit-learn-12567 | INCOMPLETE
+⚠️  97/140 | scikit-learn__scikit-learn-12543 | INCOMPLETE
+⚠️  98/140 | scikit-learn__scikit-learn-12514 | INCOMPLETE
+⚠️  99/140 | scikit-learn__scikit-learn-12446 | INCOMPLETE
+⚠️  100/140 | scikit-learn__scikit-learn-12379 | INCOMPLETE
+⚠️  101/140 | scikit-learn__scikit-learn-12246 | INCOMPLETE
+⚠️  102/140 | scikit-learn__scikit-learn-12230 | INCOMPLETE
+⚠️  103/140 | scikit-learn__scikit-learn-12211 | INCOMPLETE
+⚠️  104/140 | scikit-learn__scikit-learn-12172 | INCOMPLETE
+⚠️  105/140 | scikit-learn__scikit-learn-12155 | INCOMPLETE
+⚠️  106/140 | scikit-learn__scikit-learn-12117 | INCOMPLETE
+⚠️  107/140 | scikit-learn__scikit-learn-12116 | INCOMPLETE
+⚠️  108/140 | scikit-learn__scikit-learn-11754 | INCOMPLETE
+⚠️  109/140 | scikit-learn__scikit-learn-11674 | INCOMPLETE
+⚠️  110/140 | scikit-learn__scikit-learn-11526 | INCOMPLETE
+⚠️  111/140 | scikit-learn__scikit-learn-11364 | INCOMPLETE
+⚠️  112/140 | scikit-learn__scikit-learn-11179 | INCOMPLETE
+⚠️  115/140 | sphinx-doc__sphinx-11861 | INCOMPLETE
+✅ 117/140 | sphinx-doc__sphinx-10807 | 108.6s
+⚠️  119/140 | sphinx-doc__sphinx-6422 | INCOMPLETE
+⚠️  120/140 | sphinx-doc__sphinx-8537 | INCOMPLETE
+✅ 121/140 | sympy__sympy-14331 | 114.5s
+✅ 122/140 | sympy__sympy-14278 | 116.6s
+✅ 132/140 | sympy__sympy-26358 | 258.5s
+✅ 137/140 | sympy__sympy-25614 | 204.2s
+✅ 139/140 | sympy__sympy-25205 | 370.4s

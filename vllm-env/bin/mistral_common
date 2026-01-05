@@ -1,0 +1,7 @@
+#!/home/giacomo/LLMs_For_Green_Code_Refactoring/vllm-env/bin/python3.11
+import sys
+from mistral_common.experimental.app.main import cli
+if __name__ == '__main__':
+    if sys.argv[0].endswith('.exe'):
+        sys.argv[0] = sys.argv[0][:-4]
+    sys.exit(cli())
