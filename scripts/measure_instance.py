@@ -590,6 +590,8 @@ logger = logging.getLogger(__name__)
             print(f"  ❌ [sklearn] Installation failed: {e}")
             return False
     
+   
+
     def install_dependencies(self, repo_path: Path, repo: str, version: str, commit: str) -> Tuple[Optional[str], Optional[str]]:
         """
         Create virtual environment and install package dependencies.
@@ -688,7 +690,7 @@ logger = logging.getLogger(__name__)
             if 'matplotlib' in repo_lower or 'sphinx' in repo_lower or 'astropy' in repo_lower:
                 print(f"  📦 Installing project with build isolation...")
                 subprocess.run(
-                    [venv_pip, 'install', '-e', '.'],  # SENZA --no-build-isolation
+                    [venv_pip, 'install', '-e', '.'],
                     cwd=repo_path,
                     check=True,
                     timeout=900
@@ -700,8 +702,9 @@ logger = logging.getLogger(__name__)
                     cwd=repo_path,
                     check=True,
                     timeout=600
-                ) 
-                        # Install test dependencies
+                )
+            
+            # Install test dependencies
             matplotlib_constraint = constraints.get('matplotlib', '<3.9')
             print(f"  📦 Installing test dependencies...")
 
@@ -710,7 +713,7 @@ logger = logging.getLogger(__name__)
                 f"numpy{numpy_constraint}"
             ]
 
-            # Aggiungi dipendenze specifiche per astropy
+            # Aggiungi dipendenze specifiche per repo
             if 'astropy' in repo_lower:
                 test_deps.extend([
                     'pytest-doctestplus',
@@ -727,18 +730,12 @@ logger = logging.getLogger(__name__)
                     'PyYAML',
                     'certifi'
                 ])
-
-            # Special: matplotlib needs older pyparsing, not matplotlib itself
-            if 'matplotlib' in repo_lower:
+                # astropy NON ha bisogno di matplotlib
+            elif 'matplotlib' in repo_lower:
+                # matplotlib needs older pyparsing, not matplotlib itself
                 test_deps.append('pyparsing<3.2')
             else:
-                test_deps.append(f"matplotlib{matplotlib_constraint}")
-            
-
-            # Special: matplotlib needs older pyparsing, not matplotlib itself
-            if 'matplotlib' in repo_lower:
-                test_deps.append('pyparsing<3.2')
-            else:
+                # Altri repo: aggiungi matplotlib
                 test_deps.append(f"matplotlib{matplotlib_constraint}")
             
             subprocess.run(
