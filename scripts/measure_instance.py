@@ -66,7 +66,7 @@ REPO_PACKAGE_CONSTRAINTS = {
     },
     'astropy/astropy': {
         'numpy': '==1.25.2',      # Fix: versione esatta
-        'cython': '<3.0',
+        'cython': '>3.0',
         'setuptools': '==68.0.0', # Fix: versione esatta
     },
     # Default constraints for other repos
@@ -734,7 +734,7 @@ logger = logging.getLogger(__name__)
             else:
                 test_deps.append(f"matplotlib{matplotlib_constraint}")
             
-            
+
             # Special: matplotlib needs older pyparsing, not matplotlib itself
             if 'matplotlib' in repo_lower:
                 test_deps.append('pyparsing<3.2')
@@ -778,8 +778,7 @@ logger = logging.getLogger(__name__)
         try:
             # Build pytest command using python path
             # Quote test name to handle special characters like [] and ()
-            test_command = f"cd {repo_path} && {python_path} -m pytest '{test_name}' -v"
-            
+            test_command = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test_name}' -v"            
             # Measure test execution
             test_results = collector.measure_test_execution(
                 test_command=test_command,
