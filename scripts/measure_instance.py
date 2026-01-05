@@ -683,7 +683,8 @@ logger = logging.getLogger(__name__)
                 timeout=300
             )
             
-            if 'matplotlib' in repo_lower or 'sphinx' in repo_lower:
+            # Per matplotlib, sphinx e astropy: USA build isolation
+            if 'matplotlib' in repo_lower or 'sphinx' in repo_lower or 'astropy' in repo_lower:
                 print(f"  📦 Installing project with build isolation...")
                 subprocess.run(
                     [venv_pip, 'install', '-e', '.'],  # SENZA --no-build-isolation
@@ -698,7 +699,7 @@ logger = logging.getLogger(__name__)
                     cwd=repo_path,
                     check=True,
                     timeout=600
-                )      
+                ) 
             # Install test dependencies
             matplotlib_constraint = constraints.get('matplotlib', '<3.9')
             print(f"  📦 Installing test dependencies...")
