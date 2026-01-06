@@ -2,13 +2,13 @@
 
 # ==============================================================================
 # SINGLE MODEL LAUNCHER (AWQ 4-BIT)
-# Fix: Respects Qwen native limit (32k) to avoid RoPE scaling errors.
+# Fix: Reduced GPU_UTIL to 0.90 to prevent OOM during warmup.
 # ==============================================================================
 
 MODEL_ALIAS=$1
 PORT=8000
-GPU_UTIL=0.95
-MAX_LEN=32768  # 🟢 LIMITE SICURO: 32k Tokens (~120k caratteri). Più che sufficiente.
+GPU_UTIL=0.90  # 🟢 MODIFICATO: 90% (Lascia ~2.5GB liberi per le attivazioni)
+MAX_LEN=32768  # Rimaniamo a 32k, ora ci sta comodo.
 
 if [ "$MODEL_ALIAS" == "qwen" ]; then
     MODEL_NAME="Qwen/Qwen2.5-Coder-7B-Instruct-AWQ"
@@ -28,13 +28,14 @@ echo "================================================================="
 echo "🚀 STARTING SINGLE vLLM INSTANCE"
 echo "   Model:   $MODEL_NAME"
 echo "   Context: $MAX_LEN tokens"
+echo "   VRAM %:  $GPU_UTIL"
 echo "================================================================="
 
+# Pulizia processi orfani
 pkill -f vllm
-sleep 2
+sleep 3
 
-# VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 serve solo se vuoi forzare oltre i 32k (rischio crash)
-# Qui usiamo il limite nativo per la massima stabilità.
+# Avvio con parametri di memoria sicuri
 vllm serve $MODEL_NAME \
     --port $PORT \
     --gpu-memory-utilization $GPU_UTIL \
