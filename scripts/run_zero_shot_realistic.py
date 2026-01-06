@@ -5,7 +5,7 @@ Logic:
 2. Context Anchor: The Test Code itself.
 3. Retrieval: Scan repo and find Top-5 files semantically related to the Test Code.
 4. LLM: Asks to fix the issue given the mix of relevant/irrelevant files.
-5. Robustness: Handles measurement crashes and context limits with SMART PRIORITY.
+5. Robustness: Handles measurement crashes and context limits with CORRECT PRIORITY.
 """
 import sys
 import os
@@ -86,16 +86,15 @@ class ZeroShotRealisticRunner:
 
     def _simulated_retrieval(self, repo_path: Path, test_paths: List[str]) -> Dict[str, str]:
         """
-        Simula Retrieval con PRIORITÀ al Codice Sorgente.
-        1. Trova i file più rilevanti.
-        2. Carica prima quelli nel budget.
-        3. Se avanza spazio, carica il test code (o parte di esso).
+        Simula Retrieval con PRIORITÀ al TEST CODE.
+        1. Carica il Test Code (Anchor) per primo.
+        2. Riempie il resto del budget con i file recuperati.
         """
         logger.info("🕵️ Running Simulated Retrieval...")
         
-        # A. Analizza Test Code (ma non caricarlo ancora nel contesto)
+        # A. Analizza Test Code (Load Priority 1)
         query_tokens = set()
-        test_file_contents = {} # Cache content
+        test_file_contents = {}
         
         for tp in test_paths:
             full = repo_path / tp
@@ -126,35 +125,36 @@ class ZeroShotRealisticRunner:
         current_chars = 0
         final_context = {}
         
-        # 1. Priorità: Top 5 Retrieved Files
+        # 1. Carica TEST FILES (Priority 1)
+        for tp, content in test_file_contents.items():
+            # Se il test file è gigantesco (>20k), troncalo per lasciare spazio al codice
+            if len(content) > 20000:
+                final_context[tp] = content[:20000] + "\n... [TRUNCATED]"
+                current_chars += 20000
+                logger.warning(f"⚠️ Truncated large test file {tp}")
+            else:
+                final_context[tp] = content
+                current_chars += len(content)
+        
+        logger.info(f"✅ Added Test Anchors: {list(final_context.keys())} (Size: {current_chars})")
+
+        # 2. Carica RETRIEVED FILES (Priority 2 - Fill remaining space)
         top_files = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         retrieved_list = []
         
         for fname, _ in top_files:
-            if len(retrieved_list) >= 5: break
+            if len(retrieved_list) >= 5: break # Max 5 file
             try:
                 content = (repo_path / fname).read_text(errors='ignore')
                 if current_chars + len(content) < MAX_CONTEXT_CHARS:
                     final_context[fname] = content
                     current_chars += len(content)
                     retrieved_list.append(fname)
+                else:
+                    logger.info(f"⚠️ Skipping {fname} (size {len(content)}) to fit context limit.")
             except: pass
             
-        logger.info(f"🔎 Retrieved Files (Source Code): {retrieved_list}")
-
-        # 2. Priorità: Test Files (se c'è spazio, altrimenti tronca)
-        for tp, content in test_file_contents.items():
-            if current_chars + len(content) < MAX_CONTEXT_CHARS:
-                final_context[tp] = content
-                current_chars += len(content)
-            else:
-                remaining = MAX_CONTEXT_CHARS - current_chars
-                if remaining > 1000:
-                    final_context[tp] = content[:remaining] + "\n... [TRUNCATED]"
-                    current_chars += remaining
-                    logger.warning(f"⚠️ Truncated test file {tp} to fit context.")
-                else:
-                    logger.warning(f"⚠️ Skipped test file {tp} (Context Full).")
+        logger.info(f"🔎 Added Retrieved Source Files: {retrieved_list}")
 
         return final_context, list(final_context.keys())
 
@@ -255,7 +255,7 @@ class ZeroShotRealisticRunner:
             test_list = instance['efficiency_test'] 
             test_files = list(set([t.split("::")[0] for t in test_list]))
             
-            # Retrieval (Smart Priority)
+            # Retrieval (Priority Fixed: Tests First)
             context_files, candidates = self._simulated_retrieval(repo_path, test_files)
             
             repo_map = self._generate_repo_map(repo_path)
@@ -319,6 +319,8 @@ class ZeroShotRealisticRunner:
                     self._save(instance_id, llm_output, "Build Failed", None)
             else:
                 logger.error("❌ No patch applied.")
+                # Logghiamo l'inizio della risposta per debugging
+                logger.info(f"Preview Response:\n{llm_output[:500]}")
                 self._save(instance_id, llm_output, "Patch Failed", None)
 
         except Exception as e:
