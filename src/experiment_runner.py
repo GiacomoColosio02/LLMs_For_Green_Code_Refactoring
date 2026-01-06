@@ -265,7 +265,7 @@ class GreenExperimentRunner:
                 self._save_results(instance_id, strategy, model_name, {"error": "Build Failed"}, response, response.content)
                 return
 
-            logger.info("⚡ Measuring Energy...")
+            logger.info("⚡ Measuring Energy....")
             collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
             baseline = collector.measure_baseline(duration=2)
             results = []
