@@ -5,6 +5,7 @@ Features:
 - "Hunter Parser" to find patches inside chatty LLM responses.
 - Fuzzy Matcher to apply patches even with whitespace mismatches.
 - Integration with SWEPerfMeasurer.
+- FULL LOGGING of LLM output for debugging.
 """
 import sys
 import os
@@ -165,10 +166,6 @@ class GreenExperimentRunner:
         
         applied_count = 0
         
-        # Iteriamo sui split. 
-        # block[0] è testo inutile (o filename del primo blocco).
-        # block[1] è "content \n ======= \n content \n >>>>>>> REPLACE"
-        
         # Il filename del blocco N si trova alla fine del blocco N-1
         previous_text = raw_blocks[0]
         
@@ -215,10 +212,12 @@ class GreenExperimentRunner:
         return applied_count > 0
 
     def _apply_patch(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
+        # --- MODIFICA CHIAVE: Logga tutto l'output ---
+        logger.info(f"\n📝 FULL LLM RESPONSE:\n{'='*40}\n{raw_content}\n{'='*40}")
+        # ---------------------------------------------
+
         patch_content = self._extract_patch_content(raw_content)
         
-        logger.info(f"\n📄 PREVIEW EXTRACTED PATCH (First 300 chars):\n{'-'*30}\n{patch_content[:300]}\n{'-'*30}")
-
         # 1. Prova SEARCH/REPLACE
         if "<<<<<<< SEARCH" in patch_content:
             if self._apply_search_replace_patch(repo_path, patch_content, candidate_files): return True
@@ -286,7 +285,10 @@ class GreenExperimentRunner:
                 repo_path, instance['repo'], instance['version'], instance['base_commit']
             )
             
-            if not python_path: return
+            if not python_path:
+                logger.error("❌ Dependency Installation Failed (Likely bad patch).")
+                self._save_results(instance_id, strategy, model_name, {"error": "Build Failed"}, response, response.content)
+                return
 
             logger.info("⚡ Measuring Energy...")
             collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
