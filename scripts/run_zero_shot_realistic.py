@@ -4,8 +4,8 @@ Logic:
 1. Trigger: Failing Test.
 2. Context Anchor: The Test Code itself (Truncated).
 3. Retrieval: Scan repo and find Top-N files.
-4. Strategy: TRUNCATE large relevant files instead of skipping them.
-5. Robustness: Handles measurement crashes and token limits.
+4. LLM: System Prompt + User Context structure for better adherence.
+5. Robustness: Crash handling & Debug Logging.
 """
 import sys
 import os
@@ -85,10 +85,6 @@ class ZeroShotRealisticRunner:
         return set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text))
 
     def _simulated_retrieval(self, repo_path: Path, test_paths: List[str]) -> Dict[str, str]:
-        """
-        Retrieval con "Greedy Truncation".
-        Invece di saltare i file grossi, li tronchiamo per farli entrare.
-        """
         logger.info("🕵️ Running Simulated Retrieval...")
         
         # A. Analizza Test Code
@@ -118,9 +114,8 @@ class ZeroShotRealisticRunner:
                         if score > 0: scores[rel_path] = score
                     except: pass
         
-        # C. Costruzione Contesto (Max 45k chars totali)
-        MAX_CONTEXT_CHARS = 45000 
-        PER_FILE_LIMIT = 12000 # Max 12k chars per file sorgente (per evitare monopoli)
+        # C. Costruisci Contesto (Max 40k chars)
+        MAX_CONTEXT_CHARS = 40000 
         current_chars = 0
         final_context = {}
         
@@ -128,7 +123,7 @@ class ZeroShotRealisticRunner:
         TEST_LIMIT = 8000
         for tp, content in test_file_contents.items():
             if len(content) > TEST_LIMIT:
-                final_context[tp] = content[:TEST_LIMIT] + "\n... [TRUNCATED TEST FILE]"
+                final_context[tp] = content[:TEST_LIMIT] + "\n... [TRUNCATED FOR BREVITY]"
                 current_chars += TEST_LIMIT
             else:
                 final_context[tp] = content
@@ -136,35 +131,20 @@ class ZeroShotRealisticRunner:
         
         logger.info(f"✅ Added Test Anchors size: {current_chars}")
 
-        # 2. Carica TOP 5 RETRIEVED FILES (Con Truncation)
+        # 2. Carica RETRIEVED FILES
         top_files = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         retrieved_list = []
         
         for fname, _ in top_files:
-            if len(retrieved_list) >= 5: break # Max 5 file
-            
-            # Se siamo già pieni col budget globale, stop
-            if current_chars >= MAX_CONTEXT_CHARS:
-                break
-
+            if len(retrieved_list) >= 6: break
             try:
                 content = (repo_path / fname).read_text(errors='ignore')
-                # Applica limite per singolo file
-                if len(content) > PER_FILE_LIMIT:
-                    content = content[:PER_FILE_LIMIT] + "\n... [TRUNCATED SOURCE FILE]"
-                
-                # Controlla se ci sta nel budget globale
-                if current_chars + len(content) <= MAX_CONTEXT_CHARS:
+                if current_chars + len(content) < MAX_CONTEXT_CHARS:
                     final_context[fname] = content
                     current_chars += len(content)
                     retrieved_list.append(fname)
                 else:
-                    # Aggiungi un pezzetto finale se rimane spazio
-                    remaining = MAX_CONTEXT_CHARS - current_chars
-                    if remaining > 1000:
-                        final_context[fname] = content[:remaining] + "\n... [TRUNCATED TO FIT]"
-                        current_chars += remaining
-                        retrieved_list.append(fname)
+                    logger.info(f"⚠️ Skipping {fname} (size {len(content)}) to fit context.")
             except: pass
             
         logger.info(f"🔎 Added Retrieved Source Files: {retrieved_list}")
@@ -172,15 +152,25 @@ class ZeroShotRealisticRunner:
 
     # --- PATCH ENGINE ---
     def _extract_patch_content(self, content: str) -> str:
+        # Pulisci tag di pensiero (DeepSeek specific)
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+        
+        # 1. Cerca formato esplicito
         if "<<<<<<< SEARCH" in content:
-            return content[max(0, content.find("<<<<<<< SEARCH") - 500):]
+            # Prendi tutto da quel punto in poi, con un po' di buffer prima
+            start_idx = max(0, content.find("<<<<<<< SEARCH") - 200)
+            return content[start_idx:]
+            
+        # 2. Cerca blocchi di codice markdown
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
         if code_blocks:
+            # Cerca il blocco migliore
             for block in code_blocks:
                 if "<<<<<<< SEARCH" in block or "diff --git" in block:
                     return block
+            # Fallback: il blocco più lungo
             return max(code_blocks, key=len).strip()
+            
         return content.strip()
 
     def _perform_fuzzy_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
@@ -215,6 +205,12 @@ class ZeroShotRealisticRunner:
 
     def _apply_patch_logic(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
         patch_content = self._extract_patch_content(raw_content)
+        
+        # Debug: Log content snippet
+        logger.info(f"🔍 Analyzing Response for Patch (Length: {len(patch_content)})")
+        if "<<<<<<< SEARCH" not in patch_content:
+            logger.warning("⚠️ No '<<<<<<< SEARCH' marker found in extraction.")
+        
         if "<<<<<<< SEARCH" in patch_content:
             logger.info("🔧 Processing SEARCH/REPLACE blocks...")
             blocks = patch_content.split('<<<<<<< SEARCH')
@@ -241,8 +237,12 @@ class ZeroShotRealisticRunner:
                             if (repo_path / cand).exists() and sig in (repo_path / cand).read_text():
                                 target_file = cand; break
 
-                if target_file and self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
-                    changes_count += 1
+                if target_file:
+                    if self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
+                        changes_count += 1
+                else:
+                    logger.warning(f"⚠️ Could not identify target file for block {i}")
+                    
                 context_text = next_context
             if changes_count > 0: return True
 
@@ -269,10 +269,10 @@ class ZeroShotRealisticRunner:
             test_list = instance['efficiency_test'] 
             test_files = list(set([t.split("::")[0] for t in test_list]))
             
-            # Retrieval (Smart Truncation)
+            # Retrieval
             context_files, candidates = self._simulated_retrieval(repo_path, test_files)
-            
             repo_map = self._generate_repo_map(repo_path)
+            
             test_cmd = f"pytest {' '.join(test_list)}"
             desc = instance.get('problem_statement_realistic', f"Optimize failing tests: {test_cmd}")
             
@@ -285,18 +285,33 @@ class ZeroShotRealisticRunner:
                 repo_map=repo_map
             )
             
-            prompt = self.template.generate_prompt(ctx)
-            # Add reminder
-            prompt += "\n\nREMINDER: After your analysis, you MUST provide the code patch using <<<<<<< SEARCH / >>>>>>> REPLACE blocks."
+            # Generazione Prompt Base
+            user_prompt = self.template.generate_prompt(ctx)
+            
+            # SYSTEM PROMPT: Forzare il formato
+            system_prompt = (
+                "You are an expert Green Software Engineer.\n"
+                "Your goal is to optimize the provided code for energy efficiency.\n"
+                "CRITICAL: You MUST output the code changes using the SWE-bench format:\n"
+                "<<<<<<< SEARCH\n"
+                "... original code ...\n"
+                "=======\n"
+                "... optimized code ...\n"
+                ">>>>>>> REPLACE\n\n"
+                "Do NOT provide only explanations. Provide the actual code block."
+            )
 
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
-            logger.info("📤 Querying LLM...")
+            logger.info("📤 Querying LLM (With System Prompt Enforcement)...")
             
             response = client.chat.completions.create(
                 model=model_name,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
                 temperature=0.0,
-                max_tokens=4096 
+                max_tokens=3072 
             )
             llm_output = response.choices[0].message.content
             logger.info(f"📝 Response received ({len(llm_output)} chars).")
@@ -336,6 +351,9 @@ class ZeroShotRealisticRunner:
                     self._save(instance_id, llm_output, "Build Failed", None)
             else:
                 logger.error("❌ No patch applied.")
+                # Log anteprima per debug
+                preview = llm_output[:1000].replace('\n', ' ')
+                logger.info(f"Response Preview: {preview}...")
                 self._save(instance_id, llm_output, "Patch Failed", None)
 
         except Exception as e:
