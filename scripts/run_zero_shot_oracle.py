@@ -1,39 +1,260 @@
 """
-Zero-Shot ORACLE Prompt Strategy.
-Scenario: The LLM receives the exact files that need modification (Gold Context).
-Focus: Pure optimization reasoning and coding, without retrieval noise.
+Specific Experiment Runner: ZERO SHOT + ORACLE SETTING.
+Logic:
+1. Context: Extracts EXACT target files from the gold patch (Cheating/Oracle).
+2. Prompt: Asks to optimize those specific files.
+3. Patching: Uses Super Fuzzy Matcher to handle LLM formatting errors.
 """
-from .base_template import BasePromptTemplate, PromptStrategy, PromptContext
+import sys
+import os
+import re
+import json
+import logging
+import subprocess
+import time
+import tempfile
+import shutil
+from pathlib import Path
+from typing import Dict, List, Any
 
-class ZeroShotOracleTemplate(BasePromptTemplate):
-    def __init__(self):
-        super().__init__(PromptStrategy.ZERO_SHOT)
+# --- SETUP PATH (FONDAMENTALE) ---
+# Aggiunge la root del progetto al path per importare src
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
-    def generate_prompt(self, context: PromptContext) -> str:
-        prompt = (
-            "You are an expert Green Software Engineer optimizing Python code for energy efficiency.\n"
-            "Your task is to optimize the provided code while maintaining 100% functional correctness.\n\n"
+# --- IMPORT ASSOLUTI (CORRETTI) ---
+from src.llm_clients.client_manager import ClientManager
+# Nota: qui sotto usiamo i percorsi completi src....
+from src.prompt_templates.zero_shot_oracle import ZeroShotOracleTemplate
+from src.prompt_templates.base_template import PromptStrategy, ProblemStatementType, PromptContext
+from scripts.measure_instance import SWEPerfMeasurer
+from src.measurement.collector import MetricsCollector
+from openai import OpenAI
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("ZS_Oracle")
+
+class ZeroShotOracleRunner:
+    def __init__(self, dataset_path: str):
+        self.dataset_path = dataset_path
+        self.dataset = self._load_dataset()
+        self.client_manager = ClientManager() 
+        self.template = ZeroShotOracleTemplate()
+        self.measurer_tool = SWEPerfMeasurer(dataset_path, country_code="ESP")
+
+    def _load_dataset(self):
+        with open(self.dataset_path, 'r') as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else data["instances"]
+
+    def _get_instance(self, instance_id: str):
+        for item in self.dataset:
+            if item.get("instance_id") == instance_id: return item
+        raise ValueError(f"Instance {instance_id} not found")
+
+    # --- ROBUST PATCHING ENGINE (Hunter Parser + Fuzzy Matcher) ---
+    def _extract_patch_content(self, content: str) -> str:
+        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+        
+        idx_search = content.find("<<<<<<< SEARCH")
+        if idx_search != -1:
+            return content[max(0, idx_search - 500):]
             
-            "### CRITICAL RULES:\n"
-            "1. **Output ONLY the code patch** using the SWE-bench format (<<<<<<< SEARCH ... ======= ... >>>>>>> REPLACE).\n"
-            "2. **Use SMALL, UNIQUE SEARCH blocks**. Do NOT copy the entire file in the SEARCH block. Only include enough lines to locate the code uniquely.\n"
-            "3. **DO NOT import new external libraries** (like aiohttp, numpy) unless they are already imported in the file.\n"
-            "4. Focus on algorithmic efficiency, reducing redundant calculations, and memory usage.\n"
-            "5. Do not include explanations or conversational text.\n\n"
-        )
-        
-        # 1. Sintomo (Costruito sinteticamente)
-        prompt += f"### Repository: `{context.repo_name}`\n"
-        prompt += f"### Optimization Goal:\n{context.problem_description}\n\n"
-        
-        # 2. Contesto (Solo Gold Files)
-        prompt += "### Target Code Files (Relevant Context):\n"
-        prompt += context.get_formatted_code() + "\n\n"
-        
-        # 3. Istruzioni Formato
-        prompt += self._get_search_replace_format_instruction()
-        
-        return prompt
+        idx_diff = content.find("diff --git")
+        if idx_diff != -1:
+            return content[idx_diff:]
+            
+        code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
+        if code_blocks: return max(code_blocks, key=len).strip()
+        return content.strip()
 
-    def extract_code_from_response(self, response: str) -> str:
-        return response # L'estrazione viene fatta dal Runner
+    def _find_target_file(self, repo_path: Path, search_block: str, candidate_files: List[str]) -> str:
+        search_lines = [l.strip() for l in search_block.splitlines() if l.strip()]
+        if not search_lines: return None
+        signature = search_lines[0]
+        for fname in candidate_files:
+            fpath = repo_path / fname
+            if fpath.exists():
+                if signature in fpath.read_text(): return fname
+        return None
+
+    def _perform_fuzzy_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
+        """Applica la patch ignorando spazi e righe vuote."""
+        target_file = repo_path / rel_path
+        if not target_file.exists(): return False
+                
+        original_lines = target_file.read_text().splitlines(keepends=True)
+        norm_search = [l.strip() for l in search_lines if l.strip()]
+        if not norm_search: return False 
+
+        file_map = []
+        for idx, line in enumerate(original_lines):
+            stripped = line.strip()
+            if stripped: file_map.append((stripped, idx))
+        
+        search_len = len(norm_search)
+        match_start_idx = -1
+        
+        for i in range(len(file_map) - search_len + 1):
+            window = [item[0] for item in file_map[i : i + search_len]]
+            if window == norm_search:
+                match_start_idx = i
+                break
+        
+        if match_start_idx != -1:
+            real_start_line = file_map[match_start_idx][1]
+            real_end_line = file_map[match_start_idx + search_len - 1][1]
+            final_replace = [l + '\n' if not l.endswith('\n') else l for l in replace_lines]
+            new_content = original_lines[:real_start_line] + final_replace + original_lines[real_end_line + 1:]
+            target_file.write_text("".join(new_content))
+            logger.info(f"✅ Applied Patch to {rel_path} (Fuzzy Match)")
+            return True
+        return False
+
+    def _apply_patch_logic(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
+        patch_content = self._extract_patch_content(raw_content)
+        
+        if "<<<<<<< SEARCH" in patch_content:
+            logger.info("🔧 Processing SEARCH/REPLACE blocks...")
+            blocks = patch_content.split('<<<<<<< SEARCH')
+            changes_count = 0
+            context_text = blocks[0]
+            
+            for i in range(1, len(blocks)):
+                block = blocks[i]
+                if "=======" not in block or ">>>>>>> REPLACE" not in block: continue
+                search_part, rest = block.split('=======', 1)
+                replace_part, next_context = rest.split('>>>>>>> REPLACE', 1)
+                
+                target_file = None
+                lines_check = context_text.strip().splitlines()[-15:]
+                for line in reversed(lines_check):
+                    clean = line.strip().replace('###', '').replace('File:', '').replace('`', '').strip()
+                    if clean in candidate_files or (clean.endswith('.py') and '/' in clean):
+                        target_file = clean
+                        break
+                
+                if not target_file:
+                    target_file = self._find_target_file(repo_path, search_part, candidate_files)
+                
+                if target_file:
+                    if self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
+                        changes_count += 1
+                
+                context_text = next_context
+
+            if changes_count > 0: return True
+
+        # Git Fallback
+        patch_file = repo_path / "llm_gen.patch"
+        with open(patch_file, 'w') as f: f.write(patch_content)
+        for arg in ["-p0", "--ignore-space-change", "--ignore-whitespace"]:
+             res = subprocess.run(["git", "apply", arg, "llm_gen.patch"], cwd=repo_path, capture_output=True)
+             if res.returncode == 0:
+                 logger.info(f"✅ Git apply success ({arg})")
+                 return True
+        return False
+
+    # --- EXPERIMENT FLOW ---
+    def run(self, instance_id: str):
+        logger.info(f"🚀 START ZS_ORACLE: {instance_id}")
+        instance = self._get_instance(instance_id)
+        temp_dir = Path(tempfile.mkdtemp())
+        
+        try:
+            # 1. Clone
+            logger.info("📥 Cloning repository...")
+            repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
+            
+            # 2. Extract Gold Files (ORACLE)
+            files_dict = {}
+            for line in instance.get("patch", "").splitlines():
+                if line.startswith("--- a/"): 
+                    fname = line[6:].strip()
+                    p = repo_path / fname
+                    if p.exists(): files_dict[fname] = p.read_text()
+            candidates = list(files_dict.keys())
+            
+            # 3. Prompting
+            test_cmd = f"pytest {' '.join(instance['efficiency_test'])}"
+            desc = f"Optimize the energy efficiency of the repository. Focus on these tests: {test_cmd}"
+            
+            ctx = PromptContext(
+                problem_statement_type=ProblemStatementType.ORACLE,
+                problem_description=desc,
+                code_files=files_dict, # Solo file rilevanti
+                test_command=test_cmd,
+                target_functions=candidates
+            )
+            
+            prompt = self.template.generate_prompt(ctx)
+            
+            # 4. LLM
+            client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
+            logger.info("📤 Querying LLM...")
+            # Temperature 0 per massima determinismo in Oracle
+            response = client.chat.completions.create(
+                model="active_model",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
+                max_tokens=8192
+            )
+            llm_output = response.choices[0].message.content
+            logger.info(f"📝 Response received ({len(llm_output)} chars).")
+
+            # 5. Patch & Measure
+            logger.info("🔧 Applying Patch...")
+            if self._apply_patch_logic(repo_path, llm_output, candidates):
+                logger.info("📦 Installing & Measuring...")
+                python_path, conda_env = self.measurer_tool.install_dependencies(
+                    repo_path, instance['repo'], instance['version'], instance['base_commit']
+                )
+                
+                if python_path:
+                    logger.info("⚡ Measuring Energy...")
+                    collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
+                    baseline = collector.measure_baseline(duration=2)
+                    
+                    results = []
+                    for test in instance['efficiency_test']:
+                        logger.info(f"   Running test: {test}")
+                        cmd = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -v"
+                        res = collector.measure_test_execution(test_command=cmd, repetitions=1)
+                        res['test_name'] = test
+                        results.append(res)
+                    
+                    self._save(instance_id, llm_output, "Success", results)
+                    if conda_env: self.measurer_tool.cleanup_conda_env(conda_env)
+                else:
+                    self._save(instance_id, llm_output, "Build Failed", None)
+            else:
+                self._save(instance_id, llm_output, "Patch Failed", None)
+
+        except Exception as e:
+            logger.error(f"Error: {e}", exc_info=True)
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+    def _save(self, instance_id, response, status, metrics):
+        os.makedirs("results/zs_oracle", exist_ok=True)
+        data = {
+            "instance": instance_id, 
+            "status": status, 
+            "metrics": metrics,
+            "full_response": response
+        }
+        with open(f"results/zs_oracle/{instance_id}.json", "w") as f:
+            json.dump(data, f, indent=2)
+        logger.info(f"💾 Saved to results/zs_oracle/{instance_id}.json")
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--instance", required=True)
+    parser.add_argument("--dataset", required=True)
+    args = parser.parse_args()
+    
+    runner = ZeroShotOracleRunner(args.dataset)
+    runner.run(args.instance)
