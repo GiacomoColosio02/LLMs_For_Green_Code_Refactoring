@@ -4,6 +4,7 @@ Logic:
 1. Context: Extracts EXACT target files from the gold patch (Cheating/Oracle).
 2. Prompt: Asks to optimize those specific files.
 3. Patching: Uses Super Fuzzy Matcher to handle LLM formatting errors.
+4. Robustness: Handles measurement crashes gracefully.
 """
 import sys
 import os
@@ -52,7 +53,6 @@ class ZeroShotOracleRunner:
         raise ValueError(f"Instance {instance_id} not found")
 
     def _detect_running_model(self) -> str:
-        """Detects the model name currently served by vLLM."""
         try:
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
             models = client.models.list()
@@ -64,18 +64,13 @@ class ZeroShotOracleRunner:
             logger.warning(f"⚠️ Could not detect model name: {e}")
         return "active_model"
 
-    # --- ROBUST PATCHING ENGINE (Hunter Parser + Fuzzy Matcher) ---
+    # --- ROBUST PATCHING ENGINE ---
     def _extract_patch_content(self, content: str) -> str:
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
-        
         idx_search = content.find("<<<<<<< SEARCH")
-        if idx_search != -1:
-            return content[max(0, idx_search - 500):]
-            
+        if idx_search != -1: return content[max(0, idx_search - 500):]
         idx_diff = content.find("diff --git")
-        if idx_diff != -1:
-            return content[idx_diff:]
-            
+        if idx_diff != -1: return content[idx_diff:]
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
         if code_blocks: return max(code_blocks, key=len).strip()
         return content.strip()
@@ -91,10 +86,8 @@ class ZeroShotOracleRunner:
         return None
 
     def _perform_fuzzy_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
-        """Applica la patch ignorando spazi e righe vuote."""
         target_file = repo_path / rel_path
         if not target_file.exists(): return False
-                
         original_lines = target_file.read_text().splitlines(keepends=True)
         norm_search = [l.strip() for l in search_lines if l.strip()]
         if not norm_search: return False 
@@ -110,14 +103,13 @@ class ZeroShotOracleRunner:
         for i in range(len(file_map) - search_len + 1):
             window = [item[0] for item in file_map[i : i + search_len]]
             if window == norm_search:
-                match_start_idx = i
-                break
+                match_start_idx = i; break
         
         if match_start_idx != -1:
-            real_start_line = file_map[match_start_idx][1]
-            real_end_line = file_map[match_start_idx + search_len - 1][1]
+            real_start = file_map[match_start_idx][1]
+            real_end = file_map[match_start_idx + search_len - 1][1]
             final_replace = [l + '\n' if not l.endswith('\n') else l for l in replace_lines]
-            new_content = original_lines[:real_start_line] + final_replace + original_lines[real_end_line + 1:]
+            new_content = original_lines[:real_start] + final_replace + original_lines[real_end + 1:]
             target_file.write_text("".join(new_content))
             logger.info(f"✅ Applied Patch to {rel_path} (Fuzzy Match)")
             return True
@@ -125,13 +117,11 @@ class ZeroShotOracleRunner:
 
     def _apply_patch_logic(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
         patch_content = self._extract_patch_content(raw_content)
-        
         if "<<<<<<< SEARCH" in patch_content:
             logger.info("🔧 Processing SEARCH/REPLACE blocks...")
             blocks = patch_content.split('<<<<<<< SEARCH')
             changes_count = 0
             context_text = blocks[0]
-            
             for i in range(1, len(blocks)):
                 block = blocks[i]
                 if "=======" not in block or ">>>>>>> REPLACE" not in block: continue
@@ -143,8 +133,7 @@ class ZeroShotOracleRunner:
                 for line in reversed(lines_check):
                     clean = line.strip().replace('###', '').replace('File:', '').replace('`', '').strip()
                     if clean in candidate_files or (clean.endswith('.py') and '/' in clean):
-                        target_file = clean
-                        break
+                        target_file = clean; break
                 
                 if not target_file:
                     target_file = self._find_target_file(repo_path, search_part, candidate_files)
@@ -152,37 +141,28 @@ class ZeroShotOracleRunner:
                 if target_file:
                     if self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
                         changes_count += 1
-                
                 context_text = next_context
-
             if changes_count > 0: return True
 
-        # Git Fallback
         patch_file = repo_path / "llm_gen.patch"
         with open(patch_file, 'w') as f: f.write(patch_content)
         for arg in ["-p0", "--ignore-space-change", "--ignore-whitespace"]:
              res = subprocess.run(["git", "apply", arg, "llm_gen.patch"], cwd=repo_path, capture_output=True)
              if res.returncode == 0:
-                 logger.info(f"✅ Git apply success ({arg})")
-                 return True
+                 logger.info(f"✅ Git apply success ({arg})"); return True
         return False
 
-    # --- EXPERIMENT FLOW ---
+    # --- MAIN FLOW ---
     def run(self, instance_id: str):
         logger.info(f"🚀 START ZS_ORACLE: {instance_id}")
         instance = self._get_instance(instance_id)
-        
-        # 0. Detect Model Name
-        real_model_name = self._detect_running_model()
-        
+        model_name = self._detect_running_model()
         temp_dir = Path(tempfile.mkdtemp())
         
         try:
-            # 1. Clone
             logger.info("📥 Cloning repository...")
             repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
             
-            # 2. Extract Gold Files (ORACLE)
             files_dict = {}
             for line in instance.get("patch", "").splitlines():
                 if line.startswith("--- a/"): 
@@ -191,7 +171,6 @@ class ZeroShotOracleRunner:
                     if p.exists(): files_dict[fname] = p.read_text()
             candidates = list(files_dict.keys())
             
-            # 3. Prompting
             test_cmd = f"pytest {' '.join(instance['efficiency_test'])}"
             desc = f"Optimize the energy efficiency of the repository. Focus on these tests: {test_cmd}"
             
@@ -205,12 +184,11 @@ class ZeroShotOracleRunner:
             
             prompt = self.template.generate_prompt(ctx)
             
-            # 4. LLM
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
             logger.info("📤 Querying LLM...")
             
             response = client.chat.completions.create(
-                model=real_model_name, # Use detected name!
+                model=model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,
                 max_tokens=8192
@@ -218,7 +196,6 @@ class ZeroShotOracleRunner:
             llm_output = response.choices[0].message.content
             logger.info(f"📝 Response received ({len(llm_output)} chars).")
 
-            # 5. Patch & Measure
             logger.info("🔧 Applying Patch...")
             if self._apply_patch_logic(repo_path, llm_output, candidates):
                 logger.info("📦 Installing & Measuring...")
@@ -229,17 +206,37 @@ class ZeroShotOracleRunner:
                 if python_path:
                     logger.info("⚡ Measuring Energy...")
                     collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
-                    baseline = collector.measure_baseline(duration=2)
                     
+                    # --- ROBUST MEASUREMENT LOOP ---
                     results = []
+                    try:
+                        baseline = collector.measure_baseline(duration=2)
+                    except Exception as e:
+                        logger.warning(f"⚠️ Baseline measurement failed: {e}")
+                        baseline = None
+
                     for test in instance['efficiency_test']:
                         logger.info(f"   Running test: {test}")
                         cmd = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -v"
-                        res = collector.measure_test_execution(test_command=cmd, repetitions=1)
-                        res['test_name'] = test
-                        results.append(res)
+                        try:
+                            # Try measuring
+                            res = collector.measure_test_execution(test_command=cmd, repetitions=1)
+                            res['test_name'] = test
+                            results.append(res)
+                            # Small sleep to let sensors settle
+                            time.sleep(2) 
+                        except Exception as e:
+                            logger.error(f"❌ Measurement failed for {test}: {e}")
+                            # Record failed attempt
+                            results.append({
+                                'test_name': test,
+                                'error': str(e),
+                                'energy_joules': None,
+                                'duration_s': None
+                            })
+                    # -------------------------------
                     
-                    self._save(instance_id, llm_output, "Success", results)
+                    self._save(instance_id, llm_output, "Success (Partial)", results)
                     if conda_env: self.measurer_tool.cleanup_conda_env(conda_env)
                 else:
                     self._save(instance_id, llm_output, "Build Failed", None)
