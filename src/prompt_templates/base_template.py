@@ -2,8 +2,8 @@
 Base classes for prompt templates
 """
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Dict, List, Any, Optional
+from dataclasses import dataclass, field
+from typing import Dict, List, Any, Optional, Union
 from enum import Enum
 
 
@@ -27,29 +27,36 @@ class PromptContext:
     """Context information for prompt generation"""
     
     # Instance metadata
-    instance_id: str
-    problem_statement_type: ProblemStatementType
+    instance_id: str = ""
+    problem_statement_type: ProblemStatementType = ProblemStatementType.ORACLE
     
     # Code context
-    target_functions: List[Dict[str, Any]]  # Functions to optimize
-    code_files: Dict[str, str]  # filename -> content
+    # Flexible type to accept string filenames (from Runner) or detailed dicts
+    target_functions: List[Any] = field(default_factory=list) 
+    code_files: Dict[str, str] = field(default_factory=dict)  # filename -> content
     
     # Performance context
-    problem_description: str  # Description of performance issue
-    test_command: str  # Command to run performance tests
-    baseline_metrics: Optional[Dict[str, float]] = None  # Optional baseline metrics
+    problem_description: str = ""
+    test_command: str = ""
+    baseline_metrics: Optional[Dict[str, float]] = None
     
     # Repository context
     repo_name: str = ""
     base_commit: str = ""
     
     def get_target_functions_str(self) -> str:
-        """Format target functions as string"""
+        """Format target functions as string, handling both Dict and str inputs"""
         result = []
         for func in self.target_functions:
-            func_name = func.get('name', 'unknown')
-            file_path = func.get('file', 'unknown')
-            result.append(f"- {func_name} in {file_path}")
+            if isinstance(func, dict):
+                func_name = func.get('name', 'unknown')
+                file_path = func.get('file', 'unknown')
+                result.append(f"- {func_name} in {file_path}")
+            elif isinstance(func, str):
+                # Fallback if runner passes just filenames
+                result.append(f"- File: {func}")
+            else:
+                result.append(f"- {str(func)}")
         return "\n".join(result)
     
     def get_formatted_code(self, add_line_numbers: bool = False) -> str:
@@ -80,11 +87,15 @@ class BasePromptTemplate(ABC):
         self.strategy = strategy
     
     @abstractmethod
-    def generate_prompt(self, context: PromptContext) -> str | List[Dict[str, str]]:
+    def generate_prompt(self, context: PromptContext) -> Union[str, List[Dict[str, str]]]:
         """
         Generate prompt(s) based on context
         """
         pass
+
+    # Alias for compatibility if Runner calls build_prompt
+    def build_prompt(self, context: PromptContext) -> Union[str, List[Dict[str, str]]]:
+        return self.generate_prompt(context)
     
     @abstractmethod
     def extract_code_from_response(self, response: str) -> str:
@@ -92,6 +103,10 @@ class BasePromptTemplate(ABC):
         Extract optimized code from LLM response
         """
         pass
+
+    # Alias for compatibility if Runner calls extract_code
+    def extract_code(self, response: str, *args, **kwargs) -> str:
+        return self.extract_code_from_response(response)
     
     def _get_sweperf_header(self) -> str:
         """Standard premise from SWE-perf"""
@@ -129,3 +144,4 @@ from flask import Flask
 import math
 from flask import Flask
 >>>>>>> REPLACE
+```"""
