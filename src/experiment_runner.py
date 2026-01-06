@@ -16,7 +16,6 @@ from typing import Optional, Dict, List, Any, Union
 from pathlib import Path
 
 # --- CONFIGURAZIONE PATH ---
-# Aggiungiamo la root e la cartella scripts per importare i moduli necessari
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PROJECT_ROOT)
 sys.path.append(os.path.join(PROJECT_ROOT, "scripts"))
@@ -33,7 +32,6 @@ try:
     from src.measurement.collector import MetricsCollector
 except ImportError as e:
     print(f"CRITICAL ERROR: Could not import measurement scripts. {e}")
-    # Fallback per debug se paths non sono allineati
     sys.exit(1)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -45,166 +43,126 @@ class GreenExperimentRunner:
         self.dataset = self._load_dataset()
         self.client_manager = ClientManager() 
         self.template_manager = PromptTemplateManager()
-        # Inizializziamo il misuratore originale per sfruttare le sue utility
         self.measurer_tool = SWEPerfMeasurer(dataset_path, country_code="ESP")
 
     def _load_dataset(self) -> List[Dict]:
-        """Carica il dataset gestendo sia liste che dizionari wrapper."""
         if not os.path.exists(self.dataset_path):
             raise FileNotFoundError(f"Dataset not found at {self.dataset_path}")
-        
         with open(self.dataset_path, 'r') as f:
             data = json.load(f)
-            
-        if isinstance(data, list):
-            return data
-        elif isinstance(data, dict) and "instances" in data:
-            return data["instances"]
-        else:
-            raise ValueError(f"Unknown dataset structure in {self.dataset_path}")
+        if isinstance(data, list): return data
+        elif isinstance(data, dict) and "instances" in data: return data["instances"]
+        else: raise ValueError(f"Unknown dataset structure")
 
     def _get_instance(self, instance_id: str) -> Dict[str, Any]:
         for item in self.dataset:
-            if item.get("instance_id") == instance_id:
-                return item
+            if item.get("instance_id") == instance_id: return item
         raise ValueError(f"Instance {instance_id} not found")
 
     def _detect_running_model(self) -> str:
-        """Rileva automaticamente il modello vLLM attivo."""
         try:
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
             models = client.models.list()
-            if models.data:
-                name = models.data[0].id
-                logger.info(f"✅ Detected Model: {name}")
-                return name
-        except Exception:
-            logger.warning("⚠️ Could not detect model. Using 'active_model'")
+            if models.data: return models.data[0].id
+        except Exception: pass
         return "active_model"
 
     def _clean_response(self, content: str) -> str:
-        """Pulisce la risposta da <think> e markdown per estrarre la patch."""
-        # 1. Rimuovi i pensieri <think>
+        """Pulisce la risposta da <think> e markdown."""
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
         
-        # 2. Cerca blocchi di codice
+        # Estrazione intelligente dai blocchi markdown
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
         if code_blocks:
-            # Cerchiamo il blocco che assomiglia di più a una patch
+            # 1. Cerca blocco con SEARCH marker
             for block in code_blocks:
-                if "<<<<<<< SEARCH" in block or "diff --git" in block:
-                    return block.strip()
-            # Se non troviamo keywords, prendiamo il più lungo
+                if "<<<<<<< SEARCH" in block: return block.strip()
+            # 2. Cerca blocco con diff marker
+            for block in code_blocks:
+                if "diff --git" in block or "--- a/" in block: return block.strip()
+            # 3. Fallback: il blocco più lungo
             return max(code_blocks, key=len).strip()
             
         return content.strip()
 
     def _apply_search_replace_patch(self, repo_path: Path, patch_content: str) -> bool:
-        """
-        Applica manualmente le patch in formato SEARCH/REPLACE (SWE-bench style).
-        Necessario perché git apply non supporta questo formato.
-        """
-        logger.info("🔧 Attempting SEARCH/REPLACE patch application...")
-        
-        # Semplice parser per blocchi SEARCH/REPLACE
-        # Formato atteso:
-        # [filepath]
-        # <<<<<<< SEARCH
-        # ...
-        # =======
-        # ...
-        # >>>>>>> REPLACE
-        
+        """Parser manuale per formato SWE-bench."""
+        logger.info("🔧 Detected SEARCH/REPLACE format. Applying manually...")
         blocks = patch_content.split('<<<<<<< SEARCH')
-        if len(blocks) < 2:
-            return False # Nessun blocco trovato
-            
+        if len(blocks) < 2: return False
+        
         applied_count = 0
-        
-        # Il primo blocco è testo prima del primo match
-        # Iteriamo sui successivi
-        current_file = None
-        
-        # Cerchiamo di parsare linea per linea per essere più robusti
         lines = patch_content.splitlines()
-        mode = "TEXT"
+        current_file = None
         search_lines = []
         replace_lines = []
+        mode = "TEXT"
         
         for line in lines:
             stripped = line.strip()
-            
-            # Cerca nome file (euristica)
             if mode == "TEXT":
                 if stripped.startswith("###") or (stripped.endswith(".py") and "/" in stripped):
                     current_file = stripped.replace("###", "").strip()
-                
                 if stripped == "<<<<<<< SEARCH":
                     mode = "SEARCH"
                     search_lines = []
-            
             elif mode == "SEARCH":
                 if stripped == "=======":
                     mode = "REPLACE"
                     replace_lines = []
                 else:
                     search_lines.append(line)
-            
             elif mode == "REPLACE":
                 if stripped == ">>>>>>> REPLACE":
                     mode = "TEXT"
-                    # Applica blocco
-                    if current_file and self._replace_in_file(repo_path, current_file, search_lines, replace_lines):
+                    if current_file and self._perform_file_replace(repo_path, current_file, search_lines, replace_lines):
                         applied_count += 1
                 else:
                     replace_lines.append(line)
-                    
         return applied_count > 0
 
-    def _replace_in_file(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
+    def _perform_file_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
+        # Cerca il file anche se il path non è perfetto
         target_file = repo_path / rel_path
         if not target_file.exists():
-            # Provo a cercare il file se il path non è esatto
-            found = list(repo_path.rglob(os.path.basename(rel_path)))
-            if found:
-                target_file = found[0]
+            # Ricerca ricorsiva per nome file
+            candidates = list(repo_path.rglob(os.path.basename(rel_path)))
+            if candidates: target_file = candidates[0]
             else:
                 logger.warning(f"❌ File not found: {rel_path}")
                 return False
-        
+                
         content = target_file.read_text()
         search_block = "\n".join(search_lines)
         replace_block = "\n".join(replace_lines)
         
         if search_block in content:
-            new_content = content.replace(search_block, replace_block)
-            target_file.write_text(new_content)
-            logger.info(f"✅ Modified {rel_path}")
+            target_file.write_text(content.replace(search_block, replace_block))
+            logger.info(f"✅ Applied to {rel_path}")
             return True
-        elif search_block.strip() in content: # Try ignoring trailing newline
-             new_content = content.replace(search_block.strip(), replace_block)
-             target_file.write_text(new_content)
-             logger.info(f"✅ Modified {rel_path} (stripped)")
-             return True
-        else:
-            logger.warning(f"❌ Search block not found in {rel_path}")
-            return False
+        elif search_block.strip() in content:
+            target_file.write_text(content.replace(search_block.strip(), replace_block))
+            logger.info(f"✅ Applied (fuzzy) to {rel_path}")
+            return True
+            
+        logger.warning(f"❌ Search block mismatch in {rel_path}")
+        return False
 
     def _apply_patch(self, repo_path: Path, raw_content: str) -> bool:
-        """Tenta diverse strategie di applicazione patch."""
         patch_content = self._clean_response(raw_content)
-        patch_file = repo_path / "llm_gen.patch"
         
-        # 1. Prova SEARCH/REPLACE (Formato preferito da DeepSeek)
-        if "<<<<<<< SEARCH" in patch_content:
-            if self._apply_search_replace_patch(repo_path, patch_content):
-                return True
-            logger.warning("SEARCH/REPLACE parsing failed, falling back to git apply...")
+        # --- DEBUG LOGGING ---
+        logger.info(f"\n📄 PREVIEW PATCH RECEIVED (First 500 chars):\n{'-'*40}\n{patch_content[:500]}\n{'-'*40}")
+        # ---------------------
 
-        # 2. Prova GIT APPLY Standard
-        with open(patch_file, 'w') as f:
-            f.write(patch_content)
+        # 1. Prova SEARCH/REPLACE
+        if "<<<<<<< SEARCH" in patch_content:
+            if self._apply_search_replace_patch(repo_path, patch_content): return True
             
+        # 2. Prova Git Apply Standard
+        patch_file = repo_path / "llm_gen.patch"
+        with open(patch_file, 'w') as f: f.write(patch_content)
+        
         res = subprocess.run(
             ["git", "apply", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"],
             cwd=repo_path, capture_output=True, text=True
@@ -213,41 +171,38 @@ class GreenExperimentRunner:
             logger.info("✅ Git apply success")
             return True
             
-        # 3. Prova GIT APPLY Relaxed (Reject file)
+        # 3. Prova Git Apply -p0 (Spesso i modelli omettono a/ b/)
+        logger.info("Trying git apply -p0...")
         res = subprocess.run(
-            ["git", "apply", "--reject", "--whitespace=fix", "llm_gen.patch"],
+            ["git", "apply", "-p0", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"],
             cwd=repo_path, capture_output=True, text=True
         )
         if res.returncode == 0:
-            logger.info("✅ Git apply (relaxed) success")
+            logger.info("✅ Git apply (-p0) success")
             return True
-            
-        logger.error(f"❌ All patch methods failed. Git error: {res.stderr}")
+
+        logger.error(f"❌ Patching failed. Last git error: {res.stderr.strip()}")
         return False
 
     def run_experiment(self, instance_id: str, strategy: PromptStrategy):
         logger.info(f"🚀 STARTING EXPERIMENT: {instance_id}")
-        
-        # 1. Setup
         model_name = self._detect_running_model()
         instance = self._get_instance(instance_id)
         temp_dir = Path(tempfile.mkdtemp())
         
         try:
-            # 2. Clone (Base Commit)
+            # 1. Setup
             logger.info("📥 Cloning repository...")
-            repo_path = self.measurer_tool.setup_repository(
-                instance, temp_dir, instance['base_commit']
-            )
+            repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
             
-            # 3. Prompting
+            # 2. Prompt
             files_dict = {}
-            # Estrazione file contesto dalla patch originale
+            target_files = set()
             for line in instance.get("patch", "").splitlines():
-                if line.startswith("--- a/"):
-                    fname = line[6:].strip()
-                    p = repo_path / fname
-                    if p.exists(): files_dict[fname] = p.read_text()
+                if line.startswith("--- a/"): target_files.add(line[6:].strip())
+            for tf in target_files:
+                p = repo_path / tf
+                if p.exists(): files_dict[tf] = p.read_text()
 
             test_cmd = f"pytest {' '.join(instance['efficiency_test'])}"
             ctx = PromptContext(
@@ -257,64 +212,52 @@ class GreenExperimentRunner:
                 test_command=test_cmd,
                 target_functions=list(files_dict.keys())
             )
-            
             prompt = self.template_manager.generate_prompts(ctx, strategy)
             
-            # 4. LLM
+            # 3. LLM
             logger.info("📤 Querying LLM...")
             client = self.client_manager.get_client(model_name)
             response = client.generate(prompt, temperature=0.2)
             
-            # 5. Patching
+            # 4. Patch
             logger.info("🔧 Applying Patch...")
             if not self._apply_patch(repo_path, response.content):
                 self._save_results(instance_id, strategy, model_name, {"error": "Patch Failed"}, response, temp_dir)
                 return
 
-            # 6. Installazione & Misurazione
-            # Usiamo le funzioni esistenti di measure_instance.py ma dobbiamo adattarle
-            # Poiché measure_instance.py non espone una funzione "install_and_measure" pubblica generica,
-            # usiamo un trucco: lanciamo l'installazione specifica per repo
-            
+            # 5. Measure
             logger.info("📦 Installing Dependencies...")
-            # Logica semplificata basata su measure_instance.py
-            python_exec = "python3" # Default fallback
+            python_path, conda_env = self.measurer_tool.install_dependencies(
+                repo_path, instance['repo'], instance['version'], instance['base_commit']
+            )
             
-            # TODO: Qui dovremmo chiamare la logica esatta di measure_instance per installare l'env
-            # Per ora, per testare se la patch funziona, proviamo a usare l'ambiente corrente se compatibile
-            # O meglio: saltiamo l'installazione complessa per questo test rapido e usiamo pytest diretto se le lib ci sono
-            
+            if not python_path: return
+
             logger.info("⚡ Measuring Energy...")
             collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
             baseline = collector.measure_baseline(duration=2)
-            
             results = []
             for test in instance['efficiency_test']:
                 logger.info(f"   Running test: {test}")
-                # Tentativo di usare python del venv corrente se le dipendenze ci sono
-                cmd = f"cd {repo_path} && python3 -m pytest '{repo_path}/{test}' -v"
+                cmd = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -v"
                 res = collector.measure_test_execution(test_command=cmd, repetitions=1)
                 res['test_name'] = test
                 results.append(res)
                 
             self._save_results(instance_id, strategy, model_name, {"baseline": baseline, "tests": results}, response, response.content)
+            if conda_env: self.measurer_tool.cleanup_conda_env(conda_env)
 
         except Exception as e:
             logger.error(f"Experiment Failed: {e}", exc_info=True)
         finally:
-            if os.path.exists(temp_dir):
-                shutil.rmtree(temp_dir, ignore_errors=True)
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def _save_results(self, instance_id, strategy, model, measurements, llm_response, patch):
         output_dir = "results/experiments"
         os.makedirs(output_dir, exist_ok=True)
         report = {
-            "instance_id": instance_id,
-            "strategy": strategy.value,
-            "model": model,
-            "timestamp": time.time(),
-            "metrics": measurements,
-            "patch": self._clean_response(str(patch))
+            "instance_id": instance_id, "strategy": strategy.value, "model": model,
+            "timestamp": time.time(), "metrics": measurements, "patch": self._clean_response(str(patch))
         }
         fname = f"{output_dir}/{instance_id}_{strategy.value}.json"
         with open(fname, 'w') as f: json.dump(report, f, indent=2)
