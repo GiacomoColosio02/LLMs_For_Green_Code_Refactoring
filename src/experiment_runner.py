@@ -1,223 +1,254 @@
 """
 Main Experiment Runner for Green Code Refactoring.
-Orchestrates: Dataset -> Prompt -> LLM (vLLM) -> Patch -> Measurement.
+Orchestrates: Dataset -> Prompt -> LLM -> Patch -> Measurement (via SWEPerfMeasurer).
 """
 import sys
 import os
+import re
 import json
 import logging
-import subprocess
 import time
+import tempfile
+import shutil
 from typing import Optional, Dict, List, Any, Union
 from pathlib import Path
 
-# --- FIX IMPORT PATH ---
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# -----------------------
+# --- CONFIGURAZIONE PATH ---
+# Aggiungiamo la root e la cartella scripts per importare i moduli necessari
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_ROOT)
+sys.path.append(os.path.join(PROJECT_ROOT, "scripts"))
 
-# Import per auto-detection
-from openai import OpenAI
-
+# Importiamo i nostri moduli
 from src.llm_clients.client_manager import ClientManager
 from src.prompt_templates.template_manager import PromptTemplateManager
 from src.prompt_templates.base_template import PromptStrategy, ProblemStatementType, PromptContext
+from openai import OpenAI
+
+# Importiamo il misuratore originale (senza modificarlo)
+try:
+    from measure_instance import SWEPerfMeasurer
+    from src.measurement.collector import MetricsCollector
+except ImportError as e:
+    print(f"CRITICAL ERROR: Could not import measurement scripts. {e}")
+    sys.exit(1)
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class GreenExperimentRunner:
-    def __init__(self, dataset_path: str, repo_base_dir: str = "repositories"):
+    def __init__(self, dataset_path: str):
         self.dataset_path = dataset_path
-        self.repo_base_dir = repo_base_dir
-        self.dataset_content = self._load_dataset()
+        self.dataset = self._load_dataset()
         self.client_manager = ClientManager() 
         self.template_manager = PromptTemplateManager()
+        
+        # Inizializziamo il misuratore originale per sfruttare le sue utility (clone, install)
+        # Nota: il country code non è critico qui se non calcoliamo la CO2 esatta subito
+        self.measurer_tool = SWEPerfMeasurer(dataset_path, country_code="ESP")
 
-    def _detect_running_model(self) -> str:
-        """Chiede a vLLM quale modello sta girando."""
-        try:
-            logger.info("🕵️ Detecting running model on localhost:8000...")
-            temp_client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
-            models = temp_client.models.list()
-            if models.data:
-                real_name = models.data[0].id
-                logger.info(f"✅ Detected Model: {real_name}")
-                return real_name
-        except Exception as e:
-            logger.warning(f"⚠️ Could not detect model: {e}. Using default.")
-        return "active_model"
-
-    def _load_dataset(self) -> Union[List[Dict], Dict]:
+    def _load_dataset(self) -> List[Dict]:
+        """Carica il dataset Reduced (Lista di Dict)."""
         if not os.path.exists(self.dataset_path):
             raise FileNotFoundError(f"Dataset not found at {self.dataset_path}")
+        
         with open(self.dataset_path, 'r') as f:
-            return json.load(f)
-
-    def _get_instance_data(self, instance_id: str) -> Dict[str, Any]:
-        data = self.dataset_content
-        if isinstance(data, dict) and "instances" in data:
-            target_list = data["instances"]
-        elif isinstance(data, list):
-            target_list = data
+            data = json.load(f)
+            
+        # Gestione robusta della struttura
+        if isinstance(data, list):
+            return data
+        elif isinstance(data, dict) and "instances" in data:
+            return data["instances"]
         else:
-            raise ValueError("Unknown dataset structure.")
+            raise ValueError(f"Unknown dataset structure in {self.dataset_path}")
 
-        for item in target_list:
+    def _get_instance(self, instance_id: str) -> Dict[str, Any]:
+        for item in self.dataset:
             if item.get("instance_id") == instance_id:
                 return item
-        raise ValueError(f"Instance {instance_id} not found in dataset")
+        raise ValueError(f"Instance {instance_id} not found")
 
-    def _checkout_base_commit(self, repo_name: str, base_commit: str):
-        repo_path = os.path.join(self.repo_base_dir, repo_name)
-        
-        # Auto-Clone se manca
-        if not os.path.exists(repo_path):
-            logger.info(f"📥 Repository {repo_name} missing. Cloning into {repo_path}...")
-            os.makedirs(os.path.dirname(repo_path), exist_ok=True)
-            try:
-                subprocess.run(
-                    ["git", "clone", f"https://github.com/{repo_name}.git", repo_path],
-                    check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
-                )
-            except subprocess.CalledProcessError as e:
-                logger.error(f"❌ Git Clone Failed: {e.stderr.decode()}")
-                raise
-
-        logger.info(f"♻️ Resetting {repo_name} to base commit {base_commit}")
+    def _detect_running_model(self) -> str:
+        """Rileva automaticamente il modello vLLM attivo."""
         try:
-            subprocess.run(["git", "reset", "--hard"], cwd=repo_path, check=True, stdout=subprocess.DEVNULL)
-            subprocess.run(["git", "clean", "-fd"], cwd=repo_path, check=True, stdout=subprocess.DEVNULL)
-            subprocess.run(["git", "checkout", base_commit], cwd=repo_path, check=True, stdout=subprocess.DEVNULL)
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Git Checkout Error: {e}")
-            raise
+            client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
+            models = client.models.list()
+            if models.data:
+                name = models.data[0].id
+                logger.info(f"✅ Detected Model: {name}")
+                return name
+        except Exception:
+            logger.warning("⚠️ Could not detect model. Using 'active_model'")
+        return "active_model"
 
-    def _get_oracle_context_files(self, instance: Dict[str, Any], repo_path: str) -> Dict[str, str]:
-        gold_patch = instance.get("patch", "")
-        files_content = {}
-        lines = gold_patch.split('\n')
-        target_files = set()
-        for line in lines:
-            if line.startswith("--- a/"):
-                target_files.add(line[6:].strip())
-            elif line.startswith("+++ b/"):
-                target_files.add(line[6:].strip())
-
-        if not target_files:
-            logger.warning("⚠️ No target files found in patch.")
+    def _clean_patch_content(self, content: str) -> str:
+        """Pulisce la risposta di DeepSeek per estrarre la patch."""
+        # 1. Rimuovi i pensieri <think>
+        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
         
-        for rel_path in target_files:
-            full_path = os.path.join(repo_path, rel_path)
-            if os.path.exists(full_path):
-                with open(full_path, 'r') as f:
-                    files_content[rel_path] = f.read()
-        return files_content
+        # 2. Cerca blocchi di codice
+        code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
+        if code_blocks:
+            # Prende il blocco più lungo che sembra una patch
+            candidates = [b for b in code_blocks if "diff --git" in b or ("<<<<<<< SEARCH" in b)]
+            if candidates:
+                return max(candidates, key=len).strip()
+            return max(code_blocks, key=len).strip()
+            
+        return content.strip()
 
-    def _apply_patch(self, repo_path: str, patch_content: str) -> bool:
-        patch_file = os.path.join(repo_path, "llm_gen.patch")
-        clean_patch = patch_content.replace("```diff", "").replace("```python", "").replace("```", "").strip()
+    def _apply_patch_to_repo(self, repo_path: Path, patch_content: str) -> bool:
+        """Applica la patch nella cartella specificata."""
+        patch_file = repo_path / "llm_gen.patch"
+        clean_patch = self._clean_patch_content(patch_content)
         
         with open(patch_file, 'w') as f:
             f.write(clean_patch)
             
-        result = subprocess.run(
+        # Tentativo 1: Git Apply standard
+        res = subprocess.run(
             ["git", "apply", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"],
             cwd=repo_path, capture_output=True, text=True
         )
-        
-        if result.returncode == 0:
-            logger.info("✅ Patch applied successfully!")
+        if res.returncode == 0:
             return True
-        else:
-            logger.error(f"❌ Patch failed: {result.stderr}")
-            return False
-
-    def measure_energy(self, instance_id: str) -> Dict[str, Any]:
-        """
-        Lancia la misurazione.
-        """
-        logger.info("⚡ Running Measurement...")
-        cmd = [
-            "python", "scripts/measure_instance.py",
-            "--instance", instance_id,
-            "--dataset", self.dataset_path,
-            "--output", "data/measurements_llm"
-        ]
-        
-        try:
-            subprocess.run(cmd, check=True, capture_output=True, text=True)
-            meas_path = Path(f"data/measurements_llm/{instance_id}/measurements.json")
-            if meas_path.exists():
-                with open(meas_path, 'r') as f:
-                    return json.load(f)
-            return {"error": "Measurement output missing"}
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Measurement failed: {e.stderr}")
-            return {"error": str(e)}
+            
+        # Tentativo 2: Patch rejection allow (per formati imprecisi)
+        logger.warning(f"Git apply failed ({res.stderr.strip()}), trying robust mode...")
+        res = subprocess.run(
+            ["git", "apply", "--reject", "--whitespace=fix", "llm_gen.patch"],
+            cwd=repo_path, capture_output=True, text=True
+        )
+        return res.returncode == 0
 
     def run_experiment(self, instance_id: str, strategy: PromptStrategy):
         logger.info(f"🚀 STARTING EXPERIMENT: {instance_id}")
         
-        # 0. Detect Model Name
-        real_model_name = self._detect_running_model()
+        # 1. Preparazione Dati
+        model_name = self._detect_running_model()
+        instance = self._get_instance(instance_id)
         
-        instance = self._get_instance_data(instance_id)
-        repo_name = instance['repo']
-        base_commit = instance['base_commit']
+        # Creiamo una cartella temporanea per tutto il processo
+        temp_dir = tempfile.mkdtemp()
+        temp_path = Path(temp_dir)
         
-        # 1. Checkout
-        self._checkout_base_commit(repo_name, base_commit)
-        repo_path = os.path.join(self.repo_base_dir, repo_name)
-        
-        # 2. Prompt
-        files_dict = self._get_oracle_context_files(instance, repo_path)
-        test_cmd = f"pytest {' '.join(instance.get('efficiency_test', []))}"
-        
-        ctx = PromptContext(
-            problem_statement_type=ProblemStatementType.ORACLE,
-            problem_description=f"Optimize energy for: {test_cmd}",
-            code_files=files_dict,
-            test_command=test_cmd,
-            target_functions=list(files_dict.keys())
-        )
-        
-        prompt = self.template_manager.generate_prompts(ctx, strategy)
-        
-        # 3. LLM
-        logger.info("📤 Asking LLM...")
-        # USIAMO IL NOME RILEVATO!
-        client = self.client_manager.get_client(real_model_name)
-        response = client.generate(prompt, temperature=0.2)
-        
-        # 4. Patch
-        patch = self.template_manager.extract_code(response.content, strategy, ProblemStatementType.ORACLE)
-        self._apply_patch(repo_path, patch)
-        
-        # 5. Measure
-        results = self.measure_energy(instance_id)
-        self._save_results(instance_id, strategy, real_model_name, results, response, patch)
+        try:
+            # 2. Clonazione Repo (Uso logica originale di measure_instance)
+            # Scarica la repo pulita al commit BASE
+            logger.info("📥 Cloning repository (Base Commit)...")
+            repo_path = self.measurer_tool.setup_repository(
+                instance, temp_path, instance['base_commit']
+            )
+            
+            # 3. Prompting e LLM
+            # Per l'Oracle context, leggiamo i file dalla repo appena clonata
+            files_dict = {}
+            # Parsing semplice della patch originale per trovare i file target
+            target_files = set()
+            for line in instance.get("patch", "").splitlines():
+                if line.startswith("--- a/"): target_files.add(line[6:].strip())
+                elif line.startswith("+++ b/"): target_files.add(line[6:].strip())
+            
+            for tf in target_files:
+                p = repo_path / tf
+                if p.exists():
+                    files_dict[tf] = p.read_text()
+
+            test_cmd = f"pytest {' '.join(instance['efficiency_test'])}"
+            ctx = PromptContext(
+                problem_statement_type=ProblemStatementType.ORACLE,
+                problem_description=f"Optimize energy usage. Tests: {test_cmd}",
+                code_files=files_dict,
+                test_command=test_cmd,
+                target_functions=list(files_dict.keys())
+            )
+            
+            prompt = self.template_manager.generate_prompts(ctx, strategy)
+            
+            logger.info("📤 Querying LLM...")
+            client = self.client_manager.get_client(model_name)
+            response = client.generate(prompt, temperature=0.2)
+            
+            # 4. Applicazione Patch
+            logger.info("🔧 Applying LLM Patch...")
+            patch_success = self._apply_patch_to_repo(repo_path, response.content)
+            
+            if not patch_success:
+                logger.error("❌ Patch Application Failed. Aborting measurement.")
+                self._save_results(instance_id, strategy, model_name, {"error": "Patch Failed"}, response, temp_dir)
+                return
+
+            # 5. Installazione Dipendenze (Uso logica originale)
+            logger.info("📦 Installing Dependencies...")
+            python_path, conda_env = self.measurer_tool.install_dependencies(
+                repo_path, instance['repo'], instance['version'], instance['base_commit']
+            )
+            
+            if not python_path:
+                logger.error("❌ Dependency Installation Failed.")
+                return
+
+            # 6. Misurazione (Custom Loop usando collector originale)
+            logger.info("⚡ Measuring Energy (LLM Solution)...")
+            collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
+            
+            # Baseline (Idle)
+            baseline = collector.measure_baseline(duration=2)
+            
+            results = []
+            for test in instance['efficiency_test']:
+                logger.info(f"   Running test: {test}")
+                # Costruiamo il comando come fa measure_instance.py
+                cmd = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -v"
+                res = collector.measure_test_execution(test_command=cmd, repetitions=1)
+                res['test_name'] = test
+                results.append(res)
+                
+            # 7. Salvataggio
+            final_data = {
+                "baseline": baseline,
+                "tests": results,
+                "status": "success"
+            }
+            self._save_results(instance_id, strategy, model_name, final_data, response, response.content)
+            
+            # Cleanup Env
+            if conda_env:
+                self.measurer_tool.cleanup_conda_env(conda_env)
+
+        except Exception as e:
+            logger.error(f"Experiment Failed: {e}", exc_info=True)
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def _save_results(self, instance_id, strategy, model, measurements, llm_response, patch):
         output_dir = "results/experiments"
         os.makedirs(output_dir, exist_ok=True)
+        
         report = {
-            "instance_id": instance_id, "strategy": strategy.value, "model": model,
-            "timestamp": time.time(), "measurements": measurements,
-            "patch": patch
+            "instance_id": instance_id,
+            "strategy": strategy.value,
+            "model": model,
+            "timestamp": time.time(),
+            "metrics": measurements,
+            "patch": self._clean_patch_content(str(patch))
         }
+        
         fname = f"{output_dir}/{instance_id}_{strategy.value}.json"
         with open(fname, 'w') as f:
             json.dump(report, f, indent=2)
-        logger.info(f"💾 Report saved: {fname}")
+        logger.info(f"💾 Results saved to {fname}")
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--instance", required=True)
     parser.add_argument("--strategy", required=True, choices=["ZERO_SHOT", "COT", "LDB"])
-    parser.add_argument("--dataset", required=True)
-    parser.add_argument("--repo_dir", default="repositories")
+    # Default al Reduced Dataset come richiesto
+    parser.add_argument("--dataset", default="data/processed/swe_perf_reduced.json")
+    
     args = parser.parse_args()
     
-    runner = GreenExperimentRunner(args.dataset, repo_base_dir=args.repo_dir)
+    runner = GreenExperimentRunner(args.dataset)
     runner.run_experiment(args.instance, PromptStrategy[args.strategy])
