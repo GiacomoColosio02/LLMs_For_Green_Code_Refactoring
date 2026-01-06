@@ -3,9 +3,9 @@ Specific Experiment Runner: ZERO SHOT + REALISTIC SETTING.
 Logic:
 1. Trigger: Failing Test.
 2. Context Anchor: The Test Code itself.
-3. Retrieval: Scan repo and find Top-5 files semantically related to the Test Code.
+3. Retrieval: Scan repo and find Top-N files (fitting in context window).
 4. LLM: Asks to fix the issue given the mix of relevant/irrelevant files.
-5. Robustness: Handles measurement crashes gracefully.
+5. Robustness: Handles measurement crashes and context limits.
 """
 import sys
 import os
@@ -80,8 +80,8 @@ class ZeroShotRealisticRunner:
             for f in files:
                 if f.endswith('.py'):
                     tree.append(f"{subindent}{f}")
-        # Tronca se troppo lungo per risparmiare token (max 150 righe)
-        return "\n".join(tree[:150]) + ("\n... (truncated)" if len(tree) > 150 else "")
+        # LIMITAZIONE TOKEN: Tronca a 60 righe max
+        return "\n".join(tree[:60]) + ("\n... (truncated)" if len(tree) > 60 else "")
 
     def _tokenize(self, text: str) -> set:
         """Estrae token significativi (nomi funzioni, variabili) dal codice."""
@@ -89,22 +89,25 @@ class ZeroShotRealisticRunner:
 
     def _simulated_retrieval(self, repo_path: Path, test_paths: List[str]) -> Dict[str, str]:
         """
-        Simula BM25: Usa i token del Test Code come query per trovare i Top-5 file nella repo.
+        Simula BM25 con Token Budgeting per evitare Context Overflow.
         """
         logger.info("🕵️ Running Simulated Retrieval (Anchor: Test Code)...")
         
         # 1. Costruisci la Query (Tokens dai Test Files)
         query_tokens = set()
         test_content_map = {}
+        current_char_count = 0
         
+        # Carica Anchor (Test Code)
         for tp in test_paths:
             full = repo_path / tp
             if full.exists():
                 content = full.read_text(errors='ignore')
                 test_content_map[tp] = content
+                current_char_count += len(content)
                 query_tokens.update(self._tokenize(content))
         
-        # Stopwords pythoniche per ridurre falsi positivi
+        # Stopwords
         stopwords = {'def', 'class', 'self', 'import', 'from', 'in', 'if', 'else', 'return', 'assert', 'test', 'none', 'true', 'false', 'and', 'or', 'pytest'}
         query_tokens -= stopwords
         
@@ -114,27 +117,37 @@ class ZeroShotRealisticRunner:
             for file in files:
                 if file.endswith(".py"):
                     rel_path = os.path.relpath(os.path.join(root, file), repo_path)
-                    if rel_path in test_paths: continue # Non ritrovare se stesso
+                    if rel_path in test_paths: continue 
                     
                     try:
                         f_content = (repo_path / rel_path).read_text(errors='ignore')
                         f_tokens = self._tokenize(f_content)
-                        # Score = Intersezione dei token (Semplificazione di BM25)
                         score = len(query_tokens.intersection(f_tokens))
                         if score > 0:
                             scores[rel_path] = score
                     except: pass
         
-        # 3. Prendi Top-5
-        top_files = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:5]
-        logger.info(f"🔎 Retrieved Files: {[t[0] for t in top_files]}")
+        # 3. Seleziona file con BUDGET (Max ~30k chars totali per stare in 16k tokens)
+        MAX_CONTEXT_CHARS = 30000 
+        top_files_sorted = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         
-        # 4. Costruisci il contesto finale (Anchor + Retrieved)
-        context_files = test_content_map.copy() 
-        for fname, _ in top_files:
-            context_files[fname] = (repo_path / fname).read_text(errors='ignore')
+        retrieved_files = []
+        for fname, score in top_files_sorted:
+            try:
+                f_content = (repo_path / fname).read_text(errors='ignore')
+                if current_char_count + len(f_content) < MAX_CONTEXT_CHARS:
+                    test_content_map[fname] = f_content
+                    retrieved_files.append(fname)
+                    current_char_count += len(f_content)
+                else:
+                    logger.info(f"⚠️ Skipping {fname} (size {len(f_content)}) to fit context limit.")
+            except: pass
             
-        return context_files, list(context_files.keys())
+            # Limite hard di 5 file massimi se ci stiamo dentro
+            if len(retrieved_files) >= 5: break
+
+        logger.info(f"🔎 Retrieved Files ({len(retrieved_files)}): {retrieved_files}")
+        return test_content_map, list(test_content_map.keys())
 
     # --- PATCH ENGINE (Robust) ---
     def _extract_patch_content(self, content: str) -> str:
@@ -230,17 +243,14 @@ class ZeroShotRealisticRunner:
             repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
             
             # --- REALISTIC CONTEXT ---
-            # 1. Anchor: Test Files
             test_list = instance['efficiency_test'] 
             test_files = list(set([t.split("::")[0] for t in test_list]))
             
-            # 2. Retrieval: Anchor + Top 5
+            # Retrieval with budget check
             context_files, candidates = self._simulated_retrieval(repo_path, test_files)
             
-            # 3. Repo Map
             repo_map = self._generate_repo_map(repo_path)
             
-            # 4. Prompt
             test_cmd = f"pytest {' '.join(test_list)}"
             desc = instance.get('problem_statement_realistic', f"Optimize failing tests: {test_cmd}")
             
@@ -255,19 +265,18 @@ class ZeroShotRealisticRunner:
             
             prompt = self.template.generate_prompt(ctx)
             
-            # 5. LLM
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
-            logger.info("📤 Querying LLM (Context includes Noise)...")
+            logger.info("📤 Querying LLM...")
+            # Reduced output tokens slightly to balance
             response = client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,
-                max_tokens=8192
+                max_tokens=4096 
             )
             llm_output = response.choices[0].message.content
             logger.info(f"📝 Response received ({len(llm_output)} chars).")
 
-            # 6. Apply & Measure
             logger.info("🔧 Applying Patch...")
             if self._apply_patch_logic(repo_path, llm_output, candidates):
                 logger.info("📦 Installing & Measuring...")
@@ -278,7 +287,6 @@ class ZeroShotRealisticRunner:
                     logger.info("⚡ Measuring Energy...")
                     collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
                     
-                    # --- ROBUST MEASUREMENT ---
                     results = []
                     try:
                         baseline = collector.measure_baseline(duration=2)
@@ -297,7 +305,6 @@ class ZeroShotRealisticRunner:
                         except Exception as e:
                             logger.error(f"❌ Measurement failed for {test}: {e}")
                             results.append({'test_name': test, 'error': str(e), 'energy_joules': None})
-                    # --------------------------
 
                     self._save(instance_id, llm_output, "Success", results)
                     if conda_env: self.measurer_tool.cleanup_conda_env(conda_env)
