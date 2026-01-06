@@ -1,8 +1,10 @@
 """
-Specific Experiment Runner: ZERO SHOT + REALISTIC SETTING.
-Hybrid Engine:
-- Brain: Realistic Retrieval (32k Context, System Prompts).
-- Hands: "Old" Robust Patching Engine (Fuzzy Match + Git Apply Fallback).
+Specific Experiment Runner: ZERO SHOT + REALISTIC SETTING (Smart Fix).
+Logic:
+1. Trigger: Failing Test.
+2. Context Anchor: Test Code.
+3. Retrieval: Source Code.
+4. Patching: Smart Auto-Correction (Searches all files if filename is wrong).
 """
 import sys
 import os
@@ -31,7 +33,7 @@ from src.measurement.collector import MetricsCollector
 from openai import OpenAI
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("ZS_Realistic_Hybrid")
+logger = logging.getLogger("ZS_Realistic_Smart")
 
 class ZeroShotRealisticRunner:
     def __init__(self, dataset_path: str):
@@ -63,7 +65,7 @@ class ZeroShotRealisticRunner:
             logger.warning(f"⚠️ Could not detect model name: {e}")
         return "active_model"
 
-    # --- REALISTIC HELPERS (Context Builder) ---
+    # --- REALISTIC HELPERS ---
     
     def _generate_repo_map(self, repo_path: Path) -> str:
         tree = []
@@ -76,15 +78,13 @@ class ZeroShotRealisticRunner:
             for f in files:
                 if f.endswith('.py'):
                     tree.append(f"{subindent}{f}")
-        return "\n".join(tree[:150]) + ("\n... (truncated)" if len(tree) > 150 else "")
+        return "\n".join(tree[:300]) + ("\n... (truncated)" if len(tree) > 300 else "")
 
     def _tokenize(self, text: str) -> set:
         return set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text))
 
     def _simulated_retrieval(self, repo_path: Path, test_paths: List[str]) -> Dict[str, str]:
-        """Retrieval Logic (32k Optimized)."""
-        logger.info("🕵️ Running Simulated Retrieval...")
-        
+        logger.info("🕵️ Running Simulated Retrieval (32k Safe Mode)...")
         query_tokens = set()
         test_file_contents = {}
         for tp in test_paths:
@@ -114,7 +114,6 @@ class ZeroShotRealisticRunner:
         current_chars = 0
         final_context = {}
         
-        # 1. Test Files
         TEST_LIMIT = 25000 
         for tp, content in test_file_contents.items():
             if len(content) > TEST_LIMIT:
@@ -124,7 +123,8 @@ class ZeroShotRealisticRunner:
                 final_context[tp] = content
                 current_chars += len(content)
         
-        # 2. Retrieved Files
+        logger.info(f"✅ Added Test Anchors size: {current_chars} chars")
+
         top_files = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         retrieved_list = []
         for fname, _ in top_files:
@@ -147,35 +147,18 @@ class ZeroShotRealisticRunner:
         logger.info(f"🔎 Added Retrieved Source Files ({len(retrieved_list)}): {retrieved_list}")
         return final_context, list(final_context.keys())
 
-    # --- ROBUST PATCH ENGINE (PORTED FROM OLD RUNNER) ---
-    
+    # --- SMART PATCH ENGINE ---
     def _extract_patch_content(self, content: str) -> str:
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
-        idx_search = content.find("<<<<<<< SEARCH")
-        if idx_search != -1:
-            return content[max(0, idx_search - 500):]
-        idx_diff = content.find("diff --git")
-        if idx_diff != -1:
-            return content[idx_diff:]
+        if "<<<<<<< SEARCH" in content:
+            return content[max(0, content.find("<<<<<<< SEARCH") - 500):]
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
-        if code_blocks: return max(code_blocks, key=len).strip()
+        if code_blocks:
+            for block in code_blocks:
+                if "<<<<<<< SEARCH" in block or "diff --git" in block:
+                    return block
+            return max(code_blocks, key=len).strip()
         return content.strip()
-
-    def _find_target_file(self, repo_path: Path, search_block: str, candidate_files: List[str]) -> str:
-        """Cerca il file giusto scansionando i candidati per la firma del codice."""
-        search_lines = [l.strip() for l in search_block.splitlines() if l.strip()]
-        if not search_lines: return None
-        signature = search_lines[0] # La prima riga del blocco SEARCH deve esistere
-        
-        for fname in candidate_files:
-            fpath = repo_path / fname
-            if fpath.exists():
-                # Ignoriamo le virgolette per il match
-                file_content = fpath.read_text().replace('"', "'")
-                sig_norm = signature.replace('"', "'")
-                if sig_norm in file_content: 
-                    return fname
-        return None
 
     def _perform_fuzzy_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
         target_file = repo_path / rel_path
@@ -212,12 +195,10 @@ class ZeroShotRealisticRunner:
     def _apply_patch_logic(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
         patch_content = self._extract_patch_content(raw_content)
         
-        # --- STRATEGIA 1: Blocchi SEARCH/REPLACE ---
         if "<<<<<<< SEARCH" in patch_content:
-            logger.info("🔧 Processing SEARCH/REPLACE blocks...")
+            logger.info("🔧 Processing SEARCH/REPLACE blocks with Smart Auto-Correct...")
             blocks = patch_content.split('<<<<<<< SEARCH')
             changes_count = 0
-            context_text = blocks[0]
             
             for i in range(1, len(blocks)):
                 block = blocks[i]
@@ -225,39 +206,46 @@ class ZeroShotRealisticRunner:
                 search_part, rest = block.split('=======', 1)
                 replace_part, next_context = rest.split('>>>>>>> REPLACE', 1)
                 
+                # 1. Identifica il file dichiarato dall'LLM
                 target_file = None
-                # Cerca nome file nelle righe precedenti
-                lines_check = context_text.strip().splitlines()[-20:]
+                lines_check = patch_content[:patch_content.find(block)].strip().splitlines()[-30:]
                 for line in reversed(lines_check):
                     clean = line.strip().replace('###', '').replace('File:', '').replace('`', '').strip()
                     if clean in candidate_files or (clean.endswith('.py') and '/' in clean):
                         target_file = clean; break
                 
-                # Se non trovato, usa Auto-Detection (Logic Old Runner)
-                if not target_file:
-                    target_file = self._find_target_file(repo_path, search_part, candidate_files)
-                
+                # 2. Tentativo 1: File dichiarato
+                success = False
                 if target_file:
+                    logger.info(f"👉 Attempting patch on stated file: {target_file}")
                     if self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
+                        success = True
                         changes_count += 1
-                else:
-                    logger.warning(f"⚠️ Could not identify target file for block {i}")
                 
-                context_text = next_context
-            
+                # 3. Tentativo 2: Smart Scan (Se il tentativo 1 fallisce o il file non è stato trovato)
+                if not success:
+                    logger.warning(f"⚠️ Stated file failed. Scanning ALL {len(candidate_files)} retrieved files for match...")
+                    for cand in candidate_files:
+                        if cand == target_file: continue # Già provato
+                        if self._perform_fuzzy_replace(repo_path, cand, search_part.splitlines(), replace_part.splitlines()):
+                            logger.info(f"🎉 Smart Fix! Found matching code in {cand} instead of {target_file}")
+                            changes_count += 1
+                            success = True
+                            break
+                
+                if not success:
+                    logger.error(f"❌ Failed to find matching code for block {i} in any file.")
+
             if changes_count > 0: return True
 
-        # --- STRATEGIA 2: Git Apply Fallback (Quella che salvava la situazione) ---
-        logger.info("🔧 Trying Git Apply fallback...")
-        patch_file = repo_path / "llm_gen.patch"
-        with open(patch_file, 'w') as f: f.write(patch_content)
-        
-        # Proviamo diversi argomenti per git apply
-        for arg in ["-p0", "--ignore-space-change", "--ignore-whitespace"]:
-             res = subprocess.run(["git", "apply", arg, "llm_gen.patch"], cwd=repo_path, capture_output=True)
+        # Fallback diff standard
+        if "diff --git" in patch_content:
+             patch_file = repo_path / "llm_gen.patch"
+             with open(patch_file, 'w') as f: f.write(patch_content)
+             res = subprocess.run(["git", "apply", "-p0", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"], cwd=repo_path, capture_output=True)
              if res.returncode == 0:
-                 logger.info(f"✅ Git apply success ({arg})"); return True
-        
+                 logger.info("✅ Git apply success"); return True
+
         return False
 
     # --- MAIN FLOW ---
@@ -271,9 +259,9 @@ class ZeroShotRealisticRunner:
             logger.info("📥 Cloning repository...")
             repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
             
-            # Context
             test_list = instance['efficiency_test'] 
             test_files = list(set([t.split("::")[0] for t in test_list]))
+            
             context_files, candidates = self._simulated_retrieval(repo_path, test_files)
             repo_map = self._generate_repo_map(repo_path)
             
@@ -292,9 +280,14 @@ class ZeroShotRealisticRunner:
             user_prompt = self.template.generate_prompt(ctx)
             system_prompt = (
                 "You are an expert Green Software Engineer.\n"
-                "Optimize the provided code for energy efficiency.\n"
-                "Use SWE-bench format (<<<<<<< SEARCH / ======= / >>>>>>> REPLACE).\n"
-                "Provide actual code blocks immediately."
+                "Your goal is to optimize the provided code for energy efficiency.\n"
+                "CRITICAL: You MUST output the code changes using the SWE-bench format:\n"
+                "<<<<<<< SEARCH\n"
+                "... original code ...\n"
+                "=======\n"
+                "... optimized code ...\n"
+                ">>>>>>> REPLACE\n\n"
+                "Do NOT provide only explanations. Provide the actual code block immediately."
             )
 
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
@@ -321,6 +314,7 @@ class ZeroShotRealisticRunner:
                 if python_path:
                     logger.info("⚡ Measuring Energy...")
                     collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
+                    
                     results = []
                     try:
                         baseline = collector.measure_baseline(duration=2)
