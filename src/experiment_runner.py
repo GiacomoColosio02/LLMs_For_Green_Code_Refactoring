@@ -1,7 +1,10 @@
 """
 Main Experiment Runner for Green Code Refactoring.
 Orchestrates: Dataset -> Prompt -> LLM -> Patch -> Measurement.
-Integrates with existing SWEPerfMeasurer for robust environment handling.
+Features: 
+- "Hunter Parser" to find patches inside chatty LLM responses.
+- Fuzzy Matcher to apply patches even with whitespace mismatches.
+- Integration with SWEPerfMeasurer.
 """
 import sys
 import os
@@ -67,76 +70,59 @@ class GreenExperimentRunner:
         except Exception: pass
         return "active_model"
 
-    def _clean_response(self, content: str) -> str:
+    def _extract_patch_content(self, content: str) -> str:
+        """
+        HUNTER PARSER: Scansiona il testo per trovare la patch, ignorando le chiacchiere.
+        """
+        # 1. Rimuovi i tag di pensiero <think>
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+        
+        # 2. Cerca l'inizio di un blocco SEARCH/REPLACE
+        search_marker = "<<<<<<< SEARCH"
+        diff_marker = "diff --git"
+        
+        start_idx = -1
+        idx_search = content.find(search_marker)
+        idx_diff = content.find(diff_marker)
+        
+        # Trova il primo marcatore valido
+        if idx_search != -1 and (idx_diff == -1 or idx_search < idx_diff):
+            start_idx = idx_search
+            # Cerca di risalire al nome del file (spesso è nella riga sopra o due sopra)
+            # Prendi un buffer di 200 char prima del match
+            pre_buffer_start = max(0, start_idx - 200)
+            return content[pre_buffer_start:] 
+        elif idx_diff != -1:
+            start_idx = idx_diff
+            return content[start_idx:]
+            
+        # 3. Fallback: Se è wrappato in markdown python/diff senza marker specifici
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
         if code_blocks:
-            for block in code_blocks:
-                if "<<<<<<< SEARCH" in block: return block.strip()
-            for block in code_blocks:
-                if "diff --git" in block or "--- a/" in block: return block.strip()
+            # Ritorna il blocco più lungo
             return max(code_blocks, key=len).strip()
+            
         return content.strip()
 
     def _find_target_file(self, repo_path: Path, search_block: str, candidate_files: List[str]) -> Optional[str]:
-        search_lines = [l.strip() for l in search_block.splitlines() if l.strip()]
+        # Normalizza rimuovendo spazi vuoti per il confronto
+        def clean(s): return [l.strip() for l in s.splitlines() if l.strip()]
+        search_lines = clean(search_block)
         if not search_lines: return None
+        
         for fname in candidate_files:
             fpath = repo_path / fname
             if fpath.exists():
                 content = fpath.read_text()
-                if search_lines[0] in content: # Quick check
+                # Controllo rapido: la prima riga del blocco esiste nel file?
+                if search_lines[0] in content:
                     return fname
         return None
 
-    def _apply_search_replace_patch(self, repo_path: Path, patch_content: str, candidate_files: List[str] = []) -> bool:
-        logger.info("🔧 Detected SEARCH/REPLACE format. Applying manually...")
-        blocks = patch_content.split('<<<<<<< SEARCH')
-        if len(blocks) < 2: return False
-        
-        applied_count = 0
-        lines = patch_content.splitlines()
-        current_file = None
-        search_lines = []
-        replace_lines = []
-        mode = "TEXT"
-        
-        for line in lines:
-            stripped = line.strip()
-            if mode == "TEXT":
-                if stripped.startswith("###") or (stripped.endswith(".py") and "/" in stripped):
-                    current_file = stripped.replace("###", "").strip()
-                if stripped == "<<<<<<< SEARCH":
-                    mode = "SEARCH"
-                    search_lines = []
-            elif mode == "SEARCH":
-                if stripped == "=======":
-                    mode = "REPLACE"
-                    replace_lines = []
-                else:
-                    search_lines.append(line)
-            elif mode == "REPLACE":
-                if stripped == ">>>>>>> REPLACE":
-                    mode = "TEXT"
-                    target = current_file
-                    if not target:
-                        search_block = "\n".join(search_lines)
-                        target = self._find_target_file(repo_path, search_block, candidate_files)
-                        if target: logger.info(f"🔎 Auto-detected target file: {target}")
-                    
-                    if target and self._perform_file_replace(repo_path, target, search_lines, replace_lines):
-                        applied_count += 1
-                    current_file = None
-                else:
-                    replace_lines.append(line)
-        return applied_count > 0
-
     def _perform_file_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
-        """
-        Esegue la sostituzione Fuzzy (ignorando whitespace) riga per riga.
-        """
         target_file = repo_path / rel_path
         if not target_file.exists():
+            # Ricerca euristica
             candidates = list(repo_path.rglob(os.path.basename(rel_path)))
             if candidates: target_file = candidates[0]
             else:
@@ -144,66 +130,116 @@ class GreenExperimentRunner:
                 return False
                 
         content_lines = target_file.read_text().splitlines(keepends=True)
-        
-        # Normalizziamo le righe di ricerca per il confronto (strip whitespace)
         search_stripped = [l.strip() for l in search_lines]
         search_len = len(search_stripped)
         
+        if search_len == 0: return False
+
+        # Scansione Fuzzy (ignora whitespace)
         match_index = -1
-        
-        # Scansione del file
         for i in range(len(content_lines) - search_len + 1):
-            # Estraiamo un blocco di righe dal file
             chunk = content_lines[i : i + search_len]
             chunk_stripped = [l.strip() for l in chunk]
             
-            # Confronto Fuzzy
             if chunk_stripped == search_stripped:
                 match_index = i
                 break
         
         if match_index != -1:
-            # Costruiamo il nuovo contenuto
-            # Aggiungiamo newline alle righe di rimpiazzo se mancano
+            # Costruisci le nuove linee
             final_replace_lines = [l + '\n' if not l.endswith('\n') else l for l in replace_lines]
-            
-            new_content_lines = (
-                content_lines[:match_index] + 
-                final_replace_lines + 
-                content_lines[match_index + search_len:]
-            )
-            
+            new_content_lines = content_lines[:match_index] + final_replace_lines + content_lines[match_index + search_len:]
             target_file.write_text("".join(new_content_lines))
             logger.info(f"✅ Applied Fuzzy Patch to {rel_path}")
             return True
             
-        logger.warning(f"❌ Search block mismatch in {rel_path} (Even with fuzzy match)")
-        # Debug: Stampa cosa cercava vs cosa c'è
-        # logger.info(f"Wanted: {search_stripped[:3]}...")
+        logger.warning(f"❌ Search block mismatch in {rel_path}")
         return False
 
-    def _apply_patch(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
-        patch_content = self._clean_response(raw_content)
+    def _apply_search_replace_patch(self, repo_path: Path, patch_content: str, candidate_files: List[str] = []) -> bool:
+        logger.info("🔧 Detected SEARCH/REPLACE format. Parsing...")
         
-        logger.info(f"\n📄 PREVIEW PATCH RECEIVED (First 500 chars):\n{'-'*40}\n{patch_content[:500]}\n{'-'*40}")
+        # Splitto per blocchi, ma mantengo un po' di contesto prima del SEARCH per trovare il filename
+        raw_blocks = patch_content.split('<<<<<<< SEARCH')
+        if len(raw_blocks) < 2: return False
+        
+        applied_count = 0
+        
+        # Iteriamo sui split. 
+        # block[0] è testo inutile (o filename del primo blocco).
+        # block[1] è "content \n ======= \n content \n >>>>>>> REPLACE"
+        
+        # Il filename del blocco N si trova alla fine del blocco N-1
+        previous_text = raw_blocks[0]
+        
+        for i in range(1, len(raw_blocks)):
+            block_body = raw_blocks[i]
+            
+            # Parsing del corpo del blocco
+            if "=======" not in block_body or ">>>>>>> REPLACE" not in block_body:
+                logger.warning(f"⚠️ Malformed block {i}, skipping.")
+                previous_text = block_body
+                continue
+                
+            search_part, rest = block_body.split('=======', 1)
+            replace_part, after_replace = rest.split('>>>>>>> REPLACE', 1)
+            
+            search_lines = search_part.splitlines()
+            replace_lines = replace_part.splitlines()
+            
+            # Cerca il nome del file nelle ultime righe del testo precedente
+            # Cerca pattern: "path/to/file.py" o "### path/to/file.py"
+            target_file = None
+            lines_to_check = previous_text.strip().splitlines()[-5:] # Guarda ultime 5 righe
+            
+            for line in reversed(lines_to_check):
+                clean_line = line.strip().replace('###', '').strip()
+                if clean_line.endswith('.py'): # Euristica semplice
+                    target_file = clean_line
+                    break
+            
+            # Se non trovato, usa auto-detection
+            if not target_file:
+                search_txt = "\n".join(search_lines)
+                target_file = self._find_target_file(repo_path, search_txt, candidate_files)
+                if target_file: logger.info(f"🔎 Auto-detected file: {target_file}")
+            
+            if target_file:
+                if self._perform_file_replace(repo_path, target_file, search_lines, replace_lines):
+                    applied_count += 1
+            else:
+                logger.warning(f"⚠️ Could not identify target file for block {i}")
+            
+            previous_text = after_replace # Il testo dopo il REPLACE diventa il preambolo del prossimo
 
+        return applied_count > 0
+
+    def _apply_patch(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
+        patch_content = self._extract_patch_content(raw_content)
+        
+        logger.info(f"\n📄 PREVIEW EXTRACTED PATCH (First 300 chars):\n{'-'*30}\n{patch_content[:300]}\n{'-'*30}")
+
+        # 1. Prova SEARCH/REPLACE
         if "<<<<<<< SEARCH" in patch_content:
             if self._apply_search_replace_patch(repo_path, patch_content, candidate_files): return True
             
+        # 2. Prova Git Apply
         patch_file = repo_path / "llm_gen.patch"
         with open(patch_file, 'w') as f: f.write(patch_content)
         
+        # Standard
         res = subprocess.run(["git", "apply", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"], cwd=repo_path, capture_output=True, text=True)
         if res.returncode == 0:
             logger.info("✅ Git apply success")
             return True
             
+        # P0 Fallback
         res = subprocess.run(["git", "apply", "-p0", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"], cwd=repo_path, capture_output=True, text=True)
         if res.returncode == 0:
             logger.info("✅ Git apply (-p0) success")
             return True
 
-        logger.error(f"❌ Patching failed. Last git error: {res.stderr.strip()}")
+        logger.error(f"❌ Patching failed.")
         return False
 
     def run_experiment(self, instance_id: str, strategy: PromptStrategy):
@@ -216,6 +252,7 @@ class GreenExperimentRunner:
             logger.info("📥 Cloning repository...")
             repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
             
+            # Context Extraction
             files_dict = {}
             target_files = set()
             for line in instance.get("patch", "").splitlines():
@@ -223,7 +260,6 @@ class GreenExperimentRunner:
             for tf in target_files:
                 p = repo_path / tf
                 if p.exists(): files_dict[tf] = p.read_text()
-
             candidate_files_list = list(files_dict.keys())
 
             test_cmd = f"pytest {' '.join(instance['efficiency_test'])}"
@@ -276,7 +312,7 @@ class GreenExperimentRunner:
         os.makedirs(output_dir, exist_ok=True)
         report = {
             "instance_id": instance_id, "strategy": strategy.value, "model": model,
-            "timestamp": time.time(), "metrics": measurements, "patch": self._clean_response(str(patch))
+            "timestamp": time.time(), "metrics": measurements, "patch": str(patch) # Save raw
         }
         fname = f"{output_dir}/{instance_id}_{strategy.value}.json"
         with open(fname, 'w') as f: json.dump(report, f, indent=2)
