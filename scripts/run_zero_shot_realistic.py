@@ -3,8 +3,8 @@ Specific Experiment Runner: ZERO SHOT + REALISTIC SETTING.
 Logic:
 1. Trigger: Failing Test.
 2. Context Anchor: The Test Code itself (Truncated).
-3. Retrieval: Scan repo and find Top-N files (Safe Context).
-4. LLM: Asks to fix the issue given the mix of relevant/irrelevant files.
+3. Retrieval: Scan repo and find Top-N files.
+4. Strategy: TRUNCATE large relevant files instead of skipping them.
 5. Robustness: Handles measurement crashes and token limits.
 """
 import sys
@@ -86,8 +86,8 @@ class ZeroShotRealisticRunner:
 
     def _simulated_retrieval(self, repo_path: Path, test_paths: List[str]) -> Dict[str, str]:
         """
-        Retrieval calibrato per DeepSeek-R1 (16k context).
-        Target: ~11k Input Tokens (max) per lasciare ~5k per Output.
+        Retrieval con "Greedy Truncation".
+        Invece di saltare i file grossi, li tronchiamo per farli entrare.
         """
         logger.info("🕵️ Running Simulated Retrieval...")
         
@@ -118,38 +118,53 @@ class ZeroShotRealisticRunner:
                         if score > 0: scores[rel_path] = score
                     except: pass
         
-        # C. Costruisci Contesto (RIDOTTO A 40k chars ~ 10-11k tokens)
-        MAX_CONTEXT_CHARS = 40000 
+        # C. Costruzione Contesto (Max 45k chars totali)
+        MAX_CONTEXT_CHARS = 45000 
+        PER_FILE_LIMIT = 12000 # Max 12k chars per file sorgente (per evitare monopoli)
         current_chars = 0
         final_context = {}
         
-        # 1. Carica TEST FILES (Troncati a 8k)
+        # 1. Carica TEST FILES (Truncated)
         TEST_LIMIT = 8000
         for tp, content in test_file_contents.items():
             if len(content) > TEST_LIMIT:
-                final_context[tp] = content[:TEST_LIMIT] + "\n... [TRUNCATED FOR BREVITY]"
+                final_context[tp] = content[:TEST_LIMIT] + "\n... [TRUNCATED TEST FILE]"
                 current_chars += TEST_LIMIT
-                logger.warning(f"⚠️ Truncated large test file {tp} to {TEST_LIMIT} chars")
             else:
                 final_context[tp] = content
                 current_chars += len(content)
         
         logger.info(f"✅ Added Test Anchors size: {current_chars}")
 
-        # 2. Carica RETRIEVED FILES (Riempiono il resto)
+        # 2. Carica TOP 5 RETRIEVED FILES (Con Truncation)
         top_files = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         retrieved_list = []
         
         for fname, _ in top_files:
-            if len(retrieved_list) >= 6: break
+            if len(retrieved_list) >= 5: break # Max 5 file
+            
+            # Se siamo già pieni col budget globale, stop
+            if current_chars >= MAX_CONTEXT_CHARS:
+                break
+
             try:
                 content = (repo_path / fname).read_text(errors='ignore')
-                if current_chars + len(content) < MAX_CONTEXT_CHARS:
+                # Applica limite per singolo file
+                if len(content) > PER_FILE_LIMIT:
+                    content = content[:PER_FILE_LIMIT] + "\n... [TRUNCATED SOURCE FILE]"
+                
+                # Controlla se ci sta nel budget globale
+                if current_chars + len(content) <= MAX_CONTEXT_CHARS:
                     final_context[fname] = content
                     current_chars += len(content)
                     retrieved_list.append(fname)
                 else:
-                    logger.info(f"⚠️ Skipping {fname} (size {len(content)}) to fit context.")
+                    # Aggiungi un pezzetto finale se rimane spazio
+                    remaining = MAX_CONTEXT_CHARS - current_chars
+                    if remaining > 1000:
+                        final_context[fname] = content[:remaining] + "\n... [TRUNCATED TO FIT]"
+                        current_chars += remaining
+                        retrieved_list.append(fname)
             except: pass
             
         logger.info(f"🔎 Added Retrieved Source Files: {retrieved_list}")
@@ -157,12 +172,9 @@ class ZeroShotRealisticRunner:
 
     # --- PATCH ENGINE ---
     def _extract_patch_content(self, content: str) -> str:
-        # Pulisci tag di pensiero
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
-        
         if "<<<<<<< SEARCH" in content:
             return content[max(0, content.find("<<<<<<< SEARCH") - 500):]
-            
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
         if code_blocks:
             for block in code_blocks:
@@ -257,7 +269,7 @@ class ZeroShotRealisticRunner:
             test_list = instance['efficiency_test'] 
             test_files = list(set([t.split("::")[0] for t in test_list]))
             
-            # Retrieval (Priority Fixed: Tests First)
+            # Retrieval (Smart Truncation)
             context_files, candidates = self._simulated_retrieval(repo_path, test_files)
             
             repo_map = self._generate_repo_map(repo_path)
@@ -280,12 +292,11 @@ class ZeroShotRealisticRunner:
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
             logger.info("📤 Querying LLM...")
             
-            # RIDOTTO MAX_TOKENS A 3072 per sicurezza
             response = client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,
-                max_tokens=3072 
+                max_tokens=4096 
             )
             llm_output = response.choices[0].message.content
             logger.info(f"📝 Response received ({len(llm_output)} chars).")
