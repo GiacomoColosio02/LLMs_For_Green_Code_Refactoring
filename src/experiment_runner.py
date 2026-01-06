@@ -273,7 +273,7 @@ class GreenExperimentRunner:
             
             logger.info("📤 Querying LLM...")
             client = self.client_manager.get_client(model_name)
-            response = client.generate(prompt, temperature=0.2)
+            response = client.generate(prompt, temperature=0.2, max_tokens=8192)
             
             logger.info("🔧 Applying Patch...")
             if not self._apply_patch(repo_path, response.content, candidate_files_list):
