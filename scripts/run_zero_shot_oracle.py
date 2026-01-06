@@ -17,16 +17,13 @@ import shutil
 from pathlib import Path
 from typing import Dict, List, Any
 
-# --- SETUP PATH (FONDAMENTALE) ---
-# Aggiunge la root del progetto al path per importare src
+# --- SETUP PATH ---
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-# --- IMPORT ASSOLUTI (CORRETTI) ---
 from src.llm_clients.client_manager import ClientManager
-# Nota: qui sotto usiamo i percorsi completi src....
 from src.prompt_templates.zero_shot_oracle import ZeroShotOracleTemplate
 from src.prompt_templates.base_template import PromptStrategy, ProblemStatementType, PromptContext
 from scripts.measure_instance import SWEPerfMeasurer
@@ -53,6 +50,19 @@ class ZeroShotOracleRunner:
         for item in self.dataset:
             if item.get("instance_id") == instance_id: return item
         raise ValueError(f"Instance {instance_id} not found")
+
+    def _detect_running_model(self) -> str:
+        """Detects the model name currently served by vLLM."""
+        try:
+            client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
+            models = client.models.list()
+            if models.data:
+                model_name = models.data[0].id
+                logger.info(f"✅ Detected vLLM Model: {model_name}")
+                return model_name
+        except Exception as e:
+            logger.warning(f"⚠️ Could not detect model name: {e}")
+        return "active_model"
 
     # --- ROBUST PATCHING ENGINE (Hunter Parser + Fuzzy Matcher) ---
     def _extract_patch_content(self, content: str) -> str:
@@ -161,6 +171,10 @@ class ZeroShotOracleRunner:
     def run(self, instance_id: str):
         logger.info(f"🚀 START ZS_ORACLE: {instance_id}")
         instance = self._get_instance(instance_id)
+        
+        # 0. Detect Model Name
+        real_model_name = self._detect_running_model()
+        
         temp_dir = Path(tempfile.mkdtemp())
         
         try:
@@ -184,7 +198,7 @@ class ZeroShotOracleRunner:
             ctx = PromptContext(
                 problem_statement_type=ProblemStatementType.ORACLE,
                 problem_description=desc,
-                code_files=files_dict, # Solo file rilevanti
+                code_files=files_dict, 
                 test_command=test_cmd,
                 target_functions=candidates
             )
@@ -194,9 +208,9 @@ class ZeroShotOracleRunner:
             # 4. LLM
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
             logger.info("📤 Querying LLM...")
-            # Temperature 0 per massima determinismo in Oracle
+            
             response = client.chat.completions.create(
-                model="active_model",
+                model=real_model_name, # Use detected name!
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,
                 max_tokens=8192
