@@ -16,10 +16,18 @@ class ZeroShotTemplate(BasePromptTemplate):
         super().__init__(PromptStrategy.ZERO_SHOT)
     
     def generate_prompt(self, context: PromptContext) -> str:
-        # 1. PREMISE
+        # 1. SYSTEM PERSONA (Green Adaptation)
+        # Defines the role and primary objective before the specific task.
+        system_persona = (
+            "You are an expert in Green Software Engineering. "
+            "Your goal is to refactor code to minimize energy consumption and carbon emissions "
+            "while maintaining strict functional correctness.\n"
+        )
+
+        # 2. PREMISE (Standard SWE-perf)
         premise = self._get_sweperf_header()
 
-        # 2. PROBLEM STATEMENT (Green Adaptation)
+        # 3. PROBLEM STATEMENT & GOALS
         green_guidelines = (
             "\nGREEN OPTIMIZATION GOALS:\n"
             "1. Reduce CPU Energy Consumption (Joules).\n"
@@ -36,7 +44,7 @@ class ZeroShotTemplate(BasePromptTemplate):
                 f"Focus on optimizing these specific targets:\n{targets}"
             )
         else:
-            # Realistic: Focus on symptoms (tests)
+            # Realistic: Focus on symptoms (tests) and autonomous detection
             problem_body = (
                 f"REALISTIC SETTING: The following tests are showing poor energy performance:\n"
                 f"{context.test_command}\n\n"
@@ -47,21 +55,23 @@ class ZeroShotTemplate(BasePromptTemplate):
 
         problem_block = f"<problem_statement>\n{problem_body}\n</problem_statement>"
 
-        # 3. CODE CONTEXT
+        # 4. CODE CONTEXT
+        # Line numbers are False to facilitate copy-paste for SEARCH/REPLACE blocks
         code_block = f"<code>\n{context.get_formatted_code(add_line_numbers=False)}\n</code>"
 
-        # 4. FINAL ASSEMBLY
+        # 5. FINAL ASSEMBLY
         final_prompt = [
-            premise,
-            problem_block,
+            system_persona,  # <--- Added: Sets the expert role
+            premise,         # <--- Standard instruction
+            problem_block,   # <--- The task + Green Goals
             "",
-            code_block,
+            code_block,      # <--- The code to fix
             "",
-            self._get_search_replace_format_instruction()
+            self._get_search_replace_format_instruction() # <--- Mandatory output format
         ]
         
         return "\n".join(final_prompt)
-
+    
     def extract_code_from_response(self, response: str) -> str:
         """Extracts the python code block containing the patch."""
         if "```python" in response:
