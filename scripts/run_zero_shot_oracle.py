@@ -1,10 +1,9 @@
 """
-Main Experiment Runner for Green Code Refactoring.
-Orchestrates: Dataset -> Prompt -> LLM -> Patch -> Measurement.
-Features: 
-- Hunter Parser: Finds patches in verbose LLM output.
-- Super Fuzzy Matcher: Robustly applies patches ignoring whitespace/newline diffs.
-- Integrated Measurement with Crash Protection.
+Specific Experiment Runner: ZERO SHOT + ORACLE SETTING.
+Logic:
+1. Context: Extracts EXACT target files from the gold patch.
+2. Prompting: System Prompt enforcement + DeepSeek/Qwen optimization.
+3. Patching: Ultra-Robust Hybrid Engine (Fuzzy + Quote Normalization + Git Fallback).
 """
 import sys
 import os
@@ -15,48 +14,39 @@ import subprocess
 import time
 import tempfile
 import shutil
-from typing import Optional, Dict, List, Any
 from pathlib import Path
+from typing import Dict, List, Any
 
-# --- CONFIGURAZIONE PATH ---
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(PROJECT_ROOT)
-sys.path.append(os.path.join(PROJECT_ROOT, "scripts"))
+# --- SETUP PATH ---
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 from src.llm_clients.client_manager import ClientManager
-from src.prompt_templates.template_manager import PromptTemplateManager
+from src.prompt_templates.zero_shot_oracle import ZeroShotOracleTemplate
 from src.prompt_templates.base_template import PromptStrategy, ProblemStatementType, PromptContext
+from scripts.measure_instance import SWEPerfMeasurer
+from src.measurement.collector import MetricsCollector
 from openai import OpenAI
 
-# Import misuratore originale
-try:
-    from scripts.measure_instance import SWEPerfMeasurer
-    from src.measurement.collector import MetricsCollector
-except ImportError as e:
-    print(f"CRITICAL ERROR: Could not import measurement scripts. {e}")
-    sys.exit(1)
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ZS_Oracle_Hybrid")
 
-class GreenExperimentRunner:
+class ZeroShotOracleRunner:
     def __init__(self, dataset_path: str):
         self.dataset_path = dataset_path
         self.dataset = self._load_dataset()
         self.client_manager = ClientManager() 
-        self.template_manager = PromptTemplateManager()
+        self.template = ZeroShotOracleTemplate()
         self.measurer_tool = SWEPerfMeasurer(dataset_path, country_code="ESP")
 
-    def _load_dataset(self) -> List[Dict]:
-        if not os.path.exists(self.dataset_path):
-            raise FileNotFoundError(f"Dataset not found at {self.dataset_path}")
+    def _load_dataset(self):
         with open(self.dataset_path, 'r') as f:
             data = json.load(f)
-        if isinstance(data, list): return data
-        elif isinstance(data, dict) and "instances" in data: return data["instances"]
-        else: raise ValueError(f"Unknown dataset structure")
+        return data if isinstance(data, list) else data["instances"]
 
-    def _get_instance(self, instance_id: str) -> Dict[str, Any]:
+    def _get_instance(self, instance_id: str):
         for item in self.dataset:
             if item.get("instance_id") == instance_id: return item
         raise ValueError(f"Instance {instance_id} not found")
@@ -65,169 +55,113 @@ class GreenExperimentRunner:
         try:
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
             models = client.models.list()
-            if models.data: return models.data[0].id
+            if models.data:
+                model_name = models.data[0].id
+                logger.info(f"✅ Detected vLLM Model: {model_name}")
+                return model_name
         except Exception: pass
         return "active_model"
 
+    # --- ULTRA ROBUST PATCH ENGINE ---
     def _extract_patch_content(self, content: str) -> str:
-        """Estrae la patch pulendo il testo dell'LLM."""
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
-        
-        idx_search = content.find("<<<<<<< SEARCH")
-        if idx_search != -1:
-            # Mantieni un buffer prima del primo blocco per intercettare il nome del file
-            return content[max(0, idx_search - 500):]
-            
-        # Fallback diff standard
-        idx_diff = content.find("diff --git")
-        if idx_diff != -1:
-            return content[idx_diff:]
-            
-        # Fallback markdown code block
+        if "<<<<<<< SEARCH" in content:
+            return content[max(0, content.find("<<<<<<< SEARCH") - 500):]
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
-        if code_blocks: return max(code_blocks, key=len).strip()
-            
+        if code_blocks:
+            for block in code_blocks:
+                if "<<<<<<< SEARCH" in block or "diff --git" in block:
+                    return block
+            return max(code_blocks, key=len).strip()
         return content.strip()
 
-    def _find_target_file(self, repo_path: Path, search_block: str, candidate_files: List[str]) -> Optional[str]:
-        # Cerca il file che contiene la prima riga non vuota del blocco
-        search_lines = [l.strip() for l in search_block.splitlines() if l.strip()]
-        if not search_lines: return None
-        
-        signature = search_lines[0]
-        for fname in candidate_files:
-            fpath = repo_path / fname
-            if fpath.exists():
-                if signature in fpath.read_text(): return fname
-        return None
-
     def _perform_fuzzy_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
-        """
-        SUPER FUZZY MATCHER:
-        Confronta il contenuto ignorando spazi bianchi e righe vuote.
-        """
         target_file = repo_path / rel_path
-        if not target_file.exists():
-            # Ricerca file se path errato
-            candidates = list(repo_path.rglob(os.path.basename(rel_path)))
-            if candidates: target_file = candidates[0]
-            else: return False
-                
+        if not target_file.exists(): return False
         original_lines = target_file.read_text().splitlines(keepends=True)
         
-        # 1. Normalizza Search Block (lista di stringhe pulite)
-        norm_search = [l.strip() for l in search_lines if l.strip()]
+        # Normalize: strip whitespace + normalize quotes
+        norm_search = [l.strip().replace('"', "'") for l in search_lines if l.strip()]
         if not norm_search: return False 
 
-        # 2. Crea Mappa del File Originale (contenuto_pulito -> indice_reale)
         file_map = []
         for idx, line in enumerate(original_lines):
-            stripped = line.strip()
-            if stripped:
-                file_map.append((stripped, idx))
+            stripped = line.strip().replace('"', "'")
+            if stripped: file_map.append((stripped, idx))
         
-        # 3. Cerca la sequenza
         search_len = len(norm_search)
         match_start_idx = -1
         
         for i in range(len(file_map) - search_len + 1):
-            # Prendi una finestra di righe dal file mappa
             window = [item[0] for item in file_map[i : i + search_len]]
             if window == norm_search:
-                match_start_idx = i
-                break
+                match_start_idx = i; break
         
         if match_start_idx != -1:
-            # Trovato! Recupera gli indici reali
-            real_start_line = file_map[match_start_idx][1]
-            real_end_line = file_map[match_start_idx + search_len - 1][1]
-            
-            # Prepara il blocco di sostituzione (aggiungi newline se mancano)
+            real_start = file_map[match_start_idx][1]
+            real_end = file_map[match_start_idx + search_len - 1][1]
             final_replace = [l + '\n' if not l.endswith('\n') else l for l in replace_lines]
-            
-            # Applica modifica
-            new_content = (
-                original_lines[:real_start_line] + 
-                final_replace + 
-                original_lines[real_end_line + 1:]
-            )
+            new_content = original_lines[:real_start] + final_replace + original_lines[real_end + 1:]
             target_file.write_text("".join(new_content))
             logger.info(f"✅ Applied Patch to {rel_path} (Fuzzy Match)")
             return True
-            
-        logger.warning(f"❌ Search block mismatch in {rel_path}")
         return False
 
     def _apply_patch_logic(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
         patch_content = self._extract_patch_content(raw_content)
-        logger.info(f"\n📄 PATCH EXTRACTED ({len(patch_content)} chars)")
-
+        
         if "<<<<<<< SEARCH" in patch_content:
             logger.info("🔧 Processing SEARCH/REPLACE blocks...")
             blocks = patch_content.split('<<<<<<< SEARCH')
             changes_count = 0
             
-            # Il testo prima del primo blocco contiene indizi sul file
-            context_text = blocks[0]
-            
             for i in range(1, len(blocks)):
                 block = blocks[i]
                 if "=======" not in block or ">>>>>>> REPLACE" not in block: continue
-                
                 search_part, rest = block.split('=======', 1)
                 replace_part, next_context = rest.split('>>>>>>> REPLACE', 1)
                 
-                # 1. Cerca nome file nel testo precedente (ultime righe)
                 target_file = None
-                lines_check = context_text.strip().splitlines()[-10:]
+                lines_check = patch_content[:patch_content.find(block)].strip().splitlines()[-30:]
                 for line in reversed(lines_check):
-                    clean = line.strip().replace('###', '').replace('File:', '').strip()
-                    # Rimuovi backticks se presenti `path/to/file.py`
-                    clean = clean.replace('`', '')
+                    clean = line.strip().replace('###', '').replace('File:', '').replace('`', '').strip()
                     if clean in candidate_files or (clean.endswith('.py') and '/' in clean):
-                        target_file = clean
-                        break
+                        target_file = clean; break
                 
-                # 2. Se non trovato, usa auto-detection dal contenuto
                 if not target_file:
-                    target_file = self._find_target_file(repo_path, search_part, candidate_files)
-                
-                if target_file:
-                    if self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
-                        changes_count += 1
-                else:
-                    logger.warning(f"⚠️ Could not identify file for block {i}")
-                
-                context_text = next_context # Aggiorna contesto per il prossimo blocco
+                    search_l = [l.strip() for l in search_part.splitlines() if l.strip()]
+                    if search_l:
+                        sig = search_l[0].replace('"', "'")
+                        for cand in candidate_files:
+                            path = repo_path / cand
+                            if path.exists() and sig in path.read_text().replace('"', "'"):
+                                target_file = cand; break
 
+                if target_file and self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
+                    changes_count += 1
+            
             if changes_count > 0: return True
 
-        # Fallback Git Apply
         logger.info("🔧 Trying Git Apply fallback...")
         patch_file = repo_path / "llm_gen.patch"
         with open(patch_file, 'w') as f: f.write(patch_content)
-        
-        # Prova p0 e p1
         for arg in ["-p0", "--ignore-space-change", "--ignore-whitespace"]:
              res = subprocess.run(["git", "apply", arg, "llm_gen.patch"], cwd=repo_path, capture_output=True)
              if res.returncode == 0:
-                 logger.info(f"✅ Git apply success ({arg})")
-                 return True
-        
-        logger.error("❌ All patch application methods failed.")
+                 logger.info(f"✅ Git apply success ({arg})"); return True
         return False
 
-    def run_experiment(self, instance_id: str, strategy: PromptStrategy):
-        logger.info(f"🚀 STARTING EXPERIMENT: {instance_id}")
-        model_name = self._detect_running_model()
+    # --- MAIN FLOW ---
+    def run(self, instance_id: str):
+        logger.info(f"🚀 START ZS_ORACLE: {instance_id}")
         instance = self._get_instance(instance_id)
+        model_name = self._detect_running_model()
         temp_dir = Path(tempfile.mkdtemp())
         
         try:
             logger.info("📥 Cloning repository...")
             repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
             
-            # Identify target files from patch
             files_dict = {}
             for line in instance.get("patch", "").splitlines():
                 if line.startswith("--- a/"): 
@@ -235,89 +169,102 @@ class GreenExperimentRunner:
                     p = repo_path / fname
                     if p.exists(): files_dict[fname] = p.read_text()
             candidates = list(files_dict.keys())
-
-            # Prompt
+            
             test_cmd = f"pytest {' '.join(instance['efficiency_test'])}"
+            desc = f"Optimize the energy efficiency of the repository. Focus on these tests: {test_cmd}"
+            
             ctx = PromptContext(
                 problem_statement_type=ProblemStatementType.ORACLE,
-                problem_description=f"Optimize energy usage. Tests: {test_cmd}",
-                code_files=files_dict,
+                problem_description=desc,
+                code_files=files_dict, 
                 test_command=test_cmd,
                 target_functions=candidates
             )
-            prompt = self.template_manager.generate_prompts(ctx, strategy)
             
-            logger.info("📤 Querying LLM...")
-            client = self.client_manager.get_client(model_name)
-            response = client.generate(prompt, temperature=0.0, max_tokens=8192) # Max tokens increased
+            user_prompt = self.template.generate_prompt(ctx)
             
-            logger.info("🔧 Applying Patch...")
-            if not self._apply_patch_logic(repo_path, response.content, candidates):
-                self._save_results(instance_id, strategy, model_name, {"error": "Patch Failed"}, response, temp_dir)
-                return
-
-            logger.info("📦 Installing Dependencies...")
-            python_path, conda_env = self.measurer_tool.install_dependencies(
-                repo_path, instance['repo'], instance['version'], instance['base_commit']
+            system_prompt = (
+                "You are an expert Green Software Engineer.\n"
+                "Your goal is to optimize the provided code for energy efficiency.\n"
+                "CRITICAL: You MUST output the code changes using the SWE-bench format:\n"
+                "<<<<<<< SEARCH\n"
+                "... original code ...\n"
+                "=======\n"
+                "... optimized code ...\n"
+                ">>>>>>> REPLACE\n\n"
+                "Do NOT provide only explanations. Provide the actual code block immediately."
             )
             
-            if not python_path:
-                self._save_results(instance_id, strategy, model_name, {"error": "Build Failed"}, response, response.content)
-                return
-
-            logger.info("⚡ Measuring Energy...")
-            collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
+            client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
+            logger.info("📤 Querying LLM...")
             
-            # --- ROBUST MEASUREMENT LOOP START ---
-            results = []
-            baseline = None
-            try:
-                baseline = collector.measure_baseline(duration=2)
-            except Exception as e:
-                logger.warning(f"⚠️ Baseline measurement failed: {e}")
+            response = client.chat.completions.create(
+                model=model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.0,
+                max_tokens=4096
+            )
+            llm_output = response.choices[0].message.content
+            logger.info(f"📝 Response received ({len(llm_output)} chars).")
 
-            for test in instance['efficiency_test']:
-                logger.info(f"   Running test: {test}")
-                cmd = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -v"
+            logger.info("🔧 Applying Patch...")
+            if self._apply_patch_logic(repo_path, llm_output, candidates):
+                logger.info("📦 Installing & Measuring...")
+                python_path, conda_env = self.measurer_tool.install_dependencies(
+                    repo_path, instance['repo'], instance['version'], instance['base_commit']
+                )
                 
-                try:
-                    res = collector.measure_test_execution(test_command=cmd, repetitions=1)
-                    res['test_name'] = test
-                    results.append(res)
-                    # Pausa di sicurezza per far riprendere i sensori
-                    time.sleep(2) 
-                except Exception as e:
-                    logger.error(f"❌ Measurement failed for {test}: {e}")
-                    results.append({'test_name': test, 'error': str(e), 'energy_joules': None})
-            
-            # --- ROBUST MEASUREMENT LOOP END ---
-                
-            self._save_results(instance_id, strategy, model_name, {"baseline": baseline, "tests": results}, response, response.content)
-            if conda_env: self.measurer_tool.cleanup_conda_env(conda_env)
+                if python_path:
+                    logger.info("⚡ Measuring Energy...")
+                    collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
+                    results = []
+                    try:
+                        baseline = collector.measure_baseline(duration=2)
+                    except Exception as e:
+                        logger.warning(f"⚠️ Baseline failed: {e}")
+                        baseline = None
+
+                    for test in instance['efficiency_test']:
+                        logger.info(f"   Running test: {test}")
+                        cmd = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -v"
+                        try:
+                            res = collector.measure_test_execution(test_command=cmd, repetitions=1)
+                            res['test_name'] = test
+                            results.append(res)
+                            time.sleep(2) 
+                        except Exception as e:
+                            logger.error(f"❌ Measurement failed for {test}: {e}")
+                            results.append({'test_name': test, 'error': str(e), 'energy_joules': None})
+                    
+                    self._save(instance_id, llm_output, "Success", results)
+                    if conda_env: self.measurer_tool.cleanup_conda_env(conda_env)
+                else:
+                    self._save(instance_id, llm_output, "Build Failed", None)
+            else:
+                logger.error("❌ No patch applied.")
+                self._save(instance_id, llm_output, "Patch Failed", None)
 
         except Exception as e:
-            logger.error(f"Experiment Failed: {e}", exc_info=True)
+            logger.error(f"Error: {e}", exc_info=True)
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
-    def _save_results(self, instance_id, strategy, model, measurements, llm_response, patch):
-        output_dir = "results/experiments"
-        os.makedirs(output_dir, exist_ok=True)
-        report = {
-            "instance_id": instance_id, "strategy": strategy.value, "model": model,
-            "timestamp": time.time(), "metrics": measurements, "patch": str(patch)
-        }
-        fname = f"{output_dir}/{instance_id}_{strategy.value}.json"
-        with open(fname, 'w') as f: json.dump(report, f, indent=2)
-        logger.info(f"💾 Results saved to {fname}")
+    def _save(self, instance_id, response, status, metrics):
+        os.makedirs("results/zs_oracle", exist_ok=True)
+        data = {"instance": instance_id, "status": status, "metrics": metrics, "full_response": response}
+        with open(f"results/zs_oracle/{instance_id}.json", "w") as f:
+            json.dump(data, f, indent=2)
+        logger.info(f"💾 Saved to results/zs_oracle/{instance_id}.json")
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--instance", required=True)
-    parser.add_argument("--strategy", required=True, choices=["ZERO_SHOT", "COT", "LDB"])
-    parser.add_argument("--dataset", default="data/processed/swe_perf_reduced.json")
+    parser.add_argument("--dataset", required=True)
     args = parser.parse_args()
     
-    runner = GreenExperimentRunner(args.dataset)
-    runner.run_experiment(args.instance, PromptStrategy[args.strategy])
+    runner = ZeroShotOracleRunner(args.dataset)
+    runner.run(args.instance)
