@@ -68,7 +68,6 @@ class GreenExperimentRunner:
         return "active_model"
 
     def _clean_response(self, content: str) -> str:
-        """Pulisce la risposta da <think> e markdown."""
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
         if code_blocks:
@@ -80,22 +79,17 @@ class GreenExperimentRunner:
         return content.strip()
 
     def _find_target_file(self, repo_path: Path, search_block: str, candidate_files: List[str]) -> Optional[str]:
-        """Cerca quale file contiene il blocco di ricerca se il nome del file manca."""
         search_lines = [l.strip() for l in search_block.splitlines() if l.strip()]
         if not search_lines: return None
-        
-        # Primo tentativo: cerca nei file candidati (quelli passati nel prompt)
         for fname in candidate_files:
             fpath = repo_path / fname
             if fpath.exists():
                 content = fpath.read_text()
-                # Controllo rilassato: se la prima e l'ultima riga del blocco esistono nel file
-                if search_lines[0] in content and search_lines[-1] in content:
+                if search_lines[0] in content: # Quick check
                     return fname
         return None
 
     def _apply_search_replace_patch(self, repo_path: Path, patch_content: str, candidate_files: List[str] = []) -> bool:
-        """Parser manuale per formato SWE-bench con auto-detection del file."""
         logger.info("🔧 Detected SEARCH/REPLACE format. Applying manually...")
         blocks = patch_content.split('<<<<<<< SEARCH')
         if len(blocks) < 2: return False
@@ -124,25 +118,23 @@ class GreenExperimentRunner:
             elif mode == "REPLACE":
                 if stripped == ">>>>>>> REPLACE":
                     mode = "TEXT"
-                    
-                    # Logica di fallback se manca il nome file
                     target = current_file
                     if not target:
                         search_block = "\n".join(search_lines)
                         target = self._find_target_file(repo_path, search_block, candidate_files)
-                        if target:
-                            logger.info(f"🔎 Auto-detected target file: {target}")
-                        else:
-                            logger.warning("⚠️ Could not identify target file for block.")
+                        if target: logger.info(f"🔎 Auto-detected target file: {target}")
                     
                     if target and self._perform_file_replace(repo_path, target, search_lines, replace_lines):
                         applied_count += 1
-                    current_file = None # Reset per il prossimo blocco
+                    current_file = None
                 else:
                     replace_lines.append(line)
         return applied_count > 0
 
     def _perform_file_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
+        """
+        Esegue la sostituzione Fuzzy (ignorando whitespace) riga per riga.
+        """
         target_file = repo_path / rel_path
         if not target_file.exists():
             candidates = list(repo_path.rglob(os.path.basename(rel_path)))
@@ -151,34 +143,43 @@ class GreenExperimentRunner:
                 logger.warning(f"❌ File not found: {rel_path}")
                 return False
                 
-        content = target_file.read_text()
-        search_block = "\n".join(search_lines)
-        replace_block = "\n".join(replace_lines)
+        content_lines = target_file.read_text().splitlines(keepends=True)
         
-        # 1. Exact match
-        if search_block in content:
-            target_file.write_text(content.replace(search_block, replace_block))
-            logger.info(f"✅ Applied to {rel_path}")
+        # Normalizziamo le righe di ricerca per il confronto (strip whitespace)
+        search_stripped = [l.strip() for l in search_lines]
+        search_len = len(search_stripped)
+        
+        match_index = -1
+        
+        # Scansione del file
+        for i in range(len(content_lines) - search_len + 1):
+            # Estraiamo un blocco di righe dal file
+            chunk = content_lines[i : i + search_len]
+            chunk_stripped = [l.strip() for l in chunk]
+            
+            # Confronto Fuzzy
+            if chunk_stripped == search_stripped:
+                match_index = i
+                break
+        
+        if match_index != -1:
+            # Costruiamo il nuovo contenuto
+            # Aggiungiamo newline alle righe di rimpiazzo se mancano
+            final_replace_lines = [l + '\n' if not l.endswith('\n') else l for l in replace_lines]
+            
+            new_content_lines = (
+                content_lines[:match_index] + 
+                final_replace_lines + 
+                content_lines[match_index + search_len:]
+            )
+            
+            target_file.write_text("".join(new_content_lines))
+            logger.info(f"✅ Applied Fuzzy Patch to {rel_path}")
             return True
             
-        # 2. Stripped match
-        if search_block.strip() in content:
-            target_file.write_text(content.replace(search_block.strip(), replace_block))
-            logger.info(f"✅ Applied (fuzzy stripped) to {rel_path}")
-            return True
-            
-        # 3. Line-by-line whitespace ignoring match (Molto costoso ma robusto)
-        # Semplificazione: proviamo a normalizzare gli spazi
-        def normalize(s): return '\n'.join([l.strip() for l in s.splitlines() if l.strip()])
-        
-        norm_content = normalize(content)
-        norm_search = normalize(search_block)
-        
-        if norm_search in norm_content:
-             logger.warning(f"⚠️ Fuzzy match found but safe replacement not implemented for {rel_path}")
-             # Implementare sostituzione fuzzy è rischioso senza librerie dedicate
-             
-        logger.warning(f"❌ Search block mismatch in {rel_path}")
+        logger.warning(f"❌ Search block mismatch in {rel_path} (Even with fuzzy match)")
+        # Debug: Stampa cosa cercava vs cosa c'è
+        # logger.info(f"Wanted: {search_stripped[:3]}...")
         return False
 
     def _apply_patch(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
@@ -186,11 +187,9 @@ class GreenExperimentRunner:
         
         logger.info(f"\n📄 PREVIEW PATCH RECEIVED (First 500 chars):\n{'-'*40}\n{patch_content[:500]}\n{'-'*40}")
 
-        # 1. Prova SEARCH/REPLACE con auto-detection candidati
         if "<<<<<<< SEARCH" in patch_content:
             if self._apply_search_replace_patch(repo_path, patch_content, candidate_files): return True
             
-        # 2. Prova Git Apply
         patch_file = repo_path / "llm_gen.patch"
         with open(patch_file, 'w') as f: f.write(patch_content)
         
@@ -199,7 +198,6 @@ class GreenExperimentRunner:
             logger.info("✅ Git apply success")
             return True
             
-        # 3. Prova Git Apply -p0
         res = subprocess.run(["git", "apply", "-p0", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"], cwd=repo_path, capture_output=True, text=True)
         if res.returncode == 0:
             logger.info("✅ Git apply (-p0) success")
@@ -215,11 +213,9 @@ class GreenExperimentRunner:
         temp_dir = Path(tempfile.mkdtemp())
         
         try:
-            # 1. Clone
             logger.info("📥 Cloning repository...")
             repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
             
-            # 2. Context
             files_dict = {}
             target_files = set()
             for line in instance.get("patch", "").splitlines():
@@ -228,7 +224,6 @@ class GreenExperimentRunner:
                 p = repo_path / tf
                 if p.exists(): files_dict[tf] = p.read_text()
 
-            # Lista candidati per il patcher
             candidate_files_list = list(files_dict.keys())
 
             test_cmd = f"pytest {' '.join(instance['efficiency_test'])}"
@@ -241,18 +236,15 @@ class GreenExperimentRunner:
             )
             prompt = self.template_manager.generate_prompts(ctx, strategy)
             
-            # 3. LLM
             logger.info("📤 Querying LLM...")
             client = self.client_manager.get_client(model_name)
             response = client.generate(prompt, temperature=0.2)
             
-            # 4. Patch
             logger.info("🔧 Applying Patch...")
             if not self._apply_patch(repo_path, response.content, candidate_files_list):
                 self._save_results(instance_id, strategy, model_name, {"error": "Patch Failed"}, response, temp_dir)
                 return
 
-            # 5. Measure
             logger.info("📦 Installing Dependencies...")
             python_path, conda_env = self.measurer_tool.install_dependencies(
                 repo_path, instance['repo'], instance['version'], instance['base_commit']
