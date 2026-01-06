@@ -7,6 +7,7 @@ import os
 import re
 import json
 import logging
+import subprocess  # <--- MANCAVA QUESTO!
 import time
 import tempfile
 import shutil
@@ -44,7 +45,6 @@ class GreenExperimentRunner:
         self.template_manager = PromptTemplateManager()
         
         # Inizializziamo il misuratore originale per sfruttare le sue utility (clone, install)
-        # Nota: il country code non è critico qui se non calcoliamo la CO2 esatta subito
         self.measurer_tool = SWEPerfMeasurer(dataset_path, country_code="ESP")
 
     def _load_dataset(self) -> List[Dict]:
