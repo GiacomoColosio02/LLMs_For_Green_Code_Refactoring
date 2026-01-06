@@ -1,45 +1,40 @@
 #!/bin/bash
 
 # ==============================================================================
-# SINGLE MODEL LAUNCHER (AWQ 4-BIT QUANTIZED - ULTRA CONTEXT)
-# Usage: bash scripts/run_single_model.sh [qwen|deepseek]
+# SINGLE MODEL LAUNCHER (AWQ 4-BIT)
+# Fix: Respects Qwen native limit (32k) to avoid RoPE scaling errors.
 # ==============================================================================
 
 MODEL_ALIAS=$1
 PORT=8000
-GPU_UTIL=0.95  # Usiamo il 95% della GPU (4-bit lascia spazio per il contesto)
-MAX_LEN=60000  # 🚀 CONTESTO ENORME: 60k Token (possibile grazie a AWQ)
+GPU_UTIL=0.95
+MAX_LEN=32768  # 🟢 LIMITE SICURO: 32k Tokens (~120k caratteri). Più che sufficiente.
 
 if [ "$MODEL_ALIAS" == "qwen" ]; then
-    # Versione Ufficiale Quantizzata di Qwen 2.5 Coder
     MODEL_NAME="Qwen/Qwen2.5-Coder-7B-Instruct-AWQ"
-    echo "🔵 SELECTED: Qwen 2.5 Coder AWQ (The Executor - High Context)"
+    echo "🔵 SELECTED: Qwen 2.5 Coder AWQ (32k Context)"
 
 elif [ "$MODEL_ALIAS" == "deepseek" ]; then
-    # Versione Quantizzata Community (CasperHansen è lo standard per R1 AWQ)
     MODEL_NAME="casperhansen/deepseek-r1-distill-qwen-7b-awq"
-    echo "🟣 SELECTED: DeepSeek R1 AWQ (The Reasoner - High Context)"
+    echo "🟣 SELECTED: DeepSeek R1 AWQ"
 
 else
     echo "❌ Error: Specify model alias."
     echo "Usage: bash scripts/run_single_model.sh qwen"
-    echo "       bash scripts/run_single_model.sh deepseek"
     exit 1
 fi
 
 echo "================================================================="
-echo "🚀 STARTING SINGLE vLLM INSTANCE (AWQ 4-bit)"
+echo "🚀 STARTING SINGLE vLLM INSTANCE"
 echo "   Model:   $MODEL_NAME"
 echo "   Context: $MAX_LEN tokens"
-echo "   Port:    $PORT"
 echo "================================================================="
 
-# Uccidiamo eventuali vecchi vLLM per liberare la porta e la VRAM
-echo "🧹 Cleaning up old processes..."
 pkill -f vllm
-sleep 2 # Aspetta che la GPU si liberi
+sleep 2
 
-# Lanciamo vLLM con il flag --quantization awq
+# VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 serve solo se vuoi forzare oltre i 32k (rischio crash)
+# Qui usiamo il limite nativo per la massima stabilità.
 vllm serve $MODEL_NAME \
     --port $PORT \
     --gpu-memory-utilization $GPU_UTIL \
