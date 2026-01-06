@@ -1,42 +1,35 @@
 """
-OpenAI GPT-5 Client
+OpenAI-compatible client implementation for local vLLM.
 """
-from typing import Optional
 import time
-from openai import OpenAI
-import tiktoken
+import logging
+from typing import Optional, Dict, Any
+from openai import OpenAI, APIConnectionError, APITimeoutError
 
 from .base_client import BaseLLMClient, LLMResponse
 
+logger = logging.getLogger(__name__)
 
 class OpenAIClient(BaseLLMClient):
     """
-    Client for OpenAI GPT-5 models.
-    
-    Supported models:
-    - gpt-5
-    - gpt-5.1
-    - gpt-5-mini
-    - gpt-5-nano
+    Client for OpenAI-compatible APIs (specifically local vLLM).
+    Handles port routing via base_url passed in kwargs.
     """
     
-    PROVIDER = "openai"
-    
     def _initialize_client(self):
-        """Initialize OpenAI client."""
-        self.client = OpenAI(
-            api_key=self.api_key,
-            timeout=self.timeout,
-            organization=self.kwargs.get('organization', None)
-        )
+        """
+        Initialize the OpenAI client with the specific base_url for the model.
+        """
+        # Estraiamo base_url dai kwargs, default a porta 8000
+        self.base_url = self.kwargs.get("base_url", "http://localhost:8000/v1")
         
-        # Initialize tokenizer for counting
-        try:
-            self.tokenizer = tiktoken.encoding_for_model(self.model_name)
-        except KeyError:
-            # Fallback to cl100k_base (used by GPT-4/5)
-            self.tokenizer = tiktoken.get_encoding("cl100k_base")
-    
+        logger.info(f"Initializing OpenAIClient for {self.model_name} at {self.base_url}")
+        
+        self.client = OpenAI(
+            base_url=self.base_url,
+            api_key=self.api_key if self.api_key else "EMPTY"
+        )
+
     def generate(
         self,
         prompt: str,
@@ -46,55 +39,62 @@ class OpenAIClient(BaseLLMClient):
         **kwargs
     ) -> LLMResponse:
         """
-        Generate text using OpenAI GPT-5.
-        
-        Args:
-            prompt: User prompt
-            system_prompt: System prompt (instructions for model)
-            temperature: Sampling temperature (0.0 = deterministic)
-            max_tokens: Maximum tokens to generate
-            **kwargs: Additional OpenAI parameters (top_p, frequency_penalty, etc.)
-        
-        Returns:
-            LLMResponse with generated text and metadata
+        Generate text using the local vLLM server.
         """
-        start_time = time.time()
-        
-        # Build messages
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
+
+        start_time = time.time()
         
-        # Call API
-        response = self.client.chat.completions.create(
-            model=self.model_name,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            **kwargs
-        )
-        
-        latency = time.time() - start_time
-        
-        # Extract response
-        content = response.choices[0].message.content
-        
-        return LLMResponse(
-            model_name=self.model_name,
-            provider=self.PROVIDER,
-            content=content,
-            prompt_tokens=response.usage.prompt_tokens,
-            completion_tokens=response.usage.completion_tokens,
-            total_tokens=response.usage.total_tokens,
-            latency_seconds=latency,
-            metadata={
-                "finish_reason": response.choices[0].finish_reason,
-                "model_used": response.model,
-                "system_fingerprint": getattr(response, 'system_fingerprint', None)
-            }
-        )
-    
+        try:
+            # Chiamata all'API
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs # Passa eventuali altri parametri supportati
+            )
+            
+            end_time = time.time()
+            latency = end_time - start_time
+            
+            # Estrazione dati
+            choice = response.choices[0]
+            content = choice.message.content or ""
+            
+            # Gestione sicura dei token usage (alcuni server proxy potrebbero non inviarli)
+            usage = response.usage
+            p_tokens = usage.prompt_tokens if usage else 0
+            c_tokens = usage.completion_tokens if usage else 0
+            t_tokens = usage.total_tokens if usage else 0
+
+            return LLMResponse(
+                model_name=self.model_name,
+                provider="vllm_local",
+                content=content,
+                prompt_tokens=p_tokens,
+                completion_tokens=c_tokens,
+                total_tokens=t_tokens,
+                latency_seconds=latency,
+                metadata={
+                    "finish_reason": choice.finish_reason,
+                    "base_url": self.base_url
+                }
+            )
+            
+        except Exception as e:
+            logger.error(f"Error generating with {self.model_name}: {e}")
+            raise e
+
     def count_tokens(self, text: str) -> int:
-        """Count tokens using OpenAI tokenizer."""
-        return len(self.tokenizer.encode(text))
+        """
+        Estimate token count. 
+        For local logic without loading heavy tokenizers, we use a heuristic 
+        or we could use tiktoken if installed.
+        """
+        # Stima approssimativa (4 caratteri ~= 1 token) per evitare overhead
+        # Se necessario, possiamo integrare 'tiktoken' o 'transformers' qui.
+        return len(text) // 4

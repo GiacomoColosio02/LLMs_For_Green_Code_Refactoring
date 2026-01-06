@@ -1,45 +1,64 @@
 #!/bin/bash
 
-# Attiva environment
-source vllm-env/bin/activate
+# ==============================================================================
+# GREEN CODE REFACTORING - LOCAL LLM SERVER LAUNCHER
+# Infrastructure: vLLM on NVIDIA RTX 4090 (24GB)
+# Strategy: Dual Model Serving (Split Memory)
+# ==============================================================================
 
-# Configurazione Porte
-PORT_QWEN=8000
-PORT_DEEPSEEK=8001
+# Definiamo i nomi dei modelli (HuggingFace IDs)
+# 1. Qwen2.5-Coder-7B-Instruct: Il "Manovale" (Coding puro, Zero-Shot)
+MODEL_CODER="Qwen/Qwen2.5-Coder-7B-Instruct"
 
-# Calcolo memoria: Diamo il 45% della GPU a testa (45% + 45% = 90%, lascia 10% al sistema)
-GPU_UTIL=0.45
+# 2. DeepSeek-R1-Distill-Qwen-7B: Il "Pensatore" (Reasoning, CoT, LDB)
+MODEL_REASONER="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
 
-echo "========================================================"
-echo "🚀 STARTING LOCAL GREEN AI SERVER (RTX 4090 OPTIMIZED)"
-echo "========================================================"
+# Configurazioni Porte
+PORT_CODER=8000
+PORT_REASONER=8001
 
-# 1. Start Qwen2.5-Coder (Port 8000)
-echo "Starting Qwen2.5-Coder-7B..."
-nohup vllm serve Qwen/Qwen2.5-Coder-7B-Instruct \
-    --port $PORT_QWEN \
-    --dtype bfloat16 \
+# Configurazione GPU
+# Usiamo 0.45 per lasciare un 10% di margine per il sistema operativo e overhead
+GPU_UTILIZATION=0.45
+MAX_MODEL_LEN=8192  # Riduciamo leggermente il contesto per sicurezza memoria (puoi alzare a 16k/32k se regge)
+
+echo "================================================================="
+echo "🚀 STARTING LOCAL LLM INFRASTRUCTURE (vLLM)"
+echo "GPU Memory Budget per model: ~10.8 GB (45%)"
+echo "================================================================="
+
+# Funzione per uccidere i processi alla chiusura dello script
+trap 'kill $(jobs -p)' EXIT
+
+# 1. Avvio Server Qwen (Coder) sulla porta 8000
+echo "Starting Coder Model: $MODEL_CODER on port $PORT_CODER..."
+vllm serve $MODEL_CODER \
+    --port $PORT_CODER \
+    --gpu-memory-utilization $GPU_UTILIZATION \
+    --max-model-len $MAX_MODEL_LEN \
     --kv-cache-dtype fp8 \
-    --gpu-memory-utilization $GPU_UTIL \
-    --max-model-len 8192 \
-    --api-key "EMPTY" > qwen.log 2>&1 &
+    --dtype half \
+    --trust-remote-code &
 
-# Nota: --kv-cache-dtype fp8 comprime la memoria del contesto, ottimo per repo grandi!
+# Attendiamo qualche secondo per dare precedenza all'allocazione del primo
+sleep 10
 
-# 2. Start DeepSeek-R1 (Port 8001)
-echo "Starting DeepSeek-R1-Distill-Qwen-7B..."
-nohup vllm serve deepseek-ai/DeepSeek-R1-Distill-Qwen-7B \
-    --port $PORT_DEEPSEEK \
-    --dtype bfloat16 \
+# 2. Avvio Server DeepSeek (Reasoner) sulla porta 8001
+echo "Starting Reasoner Model: $MODEL_REASONER on port $PORT_REASONER..."
+vllm serve $MODEL_REASONER \
+    --port $PORT_REASONER \
+    --gpu-memory-utilization $GPU_UTILIZATION \
+    --max-model-len $MAX_MODEL_LEN \
     --kv-cache-dtype fp8 \
-    --gpu-memory-utilization $GPU_UTIL \
-    --max-model-len 8192 \
-    --api-key "EMPTY" > deepseek.log 2>&1 &
+    --dtype half \
+    --trust-remote-code &
 
-echo "⏳ Waiting 30s for models to load..."
-sleep 30
+echo "================================================================="
+echo "⏳ Waiting for servers to be ready..."
+echo "   - Qwen Coder:     http://localhost:$PORT_CODER/v1"
+echo "   - DeepSeek R1:    http://localhost:$PORT_REASONER/v1"
+echo "================================================================="
+echo "Press Ctrl+C to stop both servers."
 
-echo "✅ SERVERS UP!"
-echo "   - Qwen:     http://localhost:$PORT_QWEN/v1"
-echo "   - DeepSeek: http://localhost:$PORT_DEEPSEEK/v1"
-echo "   (Check qwen.log and deepseek.log for errors)"
+# Mantiene lo script attivo
+wait

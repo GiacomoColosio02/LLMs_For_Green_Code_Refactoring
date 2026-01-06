@@ -1,120 +1,76 @@
 """
-LLM Client Manager
-Centralized management of all LLM clients.
-Updated for 7B/8B Green AI Experimentation.
+Factory for LLM Clients.
+Routes requests to the correct local vLLM port based on the model name.
 """
+import logging
+import os
 from typing import Dict, Optional
-import yaml
-from pathlib import Path
-
-from .openai_client import OpenAIClient
 from .base_client import BaseLLMClient
+from .openai_client import OpenAIClient
 
+logger = logging.getLogger(__name__)
 
-class LLMClientManager:
+class ClientManager:
     """
-    Manager for all LLM clients.
+    Manages connections to local vLLM instances.
     """
     
-    # Configurazione Modelli per lo Studio Green (Small Models Focus)
-    MODEL_CONFIGS = {
-        # --- BASELINE (General Purpose) ---
-        "llama-3.1-8b": {
-            "client_class": OpenAIClient, 
-            "model_name": "meta-llama/Meta-Llama-3.1-8B-Instruct", # Nome huggingface
-            "provider": "vllm_local"
+    # Configurazione Porte: Qwen (Coder) -> 8000, DeepSeek (Reasoner) -> 8001
+    MODEL_CONFIG = {
+        # PORT 8000: The Coder (Qwen)
+        "qwen": {
+            "name": "Qwen/Qwen2.5-Coder-7B-Instruct",
+            "port": 8000
+        },
+        "Qwen/Qwen2.5-Coder-7B-Instruct": {
+            "name": "Qwen/Qwen2.5-Coder-7B-Instruct",
+            "port": 8000
         },
         
-        # --- CODE SPECIALIST (Execution) ---
-        "qwen2.5-coder-7b": {
-            "client_class": OpenAIClient,
-            "model_name": "Qwen/Qwen2.5-Coder-7B-Instruct",
-            "provider": "vllm_local"
+        # PORT 8001: The Reasoner (DeepSeek)
+        "deepseek": {
+            "name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+            "port": 8001
         },
-        "qwen2.5-coder-32b": { # Teniamo anche il 32B come riferimento "Large" se serve
-            "client_class": OpenAIClient,
-            "model_name": "Qwen/Qwen2.5-Coder-32B-Instruct",
-            "provider": "vllm_local"
-        },
-
-        # --- REASONING SPECIALIST (Debugging/Planning) ---
-        "deepseek-r1-7b": {
-            "client_class": OpenAIClient,
-            "model_name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
-            "provider": "vllm_local"
-        },
-        
-        # --- PROPRIETARY (Reference Upper Bound) ---
-        "gpt-4o-mini": { # Usiamo il mini per confronto costi/green
-            "client_class": OpenAIClient,
-            "model_name": "gpt-4o-mini",
-            "provider": "openai"
+        "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B": {
+            "name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+            "port": 8001
         }
     }
-    
-    def __init__(self, api_keys_path: str = "configs/llm_api_keys.yaml"):
-        self.api_keys_path = Path(api_keys_path)
-        self.api_keys = self._load_api_keys()
-        self.clients: Dict[str, BaseLLMClient] = {}
-    
-    def _load_api_keys(self) -> Dict:
-        if not self.api_keys_path.exists():
-            print(f"Warning: {self.api_keys_path} not found. Creating template.")
-            self._create_template_config()
+
+    @staticmethod
+    def get_client(model_identifier: str, **kwargs) -> BaseLLMClient:
+        """
+        Returns the correct client configured for the specific local port.
+        
+        Args:
+            model_identifier: 'qwen', 'deepseek', or full HuggingFace ID
+            **kwargs: Additional args passed to client constructor
+        """
+        # Normalizza la chiave
+        config = ClientManager.MODEL_CONFIG.get(model_identifier)
+        
+        # Default API Key per vLLM è spesso "EMPTY" o ignorata
+        api_key = os.getenv("VLLM_API_KEY", "EMPTY")
+        
+        if not config:
+            logger.warning(f"Model '{model_identifier}' not mapped. Defaulting to localhost:8000")
+            return OpenAIClient(
+                model_name=model_identifier, 
+                api_key=api_key,
+                base_url="http://localhost:8000/v1",
+                **kwargs
+            )
             
-        with open(self.api_keys_path, 'r') as f:
-            return yaml.safe_load(f) or {}
-
-    def _create_template_config(self):
-        """Creates a template config file"""
-        self.api_keys_path.parent.mkdir(parents=True, exist_ok=True)
-        template = {
-            "openai": {"api_key": "sk-..."},
-            "vllm_local": {
-                "api_key": "EMPTY", 
-                "base_url": "http://localhost:8000/v1" # Porta di default vLLM
-            },
-            "ollama_local": {
-                "api_key": "ollama", 
-                "base_url": "http://localhost:11434/v1"
-            }
-        }
-        with open(self.api_keys_path, 'w') as f:
-            yaml.dump(template, f)
-
-    def get_client(self, model_short_name: str) -> BaseLLMClient:
-        if model_short_name in self.clients:
-            return self.clients[model_short_name]
+        port = config["port"]
+        full_name = config["name"]
+        base_url = f"http://localhost:{port}/v1"
         
-        if model_short_name not in self.MODEL_CONFIGS:
-            available = list(self.MODEL_CONFIGS.keys())
-            raise ValueError(f"Model '{model_short_name}' not configured. Available: {available}")
+        logger.info(f"Routing model '{model_identifier}' -> {base_url}")
         
-        config = self.MODEL_CONFIGS[model_short_name]
-        provider = config["provider"]
-        
-        # Get credentials
-        creds = self.api_keys.get(provider, {})
-        api_key = creds.get("api_key")
-        base_url = creds.get("base_url")
-        
-        if not api_key:
-             # Fallback per vLLM se non c'è chiave esplicita
-             if "local" in provider:
-                 api_key = "EMPTY"
-             else:
-                 raise ValueError(f"API key for provider '{provider}' not found.")
-
-        # Initialize
-        client_class = config["client_class"]
-        
-        print(f"🔌 Connecting to {model_short_name} via {provider} at {base_url}...")
-        
-        client = client_class(
-            model_name=config["model_name"],
+        return OpenAIClient(
+            model_name=full_name,
             api_key=api_key,
-            base_url=base_url 
+            base_url=base_url,
+            **kwargs
         )
-        
-        self.clients[model_short_name] = client
-        return client
