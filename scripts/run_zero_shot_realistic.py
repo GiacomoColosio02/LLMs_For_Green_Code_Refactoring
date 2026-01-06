@@ -1,10 +1,10 @@
 """
-Specific Experiment Runner: ZERO SHOT + REALISTIC SETTING (32k AWQ Stable).
+Specific Experiment Runner: ZERO SHOT + REALISTIC SETTING.
 Logic:
 1. Trigger: Failing Test.
-2. Context Anchor: Test Code (Truncated to 25k chars).
-3. Retrieval: Source Code (Fills remaining budget up to 85k chars).
-4. Limits: Tuned for Qwen-AWQ running at 32k context limit.
+2. Context Anchor: Test Code.
+3. Retrieval: Source Code.
+4. Patching: ULTRA-FUZZY Matching (Ignores whitespace AND quote styles).
 """
 import sys
 import os
@@ -33,7 +33,7 @@ from src.measurement.collector import MetricsCollector
 from openai import OpenAI
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("ZS_Realistic_32k")
+logger = logging.getLogger("ZS_Realistic")
 
 class ZeroShotRealisticRunner:
     def __init__(self, dataset_path: str):
@@ -78,19 +78,13 @@ class ZeroShotRealisticRunner:
             for f in files:
                 if f.endswith('.py'):
                     tree.append(f"{subindent}{f}")
-        return "\n".join(tree[:150]) + ("\n... (truncated)" if len(tree) > 150 else "")
+        return "\n".join(tree[:300]) + ("\n... (truncated)" if len(tree) > 300 else "")
 
     def _tokenize(self, text: str) -> set:
         return set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text))
 
     def _simulated_retrieval(self, repo_path: Path, test_paths: List[str]) -> Dict[str, str]:
-        """
-        Retrieval Tuned for 32k Context (~110k chars total capacity).
-        Safety Buffer: We use 85k chars for input, leaving ~25k chars (~7k tokens) for output.
-        """
         logger.info("🕵️ Running Simulated Retrieval (32k Safe Mode)...")
-        
-        # A. Analizza Test Code
         query_tokens = set()
         test_file_contents = {}
         for tp in test_paths:
@@ -103,7 +97,6 @@ class ZeroShotRealisticRunner:
         stopwords = {'def', 'class', 'self', 'import', 'from', 'in', 'if', 'else', 'return', 'assert', 'test', 'none', 'true', 'false', 'and', 'or', 'pytest'}
         query_tokens -= stopwords
         
-        # B. Rank Repo Files
         scores = {}
         for root, _, files in os.walk(repo_path):
             for file in files:
@@ -117,12 +110,10 @@ class ZeroShotRealisticRunner:
                         if score > 0: scores[rel_path] = score
                     except: pass
         
-        # C. Costruisci Contesto (Max 85k chars input)
         MAX_CONTEXT_CHARS = 85000 
         current_chars = 0
         final_context = {}
         
-        # 1. Carica TEST FILES (Limitati a 25k chars)
         TEST_LIMIT = 25000 
         for tp, content in test_file_contents.items():
             if len(content) > TEST_LIMIT:
@@ -135,16 +126,11 @@ class ZeroShotRealisticRunner:
         
         logger.info(f"✅ Added Test Anchors size: {current_chars} chars")
 
-        # 2. Carica RETRIEVED FILES (Riempiono il resto fino a 85k)
         top_files = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         retrieved_list = []
-        
         for fname, _ in top_files:
-            if len(retrieved_list) >= 10: break
-            
-            if current_chars >= MAX_CONTEXT_CHARS:
-                break
-
+            if len(retrieved_list) >= 15: break
+            if current_chars >= MAX_CONTEXT_CHARS: break
             try:
                 content = (repo_path / fname).read_text(errors='ignore')
                 if current_chars + len(content) < MAX_CONTEXT_CHARS:
@@ -154,18 +140,15 @@ class ZeroShotRealisticRunner:
                 else:
                     remaining = MAX_CONTEXT_CHARS - current_chars
                     if remaining > 2000:
-                        final_context[fname] = content[:remaining] + "\n... [TRUNCATED TO FIT]"
+                        final_context[fname] = content[:remaining] + "\n... [TRUNCATED]"
                         current_chars += remaining
                         retrieved_list.append(fname)
-                        logger.info(f"⚠️ Truncated {fname} to fit context.")
-                    else:
-                        logger.info(f"⚠️ Skipping {fname} (Context Full).")
             except: pass
             
         logger.info(f"🔎 Added Retrieved Source Files ({len(retrieved_list)}): {retrieved_list}")
         return final_context, list(final_context.keys())
 
-    # --- PATCH ENGINE ---
+    # --- ULTRA ROBUST PATCH ENGINE ---
     def _extract_patch_content(self, content: str) -> str:
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
         if "<<<<<<< SEARCH" in content:
@@ -178,21 +161,32 @@ class ZeroShotRealisticRunner:
             return max(code_blocks, key=len).strip()
         return content.strip()
 
+    def _normalize_line(self, line: str) -> str:
+        """Normalize line for fuzzy comparison: remove whitespace and equalize quotes."""
+        return line.strip().replace('"', "'")
+
     def _perform_fuzzy_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
         target_file = repo_path / rel_path
-        if not target_file.exists(): return False
+        if not target_file.exists(): 
+            logger.warning(f"❌ Target file not found: {rel_path}")
+            return False
+            
         original_lines = target_file.read_text().splitlines(keepends=True)
-        norm_search = [l.strip() for l in search_lines if l.strip()]
+        
+        # Normalize search block (ignore quotes and whitespace)
+        norm_search = [self._normalize_line(l) for l in search_lines if l.strip()]
         if not norm_search: return False 
 
+        # Create map of normalized original file
         file_map = []
         for idx, line in enumerate(original_lines):
-            stripped = line.strip()
+            stripped = self._normalize_line(line)
             if stripped: file_map.append((stripped, idx))
         
         search_len = len(norm_search)
         match_start_idx = -1
         
+        # Sliding window search
         for i in range(len(file_map) - search_len + 1):
             window = [item[0] for item in file_map[i : i + search_len]]
             if window == norm_search:
@@ -206,6 +200,8 @@ class ZeroShotRealisticRunner:
             target_file.write_text("".join(new_content))
             logger.info(f"✅ Applied Patch to {rel_path} (Fuzzy Match)")
             return True
+        
+        logger.warning(f"❌ Content mismatch in {rel_path}. Could not find SEARCH block.")
         return False
 
     def _apply_patch_logic(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
@@ -230,21 +226,26 @@ class ZeroShotRealisticRunner:
                 if not target_file:
                     search_l = [l.strip() for l in search_part.splitlines() if l.strip()]
                     if search_l:
-                        sig = search_l[0]
+                        sig = self._normalize_line(search_l[0])
                         for cand in candidate_files:
-                            if (repo_path / cand).exists() and sig in (repo_path / cand).read_text():
+                            path = repo_path / cand
+                            if path.exists() and sig in path.read_text().replace('"', "'"):
                                 target_file = cand; break
 
-                if target_file and self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
-                    changes_count += 1
+                if target_file:
+                    if self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
+                        changes_count += 1
+                else:
+                    logger.warning(f"⚠️ Could not identify target file for block {i}")
+
             if changes_count > 0: return True
 
         patch_file = repo_path / "llm_gen.patch"
         with open(patch_file, 'w') as f: f.write(patch_content)
-        for arg in ["-p0", "--ignore-space-change", "--ignore-whitespace"]:
-             res = subprocess.run(["git", "apply", arg, "llm_gen.patch"], cwd=repo_path, capture_output=True)
-             if res.returncode == 0:
-                 logger.info(f"✅ Git apply success ({arg})"); return True
+        res = subprocess.run(["git", "apply", "-p0", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"], cwd=repo_path, capture_output=True)
+        if res.returncode == 0:
+             logger.info("✅ Git apply success"); return True
+
         return False
 
     # --- MAIN FLOW ---
@@ -262,7 +263,7 @@ class ZeroShotRealisticRunner:
             test_list = instance['efficiency_test'] 
             test_files = list(set([t.split("::")[0] for t in test_list]))
             
-            # Retrieval (32k Safe Mode)
+            # Retrieval
             context_files, candidates = self._simulated_retrieval(repo_path, test_files)
             repo_map = self._generate_repo_map(repo_path)
             
@@ -294,7 +295,6 @@ class ZeroShotRealisticRunner:
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
             logger.info("📤 Querying LLM...")
             
-            # Output max 4096 tokens (should fit within remaining 32k - ~24k input)
             response = client.chat.completions.create(
                 model=model_name,
                 messages=[
@@ -316,7 +316,6 @@ class ZeroShotRealisticRunner:
                 if python_path:
                     logger.info("⚡ Measuring Energy...")
                     collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
-                    
                     results = []
                     try:
                         baseline = collector.measure_baseline(duration=2)
