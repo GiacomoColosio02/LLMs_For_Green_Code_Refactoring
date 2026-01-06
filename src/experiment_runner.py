@@ -15,6 +15,9 @@ from pathlib import Path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # -----------------------
 
+# Import per auto-detection
+from openai import OpenAI
+
 from src.llm_clients.client_manager import ClientManager
 from src.prompt_templates.template_manager import PromptTemplateManager
 from src.prompt_templates.base_template import PromptStrategy, ProblemStatementType, PromptContext
@@ -29,6 +32,20 @@ class GreenExperimentRunner:
         self.dataset_content = self._load_dataset()
         self.client_manager = ClientManager() 
         self.template_manager = PromptTemplateManager()
+
+    def _detect_running_model(self) -> str:
+        """Chiede a vLLM quale modello sta girando."""
+        try:
+            logger.info("🕵️ Detecting running model on localhost:8000...")
+            temp_client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
+            models = temp_client.models.list()
+            if models.data:
+                real_name = models.data[0].id
+                logger.info(f"✅ Detected Model: {real_name}")
+                return real_name
+        except Exception as e:
+            logger.warning(f"⚠️ Could not detect model: {e}. Using default.")
+        return "active_model"
 
     def _load_dataset(self) -> Union[List[Dict], Dict]:
         if not os.path.exists(self.dataset_path):
@@ -51,13 +68,9 @@ class GreenExperimentRunner:
         raise ValueError(f"Instance {instance_id} not found in dataset")
 
     def _checkout_base_commit(self, repo_name: str, base_commit: str):
-        """
-        Assicura che la repo esista e sia al commit corretto.
-        SE MANCA, LA CLONA AUTOMATICAMENTE.
-        """
         repo_path = os.path.join(self.repo_base_dir, repo_name)
         
-        # --- AUTO CLONE FIX ---
+        # Auto-Clone se manca
         if not os.path.exists(repo_path):
             logger.info(f"📥 Repository {repo_name} missing. Cloning into {repo_path}...")
             os.makedirs(os.path.dirname(repo_path), exist_ok=True)
@@ -69,7 +82,6 @@ class GreenExperimentRunner:
             except subprocess.CalledProcessError as e:
                 logger.error(f"❌ Git Clone Failed: {e.stderr.decode()}")
                 raise
-        # ----------------------
 
         logger.info(f"♻️ Resetting {repo_name} to base commit {base_commit}")
         try:
@@ -123,12 +135,8 @@ class GreenExperimentRunner:
     def measure_energy(self, instance_id: str) -> Dict[str, Any]:
         """
         Lancia la misurazione.
-        NOTA: Attualmente measure_instance.py usa una copia pulita.
-        Dovremo modificarlo nel prossimo passo per usare la nostra copia modificata.
         """
         logger.info("⚡ Running Measurement...")
-        # Per ora lanciamo lo script standard, sapendo che misurerà la baseline originale
-        # Questo ci serve solo per verificare che il flusso funzioni.
         cmd = [
             "python", "scripts/measure_instance.py",
             "--instance", instance_id,
@@ -147,14 +155,17 @@ class GreenExperimentRunner:
             logger.error(f"Measurement failed: {e.stderr}")
             return {"error": str(e)}
 
-    def run_experiment(self, instance_id: str, strategy: PromptStrategy, model_alias: str = "active_model"):
+    def run_experiment(self, instance_id: str, strategy: PromptStrategy):
         logger.info(f"🚀 STARTING EXPERIMENT: {instance_id}")
+        
+        # 0. Detect Model Name
+        real_model_name = self._detect_running_model()
         
         instance = self._get_instance_data(instance_id)
         repo_name = instance['repo']
         base_commit = instance['base_commit']
         
-        # 1. Checkout (Scarica se manca)
+        # 1. Checkout
         self._checkout_base_commit(repo_name, base_commit)
         repo_path = os.path.join(self.repo_base_dir, repo_name)
         
@@ -174,7 +185,8 @@ class GreenExperimentRunner:
         
         # 3. LLM
         logger.info("📤 Asking LLM...")
-        client = self.client_manager.get_client(model_alias)
+        # USIAMO IL NOME RILEVATO!
+        client = self.client_manager.get_client(real_model_name)
         response = client.generate(prompt, temperature=0.2)
         
         # 4. Patch
@@ -183,7 +195,7 @@ class GreenExperimentRunner:
         
         # 5. Measure
         results = self.measure_energy(instance_id)
-        self._save_results(instance_id, strategy, model_alias, results, response, patch)
+        self._save_results(instance_id, strategy, real_model_name, results, response, patch)
 
     def _save_results(self, instance_id, strategy, model, measurements, llm_response, patch):
         output_dir = "results/experiments"
