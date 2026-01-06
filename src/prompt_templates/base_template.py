@@ -1,5 +1,6 @@
 """
-Base classes for prompt templates
+Base classes for prompt templates.
+Defines the standard interface and context structure for all prompting strategies.
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -9,8 +10,8 @@ from enum import Enum
 
 class ProblemStatementType(Enum):
     """Type of problem statement provided to LLM"""
-    ORACLE = "oracle"      # File-level: known target functions + relevant files
-    REALISTIC = "realistic"  # Repo-level: all functions + entire repository
+    ORACLE = "oracle"       # File-level: known target functions + relevant files
+    REALISTIC = "realistic" # Repo-level: all functions + entire repository + repo map
 
 
 class PromptStrategy(Enum):
@@ -34,6 +35,9 @@ class PromptContext:
     # Flexible type to accept string filenames (from Runner) or detailed dicts
     target_functions: List[Any] = field(default_factory=list) 
     code_files: Dict[str, str] = field(default_factory=dict)  # filename -> content
+    
+    # REALISTIC Context (Added for Realistic Runner)
+    repo_map: Optional[str] = None
     
     # Performance context
     problem_description: str = ""
@@ -144,4 +148,4 @@ from flask import Flask
 import math
 from flask import Flask
 >>>>>>> REPLACE
-```"""
+"""
