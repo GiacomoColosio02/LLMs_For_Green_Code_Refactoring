@@ -5,6 +5,7 @@ Logic:
 2. Context Anchor: The Test Code itself.
 3. Retrieval: Scan repo and find Top-5 files semantically related to the Test Code.
 4. LLM: Asks to fix the issue given the mix of relevant/irrelevant files.
+5. Robustness: Handles measurement crashes gracefully.
 """
 import sys
 import os
@@ -57,8 +58,12 @@ class ZeroShotRealisticRunner:
         try:
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
             models = client.models.list()
-            if models.data: return models.data[0].id
-        except Exception: pass
+            if models.data:
+                model_name = models.data[0].id
+                logger.info(f"✅ Detected vLLM Model: {model_name}")
+                return model_name
+        except Exception as e:
+            logger.warning(f"⚠️ Could not detect model name: {e}")
         return "active_model"
 
     # --- REALISTIC HELPERS (Repo Map & Retrieval) ---
@@ -75,7 +80,7 @@ class ZeroShotRealisticRunner:
             for f in files:
                 if f.endswith('.py'):
                     tree.append(f"{subindent}{f}")
-        # Tronca se troppo lungo per risparmiare token
+        # Tronca se troppo lungo per risparmiare token (max 150 righe)
         return "\n".join(tree[:150]) + ("\n... (truncated)" if len(tree) > 150 else "")
 
     def _tokenize(self, text: str) -> set:
@@ -227,7 +232,6 @@ class ZeroShotRealisticRunner:
             # --- REALISTIC CONTEXT ---
             # 1. Anchor: Test Files
             test_list = instance['efficiency_test'] 
-            # Esempio: "tests/test_x.py::func" -> "tests/test_x.py"
             test_files = list(set([t.split("::")[0] for t in test_list]))
             
             # 2. Retrieval: Anchor + Top 5
@@ -238,7 +242,6 @@ class ZeroShotRealisticRunner:
             
             # 4. Prompt
             test_cmd = f"pytest {' '.join(test_list)}"
-            # Usa la descrizione Realistica se presente, altrimenti fallback
             desc = instance.get('problem_statement_realistic', f"Optimize failing tests: {test_cmd}")
             
             ctx = PromptContext(
@@ -272,15 +275,30 @@ class ZeroShotRealisticRunner:
                     repo_path, instance['repo'], instance['version'], instance['base_commit']
                 )
                 if python_path:
+                    logger.info("⚡ Measuring Energy...")
                     collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
-                    baseline = collector.measure_baseline(duration=2)
+                    
+                    # --- ROBUST MEASUREMENT ---
                     results = []
+                    try:
+                        baseline = collector.measure_baseline(duration=2)
+                    except Exception as e:
+                        logger.warning(f"⚠️ Baseline failed: {e}")
+                        baseline = None
+
                     for test in instance['efficiency_test']:
                         logger.info(f"   Running test: {test}")
                         cmd = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -v"
-                        res = collector.measure_test_execution(test_command=cmd, repetitions=1)
-                        res['test_name'] = test
-                        results.append(res)
+                        try:
+                            res = collector.measure_test_execution(test_command=cmd, repetitions=1)
+                            res['test_name'] = test
+                            results.append(res)
+                            time.sleep(2)
+                        except Exception as e:
+                            logger.error(f"❌ Measurement failed for {test}: {e}")
+                            results.append({'test_name': test, 'error': str(e), 'energy_joules': None})
+                    # --------------------------
+
                     self._save(instance_id, llm_output, "Success", results)
                     if conda_env: self.measurer_tool.cleanup_conda_env(conda_env)
                 else:
