@@ -3,9 +3,9 @@ Specific Experiment Runner: ZERO SHOT + REALISTIC SETTING.
 Logic:
 1. Trigger: Failing Test.
 2. Context Anchor: The Test Code itself.
-3. Retrieval: Scan repo and find Top-N files (fitting in context window).
+3. Retrieval: Scan repo and find Top-5 files semantically related to the Test Code.
 4. LLM: Asks to fix the issue given the mix of relevant/irrelevant files.
-5. Robustness: Handles measurement crashes and context limits.
+5. Robustness: Handles measurement crashes and context limits with SMART PRIORITY.
 """
 import sys
 import os
@@ -66,10 +66,9 @@ class ZeroShotRealisticRunner:
             logger.warning(f"⚠️ Could not detect model name: {e}")
         return "active_model"
 
-    # --- REALISTIC HELPERS (Repo Map & Retrieval) ---
+    # --- REALISTIC HELPERS ---
     
     def _generate_repo_map(self, repo_path: Path) -> str:
-        """Crea l'albero dei file (Repository Map)."""
         tree = []
         for root, dirs, files in os.walk(repo_path):
             dirs[:] = [d for d in dirs if not d.startswith(('.', '__'))]
@@ -80,76 +79,86 @@ class ZeroShotRealisticRunner:
             for f in files:
                 if f.endswith('.py'):
                     tree.append(f"{subindent}{f}")
-        # LIMITAZIONE TOKEN: Tronca a 60 righe max
         return "\n".join(tree[:60]) + ("\n... (truncated)" if len(tree) > 60 else "")
 
     def _tokenize(self, text: str) -> set:
-        """Estrae token significativi (nomi funzioni, variabili) dal codice."""
         return set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text))
 
     def _simulated_retrieval(self, repo_path: Path, test_paths: List[str]) -> Dict[str, str]:
         """
-        Simula BM25 con Token Budgeting per evitare Context Overflow.
+        Simula Retrieval con PRIORITÀ al Codice Sorgente.
+        1. Trova i file più rilevanti.
+        2. Carica prima quelli nel budget.
+        3. Se avanza spazio, carica il test code (o parte di esso).
         """
-        logger.info("🕵️ Running Simulated Retrieval (Anchor: Test Code)...")
+        logger.info("🕵️ Running Simulated Retrieval...")
         
-        # 1. Costruisci la Query (Tokens dai Test Files)
+        # A. Analizza Test Code (ma non caricarlo ancora nel contesto)
         query_tokens = set()
-        test_content_map = {}
-        current_char_count = 0
+        test_file_contents = {} # Cache content
         
-        # Carica Anchor (Test Code)
         for tp in test_paths:
             full = repo_path / tp
             if full.exists():
                 content = full.read_text(errors='ignore')
-                test_content_map[tp] = content
-                current_char_count += len(content)
+                test_file_contents[tp] = content
                 query_tokens.update(self._tokenize(content))
         
-        # Stopwords
         stopwords = {'def', 'class', 'self', 'import', 'from', 'in', 'if', 'else', 'return', 'assert', 'test', 'none', 'true', 'false', 'and', 'or', 'pytest'}
         query_tokens -= stopwords
         
-        # 2. Rank dei file della repo
+        # B. Rank Repo Files
         scores = {}
         for root, _, files in os.walk(repo_path):
             for file in files:
                 if file.endswith(".py"):
                     rel_path = os.path.relpath(os.path.join(root, file), repo_path)
                     if rel_path in test_paths: continue 
-                    
                     try:
                         f_content = (repo_path / rel_path).read_text(errors='ignore')
                         f_tokens = self._tokenize(f_content)
                         score = len(query_tokens.intersection(f_tokens))
-                        if score > 0:
-                            scores[rel_path] = score
+                        if score > 0: scores[rel_path] = score
                     except: pass
         
-        # 3. Seleziona file con BUDGET (Max ~30k chars totali per stare in 16k tokens)
-        MAX_CONTEXT_CHARS = 30000 
-        top_files_sorted = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        # C. Costruisci Contesto con Budget (Max 45k chars ~12k tokens)
+        MAX_CONTEXT_CHARS = 45000 
+        current_chars = 0
+        final_context = {}
         
-        retrieved_files = []
-        for fname, score in top_files_sorted:
+        # 1. Priorità: Top 5 Retrieved Files
+        top_files = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        retrieved_list = []
+        
+        for fname, _ in top_files:
+            if len(retrieved_list) >= 5: break
             try:
-                f_content = (repo_path / fname).read_text(errors='ignore')
-                if current_char_count + len(f_content) < MAX_CONTEXT_CHARS:
-                    test_content_map[fname] = f_content
-                    retrieved_files.append(fname)
-                    current_char_count += len(f_content)
-                else:
-                    logger.info(f"⚠️ Skipping {fname} (size {len(f_content)}) to fit context limit.")
+                content = (repo_path / fname).read_text(errors='ignore')
+                if current_chars + len(content) < MAX_CONTEXT_CHARS:
+                    final_context[fname] = content
+                    current_chars += len(content)
+                    retrieved_list.append(fname)
             except: pass
             
-            # Limite hard di 5 file massimi se ci stiamo dentro
-            if len(retrieved_files) >= 5: break
+        logger.info(f"🔎 Retrieved Files (Source Code): {retrieved_list}")
 
-        logger.info(f"🔎 Retrieved Files ({len(retrieved_files)}): {retrieved_files}")
-        return test_content_map, list(test_content_map.keys())
+        # 2. Priorità: Test Files (se c'è spazio, altrimenti tronca)
+        for tp, content in test_file_contents.items():
+            if current_chars + len(content) < MAX_CONTEXT_CHARS:
+                final_context[tp] = content
+                current_chars += len(content)
+            else:
+                remaining = MAX_CONTEXT_CHARS - current_chars
+                if remaining > 1000:
+                    final_context[tp] = content[:remaining] + "\n... [TRUNCATED]"
+                    current_chars += remaining
+                    logger.warning(f"⚠️ Truncated test file {tp} to fit context.")
+                else:
+                    logger.warning(f"⚠️ Skipped test file {tp} (Context Full).")
 
-    # --- PATCH ENGINE (Robust) ---
+        return final_context, list(final_context.keys())
+
+    # --- PATCH ENGINE ---
     def _extract_patch_content(self, content: str) -> str:
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
         idx_search = content.find("<<<<<<< SEARCH")
@@ -210,7 +219,7 @@ class ZeroShotRealisticRunner:
                     if clean in candidate_files or (clean.endswith('.py') and '/' in clean):
                         target_file = clean; break
                 
-                if not target_file: # Find in candidates by content signature
+                if not target_file:
                     search_l = [l.strip() for l in search_part.splitlines() if l.strip()]
                     if search_l:
                         sig = search_l[0]
@@ -246,11 +255,10 @@ class ZeroShotRealisticRunner:
             test_list = instance['efficiency_test'] 
             test_files = list(set([t.split("::")[0] for t in test_list]))
             
-            # Retrieval with budget check
+            # Retrieval (Smart Priority)
             context_files, candidates = self._simulated_retrieval(repo_path, test_files)
             
             repo_map = self._generate_repo_map(repo_path)
-            
             test_cmd = f"pytest {' '.join(test_list)}"
             desc = instance.get('problem_statement_realistic', f"Optimize failing tests: {test_cmd}")
             
@@ -267,7 +275,6 @@ class ZeroShotRealisticRunner:
             
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
             logger.info("📤 Querying LLM...")
-            # Reduced output tokens slightly to balance
             response = client.chat.completions.create(
                 model=model_name,
                 messages=[{"role": "user", "content": prompt}],
@@ -311,6 +318,7 @@ class ZeroShotRealisticRunner:
                 else:
                     self._save(instance_id, llm_output, "Build Failed", None)
             else:
+                logger.error("❌ No patch applied.")
                 self._save(instance_id, llm_output, "Patch Failed", None)
 
         except Exception as e:
