@@ -14,16 +14,17 @@ import logging
 import subprocess
 import time
 import tempfile
-import random
+import shutil
 from pathlib import Path
-from collections import Counter
+from typing import Dict, List, Any
 
 # --- SETUP PATH ---
-# Aggiusta il path per importare src se lo script è in scripts/
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
-sys.path.append(project_root)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
+# --- IMPORT ---
 from src.llm_clients.client_manager import ClientManager
 from src.prompt_templates.zero_shot_realistic import ZeroShotRealisticTemplate
 from src.prompt_templates.base_template import PromptStrategy, ProblemStatementType, PromptContext
@@ -52,7 +53,15 @@ class ZeroShotRealisticRunner:
             if item.get("instance_id") == instance_id: return item
         raise ValueError(f"Instance {instance_id} not found")
 
-    # --- REALISTIC RETRIEVAL LOGIC ---
+    def _detect_running_model(self) -> str:
+        try:
+            client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
+            models = client.models.list()
+            if models.data: return models.data[0].id
+        except Exception: pass
+        return "active_model"
+
+    # --- REALISTIC HELPERS (Repo Map & Retrieval) ---
     
     def _generate_repo_map(self, repo_path: Path) -> str:
         """Crea l'albero dei file (Repository Map)."""
@@ -66,11 +75,11 @@ class ZeroShotRealisticRunner:
             for f in files:
                 if f.endswith('.py'):
                     tree.append(f"{subindent}{f}")
-        return "\n".join(tree[:100]) + "\n... (truncated)" # Tronca se troppo lungo
+        # Tronca se troppo lungo per risparmiare token
+        return "\n".join(tree[:150]) + ("\n... (truncated)" if len(tree) > 150 else "")
 
     def _tokenize(self, text: str) -> set:
         """Estrae token significativi (nomi funzioni, variabili) dal codice."""
-        # Rimuove commenti e stringhe semplici, tiene identificatori
         return set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text))
 
     def _simulated_retrieval(self, repo_path: Path, test_paths: List[str]) -> Dict[str, str]:
@@ -91,7 +100,7 @@ class ZeroShotRealisticRunner:
                 query_tokens.update(self._tokenize(content))
         
         # Stopwords pythoniche per ridurre falsi positivi
-        stopwords = {'def', 'class', 'self', 'import', 'from', 'in', 'if', 'else', 'return', 'assert', 'test', 'none', 'true', 'false', 'and', 'or'}
+        stopwords = {'def', 'class', 'self', 'import', 'from', 'in', 'if', 'else', 'return', 'assert', 'test', 'none', 'true', 'false', 'and', 'or', 'pytest'}
         query_tokens -= stopwords
         
         # 2. Rank dei file della repo
@@ -115,79 +124,139 @@ class ZeroShotRealisticRunner:
         top_files = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:5]
         logger.info(f"🔎 Retrieved Files: {[t[0] for t in top_files]}")
         
-        # 4. Costruisci il contesto finale
-        context_files = test_content_map.copy() # Anchor (Test)
+        # 4. Costruisci il contesto finale (Anchor + Retrieved)
+        context_files = test_content_map.copy() 
         for fname, _ in top_files:
             context_files[fname] = (repo_path / fname).read_text(errors='ignore')
             
-        return context_files
+        return context_files, list(context_files.keys())
 
-    # --- PATCH APPLICATION (Robust) ---
-    def _extract_patch(self, raw_response: str) -> str:
-        # Pulisce <think> e markdown
-        clean = re.sub(r'<think>.*?</think>', '', raw_response, flags=re.DOTALL)
-        if "<<<<<<< SEARCH" in clean:
-            return clean[max(0, clean.find("<<<<<<< SEARCH")-200):]
-        diff_match = re.search(r'```(?:diff)?(.*?)```', clean, re.DOTALL)
-        return diff_match.group(1).strip() if diff_match else clean
+    # --- PATCH ENGINE (Robust) ---
+    def _extract_patch_content(self, content: str) -> str:
+        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+        idx_search = content.find("<<<<<<< SEARCH")
+        if idx_search != -1: return content[max(0, idx_search - 500):]
+        idx_diff = content.find("diff --git")
+        if idx_diff != -1: return content[idx_diff:]
+        code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
+        if code_blocks: return max(code_blocks, key=len).strip()
+        return content.strip()
 
-    def _fuzzy_apply(self, repo_path: Path, patch_content: str, context_files: List[str]):
-        """Super Fuzzy Matcher Logic (Internal implementation shortcut)"""
-        # (Qui inseriamo la logica robusta che abbiamo sviluppato prima)
-        # Per brevità copio la logica essenziale di sync
-        logger.info("🔧 Applying Patch...")
-        patch_file = repo_path / "llm_gen.patch"
-        with open(patch_file, "w") as f: f.write(patch_content)
+    def _perform_fuzzy_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
+        target_file = repo_path / rel_path
+        if not target_file.exists(): return False
+        original_lines = target_file.read_text().splitlines(keepends=True)
+        norm_search = [l.strip() for l in search_lines if l.strip()]
+        if not norm_search: return False 
+
+        file_map = []
+        for idx, line in enumerate(original_lines):
+            stripped = line.strip()
+            if stripped: file_map.append((stripped, idx))
         
-        # Prova 1: Git standard
-        res = subprocess.run(["git", "apply", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"], cwd=repo_path, capture_output=True)
-        if res.returncode == 0: return True
+        search_len = len(norm_search)
+        match_start_idx = -1
         
-        # Prova 2: Git p0
-        res = subprocess.run(["git", "apply", "-p0", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"], cwd=repo_path, capture_output=True)
-        if res.returncode == 0: return True
+        for i in range(len(file_map) - search_len + 1):
+            window = [item[0] for item in file_map[i : i + search_len]]
+            if window == norm_search:
+                match_start_idx = i; break
         
-        logger.warning("Git failed. Would use Python Fuzzy Matcher here (implemented in main runner).")
+        if match_start_idx != -1:
+            real_start = file_map[match_start_idx][1]
+            real_end = file_map[match_start_idx + search_len - 1][1]
+            final_replace = [l + '\n' if not l.endswith('\n') else l for l in replace_lines]
+            new_content = original_lines[:real_start] + final_replace + original_lines[real_end + 1:]
+            target_file.write_text("".join(new_content))
+            logger.info(f"✅ Applied Patch to {rel_path} (Fuzzy Match)")
+            return True
         return False
 
+    def _apply_patch_logic(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
+        patch_content = self._extract_patch_content(raw_content)
+        if "<<<<<<< SEARCH" in patch_content:
+            logger.info("🔧 Processing SEARCH/REPLACE blocks...")
+            blocks = patch_content.split('<<<<<<< SEARCH')
+            changes_count = 0
+            context_text = blocks[0]
+            for i in range(1, len(blocks)):
+                block = blocks[i]
+                if "=======" not in block or ">>>>>>> REPLACE" not in block: continue
+                search_part, rest = block.split('=======', 1)
+                replace_part, next_context = rest.split('>>>>>>> REPLACE', 1)
+                
+                target_file = None
+                lines_check = context_text.strip().splitlines()[-15:]
+                for line in reversed(lines_check):
+                    clean = line.strip().replace('###', '').replace('File:', '').replace('`', '').strip()
+                    if clean in candidate_files or (clean.endswith('.py') and '/' in clean):
+                        target_file = clean; break
+                
+                if not target_file: # Find in candidates by content signature
+                    search_l = [l.strip() for l in search_part.splitlines() if l.strip()]
+                    if search_l:
+                        sig = search_l[0]
+                        for cand in candidate_files:
+                            if (repo_path / cand).exists() and sig in (repo_path / cand).read_text():
+                                target_file = cand; break
+
+                if target_file and self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
+                    changes_count += 1
+                context_text = next_context
+            if changes_count > 0: return True
+
+        patch_file = repo_path / "llm_gen.patch"
+        with open(patch_file, 'w') as f: f.write(patch_content)
+        for arg in ["-p0", "--ignore-space-change", "--ignore-whitespace"]:
+             res = subprocess.run(["git", "apply", arg, "llm_gen.patch"], cwd=repo_path, capture_output=True)
+             if res.returncode == 0:
+                 logger.info(f"✅ Git apply success ({arg})"); return True
+        return False
+
+    # --- MAIN FLOW ---
     def run(self, instance_id: str):
         logger.info(f"🚀 START ZS_REALISTIC: {instance_id}")
         instance = self._get_instance(instance_id)
+        model_name = self._detect_running_model()
         temp_dir = Path(tempfile.mkdtemp())
         
         try:
-            # 1. Setup Repo
-            logger.info("📥 Cloning...")
+            logger.info("📥 Cloning repository...")
             repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
             
-            # 2. Realistic Context Construction
-            # A. Test Anchor (dal campo efficiency_test)
-            test_list = instance['efficiency_test'] # ['path/to/test.py::Class::func']
+            # --- REALISTIC CONTEXT ---
+            # 1. Anchor: Test Files
+            test_list = instance['efficiency_test'] 
+            # Esempio: "tests/test_x.py::func" -> "tests/test_x.py"
             test_files = list(set([t.split("::")[0] for t in test_list]))
             
-            # B. Retrieval (Top-5 + Anchor)
-            retrieved_context = self._simulated_retrieval(repo_path, test_files)
+            # 2. Retrieval: Anchor + Top 5
+            context_files, candidates = self._simulated_retrieval(repo_path, test_files)
             
-            # C. Repo Map
+            # 3. Repo Map
             repo_map = self._generate_repo_map(repo_path)
             
-            # 3. Prompting
+            # 4. Prompt
+            test_cmd = f"pytest {' '.join(test_list)}"
+            # Usa la descrizione Realistica se presente, altrimenti fallback
+            desc = instance.get('problem_statement_realistic', f"Optimize failing tests: {test_cmd}")
+            
             ctx = PromptContext(
                 problem_statement_type=ProblemStatementType.REALISTIC,
-                problem_description=instance.get('problem_statement_realistic', "Optimize tests."),
-                code_files=retrieved_context,
-                test_command=f"pytest {' '.join(test_list)}",
-                target_functions=list(retrieved_context.keys()),
+                problem_description=desc,
+                code_files=context_files,
+                test_command=test_cmd,
+                target_functions=candidates,
                 repo_map=repo_map
             )
             
             prompt = self.template.generate_prompt(ctx)
             
-            # 4. LLM
+            # 5. LLM
             client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
-            logger.info("📤 Sending prompt to LLM...")
+            logger.info("📤 Querying LLM (Context includes Noise)...")
             response = client.chat.completions.create(
-                model="active_model", # Auto-detect o hardcoded
+                model=model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,
                 max_tokens=8192
@@ -195,25 +264,40 @@ class ZeroShotRealisticRunner:
             llm_output = response.choices[0].message.content
             logger.info(f"📝 Response received ({len(llm_output)} chars).")
 
-            # 5. Patch & Measure
-            patch = self._extract_patch(llm_output)
-            if self._fuzzy_apply(repo_path, patch, list(retrieved_context.keys())):
-                logger.info("⚡ Running Measurement...")
-                # ... Qui chiameresti il tuo codice di installazione e misura ...
-                # Per ora salviamo l'output
-                self._save(instance_id, llm_output, patch, "Success")
+            # 6. Apply & Measure
+            logger.info("🔧 Applying Patch...")
+            if self._apply_patch_logic(repo_path, llm_output, candidates):
+                logger.info("📦 Installing & Measuring...")
+                python_path, conda_env = self.measurer_tool.install_dependencies(
+                    repo_path, instance['repo'], instance['version'], instance['base_commit']
+                )
+                if python_path:
+                    collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
+                    baseline = collector.measure_baseline(duration=2)
+                    results = []
+                    for test in instance['efficiency_test']:
+                        logger.info(f"   Running test: {test}")
+                        cmd = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -v"
+                        res = collector.measure_test_execution(test_command=cmd, repetitions=1)
+                        res['test_name'] = test
+                        results.append(res)
+                    self._save(instance_id, llm_output, "Success", results)
+                    if conda_env: self.measurer_tool.cleanup_conda_env(conda_env)
+                else:
+                    self._save(instance_id, llm_output, "Build Failed", None)
             else:
-                self._save(instance_id, llm_output, patch, "Failed Patch")
+                self._save(instance_id, llm_output, "Patch Failed", None)
 
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.error(f"Error: {e}", exc_info=True)
         finally:
-            shutil.rmtree(temp_dir)
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
-    def _save(self, instance_id, response, patch, status):
+    def _save(self, instance_id, response, status, metrics):
         os.makedirs("results/zs_realistic", exist_ok=True)
+        data = {"instance": instance_id, "status": status, "metrics": metrics, "full_response": response}
         with open(f"results/zs_realistic/{instance_id}.json", "w") as f:
-            json.dump({"instance": instance_id, "status": status, "patch": patch, "full_response": response}, f, indent=2)
+            json.dump(data, f, indent=2)
         logger.info(f"💾 Saved to results/zs_realistic/{instance_id}.json")
 
 if __name__ == "__main__":
