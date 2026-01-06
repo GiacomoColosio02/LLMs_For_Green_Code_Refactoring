@@ -2,6 +2,7 @@
 Main Experiment Runner for Green Code Refactoring.
 Orchestrates: Dataset -> Prompt -> LLM (vLLM) -> Patch -> Measurement.
 """
+import sys
 import os
 import json
 import logging
@@ -10,7 +11,11 @@ import time
 from typing import Optional, Dict, List, Any
 from pathlib import Path
 
-# Imports from our modules
+# --- FIX IMPORT PATH ---
+# Aggiungiamo la root del progetto al Python Path per poter importare 'src'
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# -----------------------
+
 from src.llm_clients.client_manager import ClientManager
 from src.prompt_templates.template_manager import PromptTemplateManager
 from src.prompt_templates.base_template import PromptStrategy, ProblemStatementType, PromptContext
@@ -35,11 +40,11 @@ class GreenExperimentRunner:
         self.template_manager = PromptTemplateManager()
 
     def _load_dataset(self) -> Dict[str, Any]:
+        if not os.path.exists(self.dataset_path):
+            raise FileNotFoundError(f"Dataset not found at {self.dataset_path}. Did you run the creation script?")
+            
         with open(self.dataset_path, 'r') as f:
             data = json.load(f)
-            # If dataset is a list (standard JSONL converted), verify format
-            # If it's a dict (instance_id -> data), keep as is.
-            # Assuming SWE-perf structure usually list or dict.
             return data
 
     def _get_instance_data(self, instance_id: str) -> Dict[str, Any]:
@@ -58,24 +63,23 @@ class GreenExperimentRunner:
         """Resets the repository to the clean base state."""
         repo_path = os.path.join(self.repo_base_dir, repo_name)
         if not os.path.exists(repo_path):
-            raise FileNotFoundError(f"Repository {repo_name} not found in {self.repo_base_dir}. Please download it first.")
+            # Se la repo non c'è, proviamo a crearla (opzionale) o diamo errore
+            raise FileNotFoundError(f"Repository {repo_name} not found in {self.repo_base_dir}. Please run setup scripts first.")
         
         logger.info(f"♻️ Resetting {repo_name} to base commit {base_commit}")
+        # Git reset hard e clean per assicurarsi che non ci siano residui
         subprocess.run(["git", "reset", "--hard"], cwd=repo_path, check=True, stdout=subprocess.DEVNULL)
         subprocess.run(["git", "clean", "-fd"], cwd=repo_path, check=True, stdout=subprocess.DEVNULL)
         subprocess.run(["git", "checkout", base_commit], cwd=repo_path, check=True, stdout=subprocess.DEVNULL)
 
     def _get_oracle_context_files(self, instance: Dict[str, Any], repo_path: str) -> Dict[str, str]:
         """
-        ORACLE STRATEGY: Identifies which files to feed the LLM.
-        It parses the 'patch' field in the dataset to see which files were modified
-        in the gold solution.
+        ORACLE STRATEGY: Identifies which files to feed the LLM based on Gold Patch.
         """
         gold_patch = instance.get("patch", "")
         files_content = {}
         
         # Simple parser to find filenames in git diff
-        # Format: "--- a/path/to/file.py\n+++ b/path/to/file.py"
         lines = gold_patch.split('\n')
         target_files = set()
         for line in lines:
@@ -87,7 +91,7 @@ class GreenExperimentRunner:
                 target_files.add(fname)
 
         if not target_files:
-            logger.warning("Could not extract target files from patch. Using heuristics/fallback?")
+            logger.warning("⚠️ Could not extract target files from patch. Context might be empty!")
         
         # Read content
         for rel_path in target_files:
@@ -98,6 +102,8 @@ class GreenExperimentRunner:
                         files_content[rel_path] = f.read()
                 except Exception as e:
                     logger.error(f"Error reading {rel_path}: {e}")
+            else:
+                logger.warning(f"Target file {rel_path} not found on disk.")
         
         return files_content
 
@@ -105,14 +111,13 @@ class GreenExperimentRunner:
         """Attempts to apply the LLM generated patch."""
         patch_file = os.path.join(repo_path, "llm_gen.patch")
         
-        # Clean patch content (remove markdown code blocks if present)
+        # Pulizia base del markdown
         clean_patch = patch_content.replace("```diff", "").replace("```", "").strip()
         
         with open(patch_file, 'w') as f:
             f.write(clean_patch)
             
-        # Try applying with git apply
-        # We try strict first, then with --reject or --ignore-space-change if needed
+        # Tentativo 1: Git Apply standard
         result = subprocess.run(
             ["git", "apply", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"],
             cwd=repo_path,
@@ -125,8 +130,6 @@ class GreenExperimentRunner:
             return True
         else:
             logger.error(f"❌ Patch application failed: {result.stderr}")
-            # Try to just write the file if it's a full file replacement (LDB sometimes does this)
-            # For now, return False
             return False
 
     def measure_energy(self, instance_id: str) -> Dict[str, Any]:
@@ -142,21 +145,22 @@ class GreenExperimentRunner:
         ]
         
         try:
-            # We run it and wait
+            # Eseguiamo e aspettiamo
             result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            logger.info("Measurement script finished.")
             
-            # The script saves a JSON file. We need to find and read it.
-            # Usually data/measurements_llm/{instance_id}/measurements.json
+            # Cerchiamo il file JSON prodotto
             meas_path = Path(f"data/measurements_llm/{instance_id}/measurements.json")
             if meas_path.exists():
                 with open(meas_path, 'r') as f:
                     return json.load(f)
             else:
-                logger.error("Measurement JSON not found after execution.")
+                logger.error(f"Measurement JSON not found at {meas_path}")
                 return {"error": "Measurement output missing"}
                 
         except subprocess.CalledProcessError as e:
-            logger.error(f"Measurement failed: {e.stderr}")
+            logger.error(f"Measurement script failed: {e.stderr}")
+            logger.error(f"Stdout: {e.stdout}")
             return {"error": str(e)}
 
     def run_experiment(
@@ -171,44 +175,61 @@ class GreenExperimentRunner:
         logger.info(f"🚀 STARTING EXPERIMENT: {instance_id} | Strategy: {strategy.value}")
         
         # 1. Setup Data & Repo
-        instance = self._get_instance_data(instance_id)
+        try:
+            instance = self._get_instance_data(instance_id)
+        except ValueError as e:
+            logger.error(str(e))
+            return
+
         repo_name = instance['repo']
         base_commit = instance['base_commit']
         repo_path = os.path.join(self.repo_base_dir, repo_name)
         
-        self._checkout_base_commit(repo_name, base_commit)
+        try:
+            self._checkout_base_commit(repo_name, base_commit)
+        except Exception as e:
+            logger.error(f"Failed to checkout repo: {e}")
+            return
         
         # 2. Build Context (Oracle)
-        # TODO: Add switch for Realistic (BM25) later
         files_dict = self._get_oracle_context_files(instance, repo_path)
         
-        # Construct PromptContext object
-        # Tests list format: "pytest path/to/test.py::test_func"
-        test_cmd = f"pytest {' '.join(instance['efficiency_test'])}"
+        if not files_dict:
+            logger.error("No context files found. Aborting.")
+            return
+
+        test_list = instance.get('efficiency_test', [])
+        test_cmd = f"pytest {' '.join(test_list)}"
         
         ctx = PromptContext(
             problem_statement_type=ProblemStatementType.ORACLE,
             problem_description=f"Optimize energy for tests: {test_cmd}",
             code_files=files_dict,
             test_command=test_cmd,
-            target_functions=list(files_dict.keys()) # For oracle, we target files we found
+            target_functions=list(files_dict.keys())
         )
         
         # 3. Generate Prompt & Call LLM
-        # Handle LDB separately because it's a loop
         if strategy == PromptStrategy.LDB:
-            return self._run_ldb_loop(ctx, instance_id, model_alias, repo_path)
+            self._run_ldb_loop(ctx, instance_id, model_alias, repo_path)
+            return
         
-        # Standard Flow (Zero-Shot / CoT / Self-Collab)
-        # For Self-Collab, template manager handles the turn logic internally? 
-        # Actually no, we implemented the turns in Manager. 
-        # Let's start with Single Turn (Zero-Shot/CoT) for simplicity of this first version.
-        
-        prompt = self.template_manager.generate_prompts(ctx, strategy)
-        
-        client = self.client_manager.get_client(model_alias)
+        # Standard Flow
+        try:
+            prompt = self.template_manager.generate_prompts(ctx, strategy)
+        except Exception as e:
+            logger.error(f"Error generating prompt: {e}")
+            return
+
         logger.info("📤 Sending request to LLM...")
-        response = client.generate(prompt, temperature=0.2) # Low temp for coding
+        client = self.client_manager.get_client(model_alias)
+        
+        try:
+            # Temperature bassa per codice deterministico
+            response = client.generate(prompt, temperature=0.2)
+        except Exception as e:
+            logger.error(f"LLM Generation failed: {e}")
+            return
         
         # 4. Extract & Apply
         code_patch = self.template_manager.extract_code(response.content, strategy, ProblemStatementType.ORACLE)
@@ -216,7 +237,8 @@ class GreenExperimentRunner:
         applied = self._apply_patch(repo_path, code_patch)
         
         if not applied:
-            logger.error("Experiment Failed at Patch Application")
+            logger.error("Experiment Failed at Patch Application phase. Saving result as failure.")
+            self._save_results(instance_id, strategy, model_alias, {"error": "Patch application failed"}, response, code_patch)
             return
         
         # 5. Measure
@@ -229,35 +251,29 @@ class GreenExperimentRunner:
         """Special Loop for LDB Strategy"""
         logger.info("🔄 Entering LDB Iterative Loop")
         
-        # Iteration 0: Zero Shot
+        # Iteration 0
         prompt = self.template_manager.generate_prompts(context, PromptStrategy.ZERO_SHOT)
         client = self.client_manager.get_client(model_alias)
         response = client.generate(prompt, temperature=0.2)
         patch = self.template_manager.extract_code(response.content, PromptStrategy.ZERO_SHOT, ProblemStatementType.ORACLE)
         
-        # Loop (max 2 iterations for energy saving)
         max_iter = 2
         for i in range(max_iter + 1):
             logger.info(f"--- LDB Iteration {i} ---")
             
-            # Apply
             if not self._apply_patch(repo_path, patch):
-                logger.warning("Patch failed to apply. Stopping LDB.")
+                logger.warning("Patch failed to apply in loop. Stopping.")
                 break
                 
-            # Measure
             measurements = self.measure_energy(instance_id)
-            
-            # Check Results (Did we improve?)
             feedback_str = self.template_manager.format_ldb_feedback(measurements)
-            logger.info(f"Feedback:\n{feedback_str}")
             
-            # If "TARGET MET" or last iteration, stop
+            logger.info(f"Feedback: {feedback_str[:100]}...") # Log solo inizio
+            
             if "[TARGET MET]" in feedback_str or i == max_iter:
                 self._save_results(instance_id, PromptStrategy.LDB, model_alias, measurements, response, patch)
                 break
             
-            # Else: Generate Debug Prompt
             debug_prompt = self.template_manager.generate_ldb_debug_prompt(context, patch, feedback_str)
             response = client.generate(debug_prompt, temperature=0.2)
             patch = self.template_manager.extract_code(response.content, PromptStrategy.LDB, ProblemStatementType.ORACLE)
@@ -274,8 +290,8 @@ class GreenExperimentRunner:
             "timestamp": time.time(),
             "measurements": measurements,
             "llm_output_meta": {
-                "latency": llm_response.latency_seconds,
-                "tokens": llm_response.total_tokens
+                "latency": getattr(llm_response, 'latency_seconds', 0),
+                "tokens": getattr(llm_response, 'total_tokens', 0)
             },
             "generated_patch": patch
         }
@@ -285,17 +301,15 @@ class GreenExperimentRunner:
             json.dump(report, f, indent=2)
         logger.info(f"💾 Experiment Report saved to {fname}")
 
-# CLI Entry Point
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--instance", required=True, help="Instance ID (e.g. astropy__astropy-123)")
     parser.add_argument("--strategy", required=True, choices=["ZERO_SHOT", "COT", "LDB", "SELF_COLLABORATION"])
-    parser.add_argument("--dataset", default="data/swe_perf_green_k1.json")
+    parser.add_argument("--dataset", default="data/swe_perf_reduced.json") # Default al reduced se il green non c'è ancora
     
     args = parser.parse_args()
     
-    # Map string to Enum
     strat_enum = PromptStrategy[args.strategy]
     
     runner = GreenExperimentRunner(args.dataset)
