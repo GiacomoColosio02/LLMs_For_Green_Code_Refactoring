@@ -1,203 +1,120 @@
 """
 LLM Client Manager
-Centralized management of all LLM clients
+Centralized management of all LLM clients.
+Updated for 7B/8B Green AI Experimentation.
 """
 from typing import Dict, Optional
 import yaml
 from pathlib import Path
 
 from .openai_client import OpenAIClient
-from .anthropic_client import AnthropicClient
-from .google_client import GoogleClient
-from .alibaba_client import AlibabaClient
-from .meta_client import MetaClient
 from .base_client import BaseLLMClient
 
 
 class LLMClientManager:
     """
     Manager for all LLM clients.
-    Handles initialization, configuration, and access to all models.
     """
     
-    # Model configurations
+    # Configurazione Modelli per lo Studio Green (Small Models Focus)
     MODEL_CONFIGS = {
-        "gpt-5": {
+        # --- BASELINE (General Purpose) ---
+        "llama-3.1-8b": {
+            "client_class": OpenAIClient, 
+            "model_name": "meta-llama/Meta-Llama-3.1-8B-Instruct", # Nome huggingface
+            "provider": "vllm_local"
+        },
+        
+        # --- CODE SPECIALIST (Execution) ---
+        "qwen2.5-coder-7b": {
             "client_class": OpenAIClient,
-            "model_name": "gpt-5",
+            "model_name": "Qwen/Qwen2.5-Coder-7B-Instruct",
+            "provider": "vllm_local"
+        },
+        "qwen2.5-coder-32b": { # Teniamo anche il 32B come riferimento "Large" se serve
+            "client_class": OpenAIClient,
+            "model_name": "Qwen/Qwen2.5-Coder-32B-Instruct",
+            "provider": "vllm_local"
+        },
+
+        # --- REASONING SPECIALIST (Debugging/Planning) ---
+        "deepseek-r1-7b": {
+            "client_class": OpenAIClient,
+            "model_name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+            "provider": "vllm_local"
+        },
+        
+        # --- PROPRIETARY (Reference Upper Bound) ---
+        "gpt-4o-mini": { # Usiamo il mini per confronto costi/green
+            "client_class": OpenAIClient,
+            "model_name": "gpt-4o-mini",
             "provider": "openai"
-        },
-        "claude-opus-4.5": {
-            "client_class": AnthropicClient,
-            "model_name": "claude-opus-4-5-20251101",
-            "provider": "anthropic"
-        },
-        "gemini-3-pro": {
-            "client_class": GoogleClient,
-            "model_name": "gemini-3-pro",
-            "provider": "google"
-        },
-        "qwen2.5-coder-32b": {
-            "client_class": AlibabaClient,
-            "model_name": "qwen2.5-coder-32b-instruct",
-            "provider": "alibaba"
-        },
-        "llama-4-maverick": {
-            "client_class": MetaClient,
-            "model_name": "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
-            "provider": "meta"
-        },
-        "gemma-3-27b": {
-            "client_class": GoogleClient,
-            "model_name": "gemma-3-27b-it",
-            "provider": "google"
         }
     }
     
     def __init__(self, api_keys_path: str = "configs/llm_api_keys.yaml"):
-        """
-        Initialize client manager.
-        
-        Args:
-            api_keys_path: Path to YAML file with API keys
-        """
         self.api_keys_path = Path(api_keys_path)
         self.api_keys = self._load_api_keys()
         self.clients: Dict[str, BaseLLMClient] = {}
     
     def _load_api_keys(self) -> Dict:
-        """Load API keys from YAML file."""
         if not self.api_keys_path.exists():
-            raise FileNotFoundError(
-                f"API keys file not found: {self.api_keys_path}\n"
-                "Please create configs/llm_api_keys.yaml with your API keys."
-            )
-        
+            print(f"Warning: {self.api_keys_path} not found. Creating template.")
+            self._create_template_config()
+            
         with open(self.api_keys_path, 'r') as f:
-            return yaml.safe_load(f)
-    
+            return yaml.safe_load(f) or {}
+
+    def _create_template_config(self):
+        """Creates a template config file"""
+        self.api_keys_path.parent.mkdir(parents=True, exist_ok=True)
+        template = {
+            "openai": {"api_key": "sk-..."},
+            "vllm_local": {
+                "api_key": "EMPTY", 
+                "base_url": "http://localhost:8000/v1" # Porta di default vLLM
+            },
+            "ollama_local": {
+                "api_key": "ollama", 
+                "base_url": "http://localhost:11434/v1"
+            }
+        }
+        with open(self.api_keys_path, 'w') as f:
+            yaml.dump(template, f)
+
     def get_client(self, model_short_name: str) -> BaseLLMClient:
-        """
-        Get or create client for a model.
-        
-        Args:
-            model_short_name: Short name like 'gpt-5', 'claude-opus-4.5', etc.
-        
-        Returns:
-            Initialized LLM client
-        
-        Raises:
-            ValueError: If model not found or API key missing
-        """
-        # Return cached client if exists
         if model_short_name in self.clients:
             return self.clients[model_short_name]
         
-        # Check if model exists
         if model_short_name not in self.MODEL_CONFIGS:
-            available = ", ".join(self.MODEL_CONFIGS.keys())
-            raise ValueError(
-                f"Model '{model_short_name}' not found.\n"
-                f"Available models: {available}"
-            )
+            available = list(self.MODEL_CONFIGS.keys())
+            raise ValueError(f"Model '{model_short_name}' not configured. Available: {available}")
         
         config = self.MODEL_CONFIGS[model_short_name]
         provider = config["provider"]
         
-        # Get API key
-        provider_keys = self.api_keys.get(provider, {})
-        
-        # Handle different key names
-        if provider == "openai":
-            api_key = provider_keys.get("api_key")
-        elif provider == "anthropic":
-            api_key = provider_keys.get("api_key")
-        elif provider == "google":
-            api_key = provider_keys.get("api_key")
-        elif provider == "alibaba":
-            api_key = provider_keys.get("api_key")
-        elif provider == "meta":
-            # Try different platforms
-            api_key = (
-                provider_keys.get("together_api_key") or
-                provider_keys.get("replicate_api_key") or
-                provider_keys.get("huggingface_token")
-            )
-        else:
-            api_key = None
+        # Get credentials
+        creds = self.api_keys.get(provider, {})
+        api_key = creds.get("api_key")
+        base_url = creds.get("base_url")
         
         if not api_key:
-            raise ValueError(
-                f"API key not found for provider '{provider}'.\n"
-                f"Please add it to {self.api_keys_path}"
-            )
-        
-        # Initialize client
+             # Fallback per vLLM se non c'è chiave esplicita
+             if "local" in provider:
+                 api_key = "EMPTY"
+             else:
+                 raise ValueError(f"API key for provider '{provider}' not found.")
+
+        # Initialize
         client_class = config["client_class"]
-        model_name = config["model_name"]
+        
+        print(f"🔌 Connecting to {model_short_name} via {provider} at {base_url}...")
         
         client = client_class(
-            model_name=model_name,
+            model_name=config["model_name"],
             api_key=api_key,
-            timeout=self.api_keys.get("timeout_seconds", 120),
-            max_retries=self.api_keys.get("max_retries", 3)
+            base_url=base_url 
         )
         
-        # Cache client
         self.clients[model_short_name] = client
-        
-        print(f"✅ Initialized {model_short_name} ({provider})")
-        
         return client
-    
-    def get_all_models(self) -> list:
-        """Get list of all available model names."""
-        return list(self.MODEL_CONFIGS.keys())
-    
-    def test_client(self, model_short_name: str) -> bool:
-        """
-        Test if a client works.
-        
-        Args:
-            model_short_name: Model to test
-        
-        Returns:
-            True if test successful, False otherwise
-        """
-        try:
-            client = self.get_client(model_short_name)
-            response = client.generate(
-                prompt="Say 'Hello' in one word.",
-                temperature=0.0,
-                max_tokens=10
-            )
-            print(f"✅ {model_short_name} test successful: '{response.content}'")
-            return True
-        except Exception as e:
-            print(f"❌ {model_short_name} test failed: {str(e)}")
-            return False
-    
-    def test_all_clients(self) -> Dict[str, bool]:
-        """
-        Test all clients.
-        
-        Returns:
-            Dict mapping model name to success status
-        """
-        results = {}
-        print("\n" + "="*60)
-        print("🧪 TESTING ALL LLM CLIENTS")
-        print("="*60)
-        
-        for model_name in self.MODEL_CONFIGS.keys():
-            print(f"\nTesting {model_name}...")
-            results[model_name] = self.test_client(model_name)
-        
-        print("\n" + "="*60)
-        print("📊 RESULTS:")
-        successful = sum(results.values())
-        total = len(results)
-        print(f"✅ {successful}/{total} clients working")
-        print("="*60)
-        
-        return results
