@@ -1,6 +1,7 @@
 """
 BATCH ORCHESTRATOR & MEASUREMENT ENGINE (ULTIMATE EDITION)
-FIXED: Added 'import tempfile' explicitly and ensuring visibility.
+FIXED: Added 'import tempfile' explicitly.
+FEATURE: Immediate feedback on patch generation success/failure.
 """
 
 import sys
@@ -12,7 +13,7 @@ import time
 import shutil
 import numpy as np
 import argparse
-import tempfile  # <--- IMPORTANTE: Assicurati che sia qui
+import tempfile 
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -93,7 +94,6 @@ class GreenMeasurementEngine:
         return agg_results
 
     def measure_single_instance(self, instance_id: str, patch_content: str, strategy: str) -> Optional[Dict]:
-        # Usa tempfile correttamente
         temp_dir = Path(tempfile.mkdtemp(prefix="green_meas_"))
         final_metrics = {} 
         
@@ -203,8 +203,6 @@ class GreenMeasurementEngine:
                 with open(self.output_file, 'r') as f: dataset = json.load(f)
             except: pass
         
-        # Rigeneriamo il set degli ID processati per evitare duplicati
-        # IMPORTANTE: Se vuoi RI-PROCESSARE quelli falliti prima, commenta la logica di skip o cancella il file di output.
         existing_ids = {f"{i['instance_id']}_{i['_green_metadata']['strategy']}" for i in dataset['instances']}
         
         dataset['metadata'] = {
@@ -276,16 +274,39 @@ def run_generation(phase_name, script_name, result_dir, instances):
     
     for idx, inst in enumerate(instances):
         inst_id = inst['instance_id']
-        if is_generated(inst_id, result_dir):
+        out_file = result_path / f"{inst_id}.json"
+        
+        if out_file.exists():
             logger.info(f"⏩ Skipping {inst_id} (Already generated)")
             continue
             
         logger.info(f"▶️  Generating {inst_id} ({idx+1}/{len(instances)})...")
         cmd = ["python", str(script_path), "--instance", inst_id, "--dataset", str(INPUT_DATASET)]
+        
         try:
-            subprocess.run(cmd, capture_output=True, text=True, timeout=TIMEOUT_GEN)
+            # Esecuzione script
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=TIMEOUT_GEN)
+            
+            # --- FEEDBACK IMMEDIATO (NEW) ---
+            if out_file.exists():
+                try:
+                    with open(out_file, 'r') as f: res = json.load(f)
+                    status = res.get("status")
+                    if status == "Success":
+                        logger.info(f"   ✅ Patch Generated & Applied Successfully")
+                    else:
+                        logger.warning(f"   ❌ Generation Failed. Status: {status}")
+                except Exception:
+                    logger.error("   ⚠️ Result file corrupted.")
+            else:
+                logger.error(f"   ❌ No result file created. (Stderr: {proc.stderr[-200:] if proc.stderr else 'None'})")
+            # --------------------------------
+
+        except subprocess.TimeoutExpired:
+            logger.error(f"   ⏰ Timeout generating {inst_id}")
         except Exception as e:
-            logger.error(f"💥 Crash generating {inst_id}: {e}")
+            logger.error(f"   💥 Crash generating {inst_id}: {e}")
+        
         time.sleep(1)
 
 def main():
