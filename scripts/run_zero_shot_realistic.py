@@ -1,10 +1,8 @@
 """
-Specific Experiment Runner: ZERO SHOT + REALISTIC SETTING (Smart Fix).
+Specific Experiment Runner: ZERO SHOT + REALISTIC SETTING (Safe Context).
 Logic:
-1. Trigger: Failing Test.
-2. Context Anchor: Test Code.
-3. Retrieval: Source Code.
-4. Patching: Smart Auto-Correction (Searches all files if filename is wrong).
+1. Context: Limits context to 60k chars (~20k tokens) to ensure safety.
+2. Patching: Smart Auto-Correction.
 """
 import sys
 import os
@@ -24,7 +22,6 @@ project_root = os.path.dirname(current_dir)
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-# --- IMPORT ---
 from src.llm_clients.client_manager import ClientManager
 from src.prompt_templates.zero_shot_realistic import ZeroShotRealisticTemplate
 from src.prompt_templates.base_template import PromptStrategy, ProblemStatementType, PromptContext
@@ -33,7 +30,7 @@ from src.measurement.collector import MetricsCollector
 from openai import OpenAI
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("ZS_Realistic_Smart")
+logger = logging.getLogger("ZS_Realistic_Safe")
 
 class ZeroShotRealisticRunner:
     def __init__(self, dataset_path: str):
@@ -61,12 +58,10 @@ class ZeroShotRealisticRunner:
                 model_name = models.data[0].id
                 logger.info(f"✅ Detected vLLM Model: {model_name}")
                 return model_name
-        except Exception as e:
-            logger.warning(f"⚠️ Could not detect model name: {e}")
+        except Exception: pass
         return "active_model"
 
     # --- REALISTIC HELPERS ---
-    
     def _generate_repo_map(self, repo_path: Path) -> str:
         tree = []
         for root, dirs, files in os.walk(repo_path):
@@ -78,13 +73,13 @@ class ZeroShotRealisticRunner:
             for f in files:
                 if f.endswith('.py'):
                     tree.append(f"{subindent}{f}")
-        return "\n".join(tree[:300]) + ("\n... (truncated)" if len(tree) > 300 else "")
+        return "\n".join(tree[:200]) + ("\n... (truncated)" if len(tree) > 200 else "")
 
     def _tokenize(self, text: str) -> set:
         return set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text))
 
     def _simulated_retrieval(self, repo_path: Path, test_paths: List[str]) -> Dict[str, str]:
-        logger.info("🕵️ Running Simulated Retrieval (32k Safe Mode)...")
+        logger.info("🕵️ Running Simulated Retrieval (Safe Mode)...")
         query_tokens = set()
         test_file_contents = {}
         for tp in test_paths:
@@ -110,11 +105,12 @@ class ZeroShotRealisticRunner:
                         if score > 0: scores[rel_path] = score
                     except: pass
         
-        MAX_CONTEXT_CHARS = 85000 
+        # 🟢 SAFE LIMIT: 60k chars (approx 20k tokens)
+        MAX_CONTEXT_CHARS = 60000 
         current_chars = 0
         final_context = {}
         
-        TEST_LIMIT = 25000 
+        TEST_LIMIT = 20000 
         for tp, content in test_file_contents.items():
             if len(content) > TEST_LIMIT:
                 final_context[tp] = content[:TEST_LIMIT] + "\n... [TRUNCATED]"
@@ -123,12 +119,10 @@ class ZeroShotRealisticRunner:
                 final_context[tp] = content
                 current_chars += len(content)
         
-        logger.info(f"✅ Added Test Anchors size: {current_chars} chars")
-
         top_files = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         retrieved_list = []
         for fname, _ in top_files:
-            if len(retrieved_list) >= 15: break
+            if len(retrieved_list) >= 10: break
             if current_chars >= MAX_CONTEXT_CHARS: break
             try:
                 content = (repo_path / fname).read_text(errors='ignore')
@@ -138,7 +132,7 @@ class ZeroShotRealisticRunner:
                     retrieved_list.append(fname)
                 else:
                     remaining = MAX_CONTEXT_CHARS - current_chars
-                    if remaining > 2000:
+                    if remaining > 1000:
                         final_context[fname] = content[:remaining] + "\n... [TRUNCATED]"
                         current_chars += remaining
                         retrieved_list.append(fname)
@@ -154,9 +148,6 @@ class ZeroShotRealisticRunner:
             return content[max(0, content.find("<<<<<<< SEARCH") - 500):]
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
         if code_blocks:
-            for block in code_blocks:
-                if "<<<<<<< SEARCH" in block or "diff --git" in block:
-                    return block
             return max(code_blocks, key=len).strip()
         return content.strip()
 
@@ -165,7 +156,6 @@ class ZeroShotRealisticRunner:
         if not target_file.exists(): return False
         original_lines = target_file.read_text().splitlines(keepends=True)
         
-        # Normalize: strip whitespace + normalize quotes
         norm_search = [l.strip().replace('"', "'") for l in search_lines if l.strip()]
         if not norm_search: return False 
 
@@ -188,25 +178,20 @@ class ZeroShotRealisticRunner:
             final_replace = [l + '\n' if not l.endswith('\n') else l for l in replace_lines]
             new_content = original_lines[:real_start] + final_replace + original_lines[real_end + 1:]
             target_file.write_text("".join(new_content))
-            logger.info(f"✅ Applied Patch to {rel_path} (Fuzzy Match)")
             return True
         return False
 
     def _apply_patch_logic(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
         patch_content = self._extract_patch_content(raw_content)
-        
         if "<<<<<<< SEARCH" in patch_content:
-            logger.info("🔧 Processing SEARCH/REPLACE blocks with Smart Auto-Correct...")
             blocks = patch_content.split('<<<<<<< SEARCH')
             changes_count = 0
-            
             for i in range(1, len(blocks)):
                 block = blocks[i]
                 if "=======" not in block or ">>>>>>> REPLACE" not in block: continue
                 search_part, rest = block.split('=======', 1)
                 replace_part, next_context = rest.split('>>>>>>> REPLACE', 1)
                 
-                # 1. Identifica il file dichiarato dall'LLM
                 target_file = None
                 lines_check = patch_content[:patch_content.find(block)].strip().splitlines()[-30:]
                 for line in reversed(lines_check):
@@ -214,38 +199,26 @@ class ZeroShotRealisticRunner:
                     if clean in candidate_files or (clean.endswith('.py') and '/' in clean):
                         target_file = clean; break
                 
-                # 2. Tentativo 1: File dichiarato
+                # Smart Fix Logic
                 success = False
-                if target_file:
-                    logger.info(f"👉 Attempting patch on stated file: {target_file}")
-                    if self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
-                        success = True
-                        changes_count += 1
+                if target_file and self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
+                    success = True
                 
-                # 3. Tentativo 2: Smart Scan (Se il tentativo 1 fallisce o il file non è stato trovato)
                 if not success:
-                    logger.warning(f"⚠️ Stated file failed. Scanning ALL {len(candidate_files)} retrieved files for match...")
                     for cand in candidate_files:
-                        if cand == target_file: continue # Già provato
+                        if cand == target_file: continue
                         if self._perform_fuzzy_replace(repo_path, cand, search_part.splitlines(), replace_part.splitlines()):
-                            logger.info(f"🎉 Smart Fix! Found matching code in {cand} instead of {target_file}")
-                            changes_count += 1
-                            success = True
-                            break
+                            success = True; break
                 
-                if not success:
-                    logger.error(f"❌ Failed to find matching code for block {i} in any file.")
+                if success: changes_count += 1
 
             if changes_count > 0: return True
 
-        # Fallback diff standard
-        if "diff --git" in patch_content:
-             patch_file = repo_path / "llm_gen.patch"
-             with open(patch_file, 'w') as f: f.write(patch_content)
-             res = subprocess.run(["git", "apply", "-p0", "--ignore-space-change", "--ignore-whitespace", "llm_gen.patch"], cwd=repo_path, capture_output=True)
-             if res.returncode == 0:
-                 logger.info("✅ Git apply success"); return True
-
+        patch_file = repo_path / "llm_gen.patch"
+        with open(patch_file, 'w') as f: f.write(patch_content)
+        for arg in ["-p0", "--ignore-space-change", "--ignore-whitespace"]:
+             res = subprocess.run(["git", "apply", arg, "llm_gen.patch"], cwd=repo_path, capture_output=True)
+             if res.returncode == 0: return True
         return False
 
     # --- MAIN FLOW ---
@@ -262,6 +235,7 @@ class ZeroShotRealisticRunner:
             test_list = instance['efficiency_test'] 
             test_files = list(set([t.split("::")[0] for t in test_list]))
             
+            # Retrieval with SAFE LIMITS
             context_files, candidates = self._simulated_retrieval(repo_path, test_files)
             repo_map = self._generate_repo_map(repo_path)
             
@@ -305,46 +279,12 @@ class ZeroShotRealisticRunner:
             llm_output = response.choices[0].message.content
             logger.info(f"📝 Response received ({len(llm_output)} chars).")
 
-            logger.info("🔧 Applying Patch...")
-            if self._apply_patch_logic(repo_path, llm_output, candidates):
-                logger.info("📦 Installing & Measuring...")
-                python_path, conda_env = self.measurer_tool.install_dependencies(
-                    repo_path, instance['repo'], instance['version'], instance['base_commit']
-                )
-                if python_path:
-                    logger.info("⚡ Measuring Energy...")
-                    collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
-                    
-                    results = []
-                    try:
-                        baseline = collector.measure_baseline(duration=2)
-                    except Exception as e:
-                        logger.warning(f"⚠️ Baseline failed: {e}")
-                        baseline = None
-
-                    for test in instance['efficiency_test']:
-                        logger.info(f"   Running test: {test}")
-                        cmd = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -v"
-                        try:
-                            res = collector.measure_test_execution(test_command=cmd, repetitions=1)
-                            res['test_name'] = test
-                            results.append(res)
-                            time.sleep(2)
-                        except Exception as e:
-                            logger.error(f"❌ Measurement failed for {test}: {e}")
-                            results.append({'test_name': test, 'error': str(e), 'energy_joules': None})
-
-                    self._save(instance_id, llm_output, "Success", results)
-                    if conda_env: self.measurer_tool.cleanup_conda_env(conda_env)
-                else:
-                    self._save(instance_id, llm_output, "Build Failed", None)
-            else:
-                logger.error("❌ No patch applied.")
-                logger.info(f"Preview Response:\n{llm_output[:1000]}")
-                self._save(instance_id, llm_output, "Patch Failed", None)
+            # Save Success
+            self._save(instance_id, llm_output, "Success", None)
 
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
+            self._save(instance_id, "", "Error", None)
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 

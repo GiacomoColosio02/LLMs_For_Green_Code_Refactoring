@@ -1,9 +1,9 @@
 """
 Specific Experiment Runner: ZERO SHOT + ORACLE SETTING.
 Logic:
-1. Context: Extracts EXACT target files from the gold patch (Oracle Mode).
-2. Prompting: System Prompt enforcement + DeepSeek/Qwen optimization.
-3. Patching: Ultra-Robust Hybrid Engine (Matches the Realistic logic exactly).
+1. Context: Extracts EXACT target files from the gold patch.
+2. Limits: Enforces strict 60k char limit to prevent vLLM 32k context errors.
+3. Patching: Ultra-Robust Hybrid Engine.
 """
 import sys
 import os
@@ -31,7 +31,7 @@ from src.measurement.collector import MetricsCollector
 from openai import OpenAI
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("ZS_Oracle_Hybrid")
+logger = logging.getLogger("ZS_Oracle_Safe")
 
 class ZeroShotOracleRunner:
     def __init__(self, dataset_path: str):
@@ -62,34 +62,64 @@ class ZeroShotOracleRunner:
         except Exception: pass
         return "active_model"
 
-    # --- ULTRA ROBUST PATCH ENGINE (Identical to Realistic) ---
-    def _extract_patch_content(self, content: str) -> str:
-        # 1. Clean Thinking Tags
-        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+    # --- SAFE CONTEXT LOADER ---
+    def _load_context_files(self, repo_path: Path, patch_content: str) -> Dict[str, str]:
+        """Carica i file dalla patch rispettando il limite di sicurezza."""
+        files_dict = {}
+        MAX_CONTEXT_CHARS = 60000 # Safety limit for 32k tokens
+        current_chars = 0
         
-        # 2. Prefer Explicit Search Block
+        # Identifica file target
+        target_files = []
+        for line in patch_content.splitlines():
+            if line.startswith("--- a/"):
+                fname = line[6:].strip()
+                if (repo_path / fname).exists():
+                    target_files.append(fname)
+        
+        target_files = list(set(target_files)) # Deduplicate
+        
+        for fname in target_files:
+            if current_chars >= MAX_CONTEXT_CHARS:
+                logger.warning(f"⚠️ Context limit reached. Skipping {fname}")
+                continue
+                
+            try:
+                content = (repo_path / fname).read_text(errors='ignore')
+                # Se il singolo file è enorme, troncalo
+                if len(content) > 30000 and len(target_files) > 1:
+                    content = content[:30000] + "\n... [TRUNCATED FOR SAFETY] ..."
+                
+                if current_chars + len(content) < MAX_CONTEXT_CHARS:
+                    files_dict[fname] = content
+                    current_chars += len(content)
+                else:
+                    remaining = MAX_CONTEXT_CHARS - current_chars
+                    if remaining > 1000:
+                        files_dict[fname] = content[:remaining] + "\n... [TRUNCATED]"
+                        current_chars += remaining
+            except Exception as e:
+                logger.warning(f"Failed to read {fname}: {e}")
+                
+        return files_dict
+
+    # --- ULTRA ROBUST PATCH ENGINE (Same as Realistic) ---
+    def _extract_patch_content(self, content: str) -> str:
+        content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
         if "<<<<<<< SEARCH" in content:
             return content[max(0, content.find("<<<<<<< SEARCH") - 500):]
-            
-        # 3. Fallback to Diff or Markdown
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
         if code_blocks:
-            for block in code_blocks:
-                if "<<<<<<< SEARCH" in block or "diff --git" in block:
-                    return block
             return max(code_blocks, key=len).strip()
-            
         return content.strip()
 
     def _perform_fuzzy_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
         target_file = repo_path / rel_path
         if not target_file.exists(): return False
         original_lines = target_file.read_text().splitlines(keepends=True)
-        
-        # Normalize: strip whitespace + normalize quotes
         norm_search = [l.strip().replace('"', "'") for l in search_lines if l.strip()]
         if not norm_search: return False 
-
+        
         file_map = []
         for idx, line in enumerate(original_lines):
             stripped = line.strip().replace('"', "'")
@@ -109,25 +139,20 @@ class ZeroShotOracleRunner:
             final_replace = [l + '\n' if not l.endswith('\n') else l for l in replace_lines]
             new_content = original_lines[:real_start] + final_replace + original_lines[real_end + 1:]
             target_file.write_text("".join(new_content))
-            logger.info(f"✅ Applied Patch to {rel_path} (Fuzzy Match)")
             return True
         return False
 
     def _apply_patch_logic(self, repo_path: Path, raw_content: str, candidate_files: List[str]) -> bool:
         patch_content = self._extract_patch_content(raw_content)
-        
         if "<<<<<<< SEARCH" in patch_content:
-            logger.info("🔧 Processing SEARCH/REPLACE blocks with Smart Auto-Correct...")
             blocks = patch_content.split('<<<<<<< SEARCH')
             changes_count = 0
-            
             for i in range(1, len(blocks)):
                 block = blocks[i]
                 if "=======" not in block or ">>>>>>> REPLACE" not in block: continue
                 search_part, rest = block.split('=======', 1)
                 replace_part, next_context = rest.split('>>>>>>> REPLACE', 1)
                 
-                # 1. Identify File from Content
                 target_file = None
                 lines_check = patch_content[:patch_content.find(block)].strip().splitlines()[-30:]
                 for line in reversed(lines_check):
@@ -135,43 +160,24 @@ class ZeroShotOracleRunner:
                     if clean in candidate_files or (clean.endswith('.py') and '/' in clean):
                         target_file = clean; break
                 
-                # 2. Attempt 1: Stated File
-                success = False
-                if target_file:
-                    logger.info(f"👉 Attempting patch on stated file: {target_file}")
-                    if self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
-                        success = True
-                        changes_count += 1
-                
-                # 3. Attempt 2: Smart Scan (Oracle usually has few candidates, so scanning is fast)
-                if not success:
-                    # Fallback logic: check signature in known files
+                if not target_file:
                     search_l = [l.strip() for l in search_part.splitlines() if l.strip()]
                     if search_l:
                         sig = search_l[0].replace('"', "'")
                         for cand in candidate_files:
-                            if cand == target_file: continue
                             path = repo_path / cand
                             if path.exists() and sig in path.read_text().replace('"', "'"):
-                                logger.info(f"🎉 Smart Fix! Found matching code in {cand}")
-                                if self._perform_fuzzy_replace(repo_path, cand, search_part.splitlines(), replace_part.splitlines()):
-                                    changes_count += 1
-                                    success = True
-                                break
+                                target_file = cand; break
 
-                if not success:
-                    logger.error(f"❌ Failed to find matching code for block {i} in any file.")
-
+                if target_file and self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
+                    changes_count += 1
             if changes_count > 0: return True
 
-        # Fallback to Git Apply
-        logger.info("🔧 Trying Git Apply fallback...")
         patch_file = repo_path / "llm_gen.patch"
         with open(patch_file, 'w') as f: f.write(patch_content)
         for arg in ["-p0", "--ignore-space-change", "--ignore-whitespace"]:
              res = subprocess.run(["git", "apply", arg, "llm_gen.patch"], cwd=repo_path, capture_output=True)
-             if res.returncode == 0:
-                 logger.info(f"✅ Git apply success ({arg})"); return True
+             if res.returncode == 0: return True
         return False
 
     # --- MAIN FLOW ---
@@ -185,28 +191,24 @@ class ZeroShotOracleRunner:
             logger.info("📥 Cloning repository...")
             repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
             
-            # ORACLE CONTEXT: Extract ONLY target files from patch (Gold Standard)
-            files_dict = {}
-            for line in instance.get("patch", "").splitlines():
-                if line.startswith("--- a/"): 
-                    fname = line[6:].strip()
-                    p = repo_path / fname
-                    if p.exists(): files_dict[fname] = p.read_text()
+            # Use Safe Context Loader
+            files_dict = self._load_context_files(repo_path, instance.get("patch", ""))
             candidates = list(files_dict.keys())
             
+            if not candidates:
+                logger.error("❌ No target files found in patch!")
+                return
+
             test_cmd = f"pytest {' '.join(instance['efficiency_test'])}"
-            desc = f"Optimize the energy efficiency of the repository. Focus on these tests: {test_cmd}"
-            
             ctx = PromptContext(
                 problem_statement_type=ProblemStatementType.ORACLE,
-                problem_description=desc,
+                problem_description=f"Optimize energy usage. Tests: {test_cmd}",
                 code_files=files_dict, 
                 test_command=test_cmd,
                 target_functions=candidates
             )
             
             user_prompt = self.template.generate_prompt(ctx)
-            
             system_prompt = (
                 "You are an expert Green Software Engineer.\n"
                 "Your goal is to optimize the provided code for energy efficiency.\n"
@@ -234,46 +236,12 @@ class ZeroShotOracleRunner:
             llm_output = response.choices[0].message.content
             logger.info(f"📝 Response received ({len(llm_output)} chars).")
 
-            logger.info("🔧 Applying Patch...")
-            if self._apply_patch_logic(repo_path, llm_output, candidates):
-                logger.info("📦 Installing & Measuring...")
-                python_path, conda_env = self.measurer_tool.install_dependencies(
-                    repo_path, instance['repo'], instance['version'], instance['base_commit']
-                )
-                
-                if python_path:
-                    logger.info("⚡ Measuring Energy...")
-                    collector = MetricsCollector(instance_id=instance_id, country_code="ESP")
-                    results = []
-                    try:
-                        baseline = collector.measure_baseline(duration=2)
-                    except Exception as e:
-                        logger.warning(f"⚠️ Baseline failed: {e}")
-                        baseline = None
-
-                    for test in instance['efficiency_test']:
-                        logger.info(f"   Running test: {test}")
-                        cmd = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -v"
-                        try:
-                            res = collector.measure_test_execution(test_command=cmd, repetitions=1)
-                            res['test_name'] = test
-                            results.append(res)
-                            time.sleep(2) 
-                        except Exception as e:
-                            logger.error(f"❌ Measurement failed for {test}: {e}")
-                            results.append({'test_name': test, 'error': str(e), 'energy_joules': None})
-                    
-                    self._save(instance_id, llm_output, "Success", results)
-                    if conda_env: self.measurer_tool.cleanup_conda_env(conda_env)
-                else:
-                    self._save(instance_id, llm_output, "Build Failed", None)
-            else:
-                logger.error("❌ No patch applied.")
-                logger.info(f"Preview Response:\n{llm_output[:1000]}")
-                self._save(instance_id, llm_output, "Patch Failed", None)
+            # Save result immediately (run_batch_all will handle the rest)
+            self._save(instance_id, llm_output, "Success", None)
 
         except Exception as e:
             logger.error(f"Error: {e}", exc_info=True)
+            self._save(instance_id, "", "Error", None) # Save error state
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
