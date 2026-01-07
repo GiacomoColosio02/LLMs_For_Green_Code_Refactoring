@@ -1,9 +1,9 @@
 """
 Specific Experiment Runner: ZERO SHOT + ORACLE SETTING.
 Logic:
-1. Context: Extracts EXACT target files from the gold patch.
+1. Context: Extracts EXACT target files from the gold patch (Oracle Mode).
 2. Prompting: System Prompt enforcement + DeepSeek/Qwen optimization.
-3. Patching: Ultra-Robust Hybrid Engine (Fuzzy + Quote Normalization + Git Fallback).
+3. Patching: Ultra-Robust Hybrid Engine (Matches the Realistic logic exactly).
 """
 import sys
 import os
@@ -62,17 +62,23 @@ class ZeroShotOracleRunner:
         except Exception: pass
         return "active_model"
 
-    # --- ULTRA ROBUST PATCH ENGINE ---
+    # --- ULTRA ROBUST PATCH ENGINE (Identical to Realistic) ---
     def _extract_patch_content(self, content: str) -> str:
+        # 1. Clean Thinking Tags
         content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
+        
+        # 2. Prefer Explicit Search Block
         if "<<<<<<< SEARCH" in content:
             return content[max(0, content.find("<<<<<<< SEARCH") - 500):]
+            
+        # 3. Fallback to Diff or Markdown
         code_blocks = re.findall(r'```(?:diff|python)?\s*(.*?)```', content, re.DOTALL)
         if code_blocks:
             for block in code_blocks:
                 if "<<<<<<< SEARCH" in block or "diff --git" in block:
                     return block
             return max(code_blocks, key=len).strip()
+            
         return content.strip()
 
     def _perform_fuzzy_replace(self, repo_path: Path, rel_path: str, search_lines: List[str], replace_lines: List[str]) -> bool:
@@ -111,7 +117,7 @@ class ZeroShotOracleRunner:
         patch_content = self._extract_patch_content(raw_content)
         
         if "<<<<<<< SEARCH" in patch_content:
-            logger.info("🔧 Processing SEARCH/REPLACE blocks...")
+            logger.info("🔧 Processing SEARCH/REPLACE blocks with Smart Auto-Correct...")
             blocks = patch_content.split('<<<<<<< SEARCH')
             changes_count = 0
             
@@ -121,6 +127,7 @@ class ZeroShotOracleRunner:
                 search_part, rest = block.split('=======', 1)
                 replace_part, next_context = rest.split('>>>>>>> REPLACE', 1)
                 
+                # 1. Identify File from Content
                 target_file = None
                 lines_check = patch_content[:patch_content.find(block)].strip().splitlines()[-30:]
                 for line in reversed(lines_check):
@@ -128,20 +135,36 @@ class ZeroShotOracleRunner:
                     if clean in candidate_files or (clean.endswith('.py') and '/' in clean):
                         target_file = clean; break
                 
-                if not target_file:
+                # 2. Attempt 1: Stated File
+                success = False
+                if target_file:
+                    logger.info(f"👉 Attempting patch on stated file: {target_file}")
+                    if self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
+                        success = True
+                        changes_count += 1
+                
+                # 3. Attempt 2: Smart Scan (Oracle usually has few candidates, so scanning is fast)
+                if not success:
+                    # Fallback logic: check signature in known files
                     search_l = [l.strip() for l in search_part.splitlines() if l.strip()]
                     if search_l:
                         sig = search_l[0].replace('"', "'")
                         for cand in candidate_files:
+                            if cand == target_file: continue
                             path = repo_path / cand
                             if path.exists() and sig in path.read_text().replace('"', "'"):
-                                target_file = cand; break
+                                logger.info(f"🎉 Smart Fix! Found matching code in {cand}")
+                                if self._perform_fuzzy_replace(repo_path, cand, search_part.splitlines(), replace_part.splitlines()):
+                                    changes_count += 1
+                                    success = True
+                                break
 
-                if target_file and self._perform_fuzzy_replace(repo_path, target_file, search_part.splitlines(), replace_part.splitlines()):
-                    changes_count += 1
-            
+                if not success:
+                    logger.error(f"❌ Failed to find matching code for block {i} in any file.")
+
             if changes_count > 0: return True
 
+        # Fallback to Git Apply
         logger.info("🔧 Trying Git Apply fallback...")
         patch_file = repo_path / "llm_gen.patch"
         with open(patch_file, 'w') as f: f.write(patch_content)
@@ -162,6 +185,7 @@ class ZeroShotOracleRunner:
             logger.info("📥 Cloning repository...")
             repo_path = self.measurer_tool.setup_repository(instance, temp_dir, instance['base_commit'])
             
+            # ORACLE CONTEXT: Extract ONLY target files from patch (Gold Standard)
             files_dict = {}
             for line in instance.get("patch", "").splitlines():
                 if line.startswith("--- a/"): 
@@ -245,6 +269,7 @@ class ZeroShotOracleRunner:
                     self._save(instance_id, llm_output, "Build Failed", None)
             else:
                 logger.error("❌ No patch applied.")
+                logger.info(f"Preview Response:\n{llm_output[:1000]}")
                 self._save(instance_id, llm_output, "Patch Failed", None)
 
         except Exception as e:
