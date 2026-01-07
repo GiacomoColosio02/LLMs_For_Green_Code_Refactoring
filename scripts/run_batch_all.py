@@ -14,7 +14,7 @@ import logging
 from pathlib import Path
 
 # CONFIGURAZIONE
-DATASET_PATH = "data/processed/swe_perf_reduced.json"
+DATASET_PATH = "/home/giacomo/LLMs_For_Green_Code_Refactoring/data/processed/swe_perf_reduced_test.json"
 TIMEOUT_SECONDS = 600  # 10 minuti per istanza max
 LOG_FILE = "batch_experiment_run.log"
 
