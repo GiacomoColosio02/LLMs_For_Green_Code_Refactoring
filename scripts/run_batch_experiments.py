@@ -74,6 +74,7 @@ class BatchExperimentRunner:
         self,
         dataset_path: Path,
         strategies: List[str],
+        prompt_type: str = "zero_shot",
         skip_completed: bool = True,
         limit: Optional[int] = None
     ):
@@ -83,11 +84,13 @@ class BatchExperimentRunner:
         Args:
             dataset_path: Path to dataset JSON
             strategies: List of strategies to run ("oracle", "realistic", or both)
+            prompt_type: "zero_shot" or "cot"
             skip_completed: Skip instances that already have results
             limit: Maximum number of instances to process (None = all)
         """
         self.dataset_path = Path(dataset_path)
         self.strategies = strategies
+        self.prompt_type = prompt_type.lower()
         self.skip_completed = skip_completed
         self.limit = limit
         
@@ -100,6 +103,7 @@ class BatchExperimentRunner:
         logger.info(f"BatchExperimentRunner initialized")
         logger.info(f"  Dataset: {self.dataset_path.name}")
         logger.info(f"  Instances: {len(self.instances)}")
+        logger.info(f"  Prompt Type: {self.prompt_type.upper()}")
         logger.info(f"  Strategies: {self.strategies}")
         logger.info(f"  Skip completed: {self.skip_completed}")
         logger.info(f"  Limit: {self.limit or 'None'}")
@@ -115,7 +119,8 @@ class BatchExperimentRunner:
     
     def _is_completed(self, instance_id: str, strategy: str) -> bool:
         """Check if instance already has results."""
-        result_file = RESULTS_DIR / f"zs_{strategy}" / f"{instance_id}.json"
+        prefix = "zs" if self.prompt_type == "zero_shot" else "cot"
+        result_file = RESULTS_DIR / f"{prefix}_{strategy}" / f"{instance_id}.json"
         
         if not result_file.exists():
             return False
@@ -206,7 +211,8 @@ class BatchExperimentRunner:
         # Initialize runner for this strategy
         runner = ExperimentRunner(
             dataset_path=self.dataset_path,
-            strategy=strategy
+            strategy=strategy,
+            prompt_type=self.prompt_type
         )
         
         # Process instances
@@ -338,6 +344,9 @@ Examples:
   # Run both strategies
   python run_batch_experiments.py --strategy both
   
+  # Run with Chain-of-Thought prompting
+  python run_batch_experiments.py --strategy oracle --prompt-type cot
+  
   # Test with only 3 instances
   python run_batch_experiments.py --strategy oracle --limit 3
   
@@ -352,6 +361,14 @@ Examples:
         choices=['oracle', 'realistic', 'both'],
         default='both',
         help='Strategy to run (default: both)'
+    )
+    
+    parser.add_argument(
+        '--prompt-type', '-p',
+        type=str,
+        choices=['zero_shot', 'cot'],
+        default='zero_shot',
+        help='Prompt type: zero_shot or cot (chain-of-thought) (default: zero_shot)'
     )
     
     parser.add_argument(
@@ -386,6 +403,7 @@ Examples:
     runner = BatchExperimentRunner(
         dataset_path=Path(args.dataset),
         strategies=strategies,
+        prompt_type=args.prompt_type,
         skip_completed=not args.no_skip,
         limit=args.limit
     )

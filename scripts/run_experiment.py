@@ -34,7 +34,13 @@ if str(PROJECT_ROOT) not in sys.path:
 
 # --- IMPORTS ---
 from src.llm_clients import VLLMClient
-from src.prompt_templates import ZeroShotTemplate, PromptContext, ProblemStatementType
+from src.prompt_templates import (
+    ZeroShotTemplate, 
+    ChainOfThoughtTemplate,
+    PromptContext, 
+    ProblemStatementType,
+    extract_patch_from_cot
+)
 from src.patch_engine import PatchEngine, PatchResult
 from scripts.measure_instance import SWEPerfMeasurer
 
@@ -72,6 +78,7 @@ class ExperimentRunner:
         self,
         dataset_path: Path,
         strategy: str = "oracle",
+        prompt_type: str = "zero_shot",
         output_dir: Optional[Path] = None
     ):
         """
@@ -80,19 +87,25 @@ class ExperimentRunner:
         Args:
             dataset_path: Path to SWE-Perf dataset JSON
             strategy: "oracle" or "realistic"
-            output_dir: Directory for results (default: results/{strategy})
+            prompt_type: "zero_shot" or "cot" (chain-of-thought)
+            output_dir: Directory for results (default: results/{prompt_type}_{strategy})
         """
         self.dataset_path = Path(dataset_path)
         self.strategy = strategy.lower()
+        self.prompt_type = prompt_type.lower()
         
         if self.strategy not in ("oracle", "realistic"):
             raise ValueError(f"Strategy must be 'oracle' or 'realistic', got: {strategy}")
         
-        # Set output directory
+        if self.prompt_type not in ("zero_shot", "cot"):
+            raise ValueError(f"Prompt type must be 'zero_shot' or 'cot', got: {prompt_type}")
+        
+        # Set output directory based on prompt type and strategy
         if output_dir:
             self.output_dir = Path(output_dir)
         else:
-            self.output_dir = RESULTS_DIR / f"zs_{self.strategy}"
+            prefix = "zs" if self.prompt_type == "zero_shot" else "cot"
+            self.output_dir = RESULTS_DIR / f"{prefix}_{self.strategy}"
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         # Load dataset
@@ -100,10 +113,17 @@ class ExperimentRunner:
         
         # Initialize components
         self.llm_client = VLLMClient()
-        self.template = ZeroShotTemplate()
+        
+        # Select template based on prompt type
+        if self.prompt_type == "zero_shot":
+            self.template = ZeroShotTemplate()
+        else:
+            self.template = ChainOfThoughtTemplate()
+        
         self.measurer = SWEPerfMeasurer(str(dataset_path), country_code="ESP")
         
         logger.info(f"Initialized ExperimentRunner")
+        logger.info(f"  Prompt Type: {self.prompt_type.upper()}")
         logger.info(f"  Strategy: {self.strategy.upper()}")
         logger.info(f"  Dataset: {self.dataset_path.name} ({len(self.dataset)} instances)")
         logger.info(f"  Output: {self.output_dir}")
@@ -428,11 +448,13 @@ class ExperimentRunner:
         """
         logger.info(f"{'='*60}")
         logger.info(f"🚀 STARTING EXPERIMENT: {instance_id}")
+        logger.info(f"   Prompt Type: {self.prompt_type.upper()}")
         logger.info(f"   Strategy: {self.strategy.upper()}")
         logger.info(f"{'='*60}")
         
         result = {
             "instance_id": instance_id,
+            "prompt_type": self.prompt_type,
             "strategy": self.strategy,
             "model": self.llm_client.model_name,
             "timestamp": datetime.now().isoformat(),
@@ -494,10 +516,18 @@ class ExperimentRunner:
             
             logger.info(f"   Response: {len(llm_output):,} chars, {response.total_tokens} tokens, {response.latency_seconds:.1f}s")
             
-            # 6. Try to apply patch (validation)
+            # 6. Extract patch content (for CoT, strip reasoning section)
+            if self.prompt_type == "cot":
+                logger.info("🧠 Extracting patch from CoT response...")
+                patch_content = extract_patch_from_cot(llm_output)
+                logger.info(f"   Extracted patch: {len(patch_content):,} chars")
+            else:
+                patch_content = llm_output
+            
+            # 7. Try to apply patch (validation)
             logger.info("🔧 Validating patch...")
             patch_engine = PatchEngine(repo_path)
-            patch_result = patch_engine.apply_patch(llm_output, candidates)
+            patch_result = patch_engine.apply_patch(patch_content, candidates)
             
             result["patch_result"] = {
                 "success": patch_result.success,
@@ -550,12 +580,18 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run oracle experiment
+  # Run zero-shot oracle experiment
   python run_experiment.py --instance mwaskom__seaborn-2389 --strategy oracle
   
-  # Run realistic experiment
+  # Run zero-shot realistic experiment
   python run_experiment.py --instance mwaskom__seaborn-2389 --strategy realistic
   
+  # Run chain-of-thought oracle experiment
+  python run_experiment.py --instance mwaskom__seaborn-2389 --strategy oracle --prompt-type cot
+  
+  # Run CoT realistic experiment  
+  python run_experiment.py --instance mwaskom__seaborn-2389 --strategy realistic --prompt-type cot
+
   # With custom dataset
   python run_experiment.py --instance X --strategy oracle --dataset path/to/data.json
         """
@@ -577,6 +613,14 @@ Examples:
     )
     
     parser.add_argument(
+        '--prompt-type', '-p',
+        type=str,
+        choices=['zero_shot', 'cot'],
+        default='zero_shot',
+        help='Prompt type: zero_shot or cot (chain-of-thought) (default: zero_shot)'
+    )
+    
+    parser.add_argument(
         '--dataset', '-d',
         type=str,
         default=str(DEFAULT_DATASET),
@@ -587,7 +631,7 @@ Examples:
         '--output', '-o',
         type=str,
         default=None,
-        help='Output directory (default: results/zs_{strategy})'
+        help='Output directory (default: results/{prompt_type}_{strategy})'
     )
     
     args = parser.parse_args()
@@ -596,6 +640,7 @@ Examples:
     runner = ExperimentRunner(
         dataset_path=Path(args.dataset),
         strategy=args.strategy,
+        prompt_type=args.prompt_type,
         output_dir=Path(args.output) if args.output else None
     )
     
