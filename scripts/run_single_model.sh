@@ -11,13 +11,13 @@ MAX_LEN=32768
 
 if [ "$MODEL_ALIAS" == "qwen" ]; then
     MODEL_NAME="Qwen/Qwen2.5-Coder-7B-Instruct-AWQ"
-    echo "�� SELECTED: Qwen 2.5 Coder 7B AWQ"
+    echo "🔵 SELECTED: Qwen 2.5 Coder 7B AWQ"
 
 elif [ "$MODEL_ALIAS" == "qwen32" ]; then
     MODEL_NAME="Qwen/Qwen2.5-Coder-32B-Instruct-AWQ"
-    GPU_UTIL=0.95
-    MAX_LEN=16384  # Ridotto per stare in 24GB
-    echo "🔵 SELECTED: Qwen 2.5 Coder 32B AWQ (più intelligente!)"
+    GPU_UTIL=0.92
+    MAX_LEN=8192  # Ridotto per 32B
+    echo "🔵 SELECTED: Qwen 2.5 Coder 32B AWQ"
 
 elif [ "$MODEL_ALIAS" == "deepseek" ]; then
     MODEL_NAME="casperhansen/deepseek-r1-distill-qwen-7b-awq"
@@ -25,9 +25,10 @@ elif [ "$MODEL_ALIAS" == "deepseek" ]; then
 
 elif [ "$MODEL_ALIAS" == "deepseek14" ]; then
     MODEL_NAME="casperhansen/deepseek-r1-distill-qwen-14b-awq"
-    GPU_UTIL=0.95
-    MAX_LEN=16384
-    echo "🟣 SELECTED: DeepSeek R1 Distill 14B AWQ (reasoning!)"
+    GPU_UTIL=0.88
+    MAX_LEN=8192  # Ridotto drasticamente
+    MAX_SEQS=64   # Limita sequenze parallele
+    echo "🟣 SELECTED: DeepSeek R1 Distill 14B AWQ (memory-safe)"
 
 else
     echo "❌ Error: Specify model alias."
@@ -53,6 +54,12 @@ echo "================================================================="
 pkill -f vllm
 sleep 3
 
+# Parametri extra per modelli grandi
+EXTRA_ARGS=""
+if [ ! -z "$MAX_SEQS" ]; then
+    EXTRA_ARGS="--max-num-seqs $MAX_SEQS"
+fi
+
 # Avvio
 vllm serve $MODEL_NAME \
     --port $PORT \
@@ -60,4 +67,5 @@ vllm serve $MODEL_NAME \
     --max-model-len $MAX_LEN \
     --quantization awq \
     --dtype half \
-    --trust-remote-code
+    --trust-remote-code \
+    $EXTRA_ARGS
