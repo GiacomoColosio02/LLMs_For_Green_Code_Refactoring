@@ -60,18 +60,29 @@ def extract_patch_from_cot(response: str) -> str:
     """Extract only the patch section from a CoT response."""
     parsed = parse_cot_response(response)
     
-    if parsed.patch_section:
-        return parsed.patch_section
+    patch = parsed.patch_section if parsed.patch_section else response
     
-    if "<<<<<<< SEARCH" in response:
-        clean = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
-        idx = clean.find("<<<<<<< SEARCH")
-        pre_idx = clean.rfind('\n', 0, idx)
-        if pre_idx > idx - 200:
-            return clean[pre_idx:].strip()
-        return clean[idx:].strip()
+    # Remove markdown code block wrappers (```python ... ```)
+    # This handles cases where the model wraps the patch in code blocks
+    patch = re.sub(r'^```(?:python|diff)?\s*\n?', '', patch, flags=re.MULTILINE)
+    patch = re.sub(r'\n?```\s*$', '', patch, flags=re.MULTILINE)
     
-    return response
+    # Also try to extract from within code blocks if SEARCH is inside
+    if "<<<<<<< SEARCH" not in patch and "<<<<<<< SEARCH" in response:
+        # Find content between ``` markers that contains SEARCH/REPLACE
+        code_block_match = re.search(r'```(?:python|diff)?\s*\n(.*?<<<<<<< SEARCH.*?)```', 
+                                      response, re.DOTALL)
+        if code_block_match:
+            patch = code_block_match.group(1).strip()
+    
+    # Final cleanup: ensure we have the file path marker
+    if "<<<<<<< SEARCH" in patch and "### " not in patch:
+        # Try to find file path before the code block
+        file_match = re.search(r'###\s+([\w/._-]+\.py)', response)
+        if file_match:
+            patch = f"### {file_match.group(1)}\n{patch}"
+    
+    return patch.strip()
 
 
 class ChainOfThoughtTemplate(BasePromptTemplate):
@@ -108,7 +119,7 @@ Then address:
 
 ### SECTION 2: PATCH
 
-Only AFTER the analysis, provide code changes:
+Only AFTER the analysis, provide code changes using this EXACT format (no code blocks):
 
 ### path/to/file.py
 <<<<<<< SEARCH
@@ -118,6 +129,7 @@ optimized code
 >>>>>>> REPLACE
 
 CRITICAL RULES:
+- Do NOT wrap the patch in ```python``` code blocks
 - Use SMALL SEARCH blocks - just enough to locate uniquely
 - Preserve functionality - tests MUST still pass
 - Do NOT add new dependencies
