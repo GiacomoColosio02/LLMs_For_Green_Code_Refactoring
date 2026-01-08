@@ -6,7 +6,7 @@ import re
 from typing import Optional, Dict, List
 from dataclasses import dataclass
 
-from .base_template import BasePromptTemplate, PromptContext, ProblemStatementType
+from .base_template import BasePromptTemplate, PromptContext, ProblemStatementType, PromptStrategy
 
 
 @dataclass
@@ -78,7 +78,7 @@ class ChainOfThoughtTemplate(BasePromptTemplate):
     """Chain-of-Thought template for Green Code Optimization."""
     
     def __init__(self):
-        super().__init__()
+        super().__init__(PromptStrategy.COT)
         self.template_name = "ChainOfThought"
     
     def generate_prompt(self, context: PromptContext) -> str:
@@ -103,20 +103,19 @@ Start by writing: "Let's think step by step."
 
 Then address:
 1. **IDENTIFICATION**: What function/code has the inefficiency?
-2. **DIAGNOSIS**: Why is it inefficient? (O(N²), memory spikes, redundant computation, etc.)
+2. **DIAGNOSIS**: Why is it inefficient? (O(N^2), memory spikes, redundant computation, etc.)
 3. **HYPOTHESIS**: What will your fix achieve? (O(1) lookup, caching, etc.)
 
 ### SECTION 2: PATCH
 
 Only AFTER the analysis, provide code changes:
-```
+
 ### path/to/file.py
 <<<<<<< SEARCH
 original code (minimum unique context)
 =======
 optimized code
 >>>>>>> REPLACE
-```
 
 CRITICAL RULES:
 - Use SMALL SEARCH blocks - just enough to locate uniquely
