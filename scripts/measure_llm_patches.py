@@ -225,7 +225,7 @@ class LLMPatchMeasurer:
                 
                 try:
                     # Build test command (same format as measure_instance.py)
-                    test_command = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test}' -x -v"
+                    test_command = f"cd {repo_path} && {python_path} -m pytest '{test}' -x -v"
                     
                     result = collector.measure_test_execution(
                         test_command=test_command,
