@@ -244,7 +244,7 @@ class LLMPatchMeasurer:
                 except Exception as e:
                     logger.warning(f"      ❌ {test_name} - {str(e)[:100]}")
             
-            # collector.cleanup()  # Not needed
+            # pass  # cleanup not needed  # Not needed
             
             if valid_tests == 0:
                 logger.warning(f"    ⚠️ No valid test measurements")
