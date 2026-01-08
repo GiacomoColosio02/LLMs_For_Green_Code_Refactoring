@@ -10,7 +10,7 @@ from .base_template import (
     ProblemStatementType,
     PromptContext
 )
-from .zero_shot_template import ZeroShotTemplate
+from .zero_shot import ZeroShotTemplate
 from .cot_template import CoTTemplate
 from .self_collaboration_template import SelfCollaborationTemplate
 from .ldb_template import LDBTemplate  # <--- NEW IMPORT FOR LDB
