@@ -1,0 +1,22 @@
+{
+  "instance_id": "pydata__xarray-9243",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-08T19:47:53.887676",
+  "status": "success",
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n1. **IDENTIFICATION**: The inefficiency is likely in the `open_datatree` method within the `H5netcdfBackendEntrypoint` class in `xarray/backends/h5netcdf_.py`.\n\n2. **DIAGNOSIS**: The method iteratively opens datasets for each group in the NetCDF file, which can be computationally expensive and resource-intensive, especially for large files with many groups. Each call to `open_dataset` involves parsing the file and setting up the data structures, leading to redundant computations and potential memory spikes.\n\n3. **HYPOTHESIS**: By optimizing the `open_datatree` method to reuse already opened datasets and avoiding redundant parsing, we can significantly improve the performance and reduce memory usage.\n\n### SECTION 2: PATCH\n\n### xarray/backends/h5netcdf_.py\n<<<<<<< SEARCH\nfor path_group in _iter_nc_groups(store.ds, parent=parent):\n    group_store = H5NetCDFStore(manager, group=path_group, **kwargs)\n    store_entrypoint = StoreBackendEntrypoint()\n    with close_on_error(group_store):\n        ds = store_entrypoint.open_dataset(\n            group_store,\n            mask_and_scale=mask_and_scale,\n            decode_times=decode_times,\n            concat_characters=concat_characters,\n            decode_coords=decode_coords,\n            drop_variables=drop_variables,\n            use_cftime=use_cftime,\n            decode_timedelta=decode_timedelta,\n        )\n        new_node: DataTree = DataTree(name=NodePath(path_group).name, data=ds)\n        tree_root._set_item(\n            path_group,\n            new_node,\n            allow_overwrite=False,\n            new_nodes_along_path=True,\n        )\n=======\nfor path_group in _iter_nc_groups(store.ds, parent=parent):\n    if path_group in store_entrypoint.datasets:\n        ds = store_entrypoint.datasets[path_group]\n    else:\n        group_store = H5NetCDFStore(manager, group=path_group, **kwargs)\n        ds = store_entrypoint.open_dataset(\n            group_store,\n            mask_and_scale=mask_and_scale,\n            decode_times=decode_times,\n            concat_characters=concat_characters,\n            decode_coords=decode_coords,\n            drop_variables=drop_variables,\n            use_cftime=use_cftime,\n            decode_timedelta=decode_timedelta,\n        )\n        store_entrypoint.datasets[path_group] = ds\n    new_node: DataTree = DataTree(name=NodePath(path_group).name, data=ds)\n    tree_root._set_item(\n        path_group,\n        new_node,\n        allow_overwrite=False,\n        new_nodes_along_path=True,\n    )\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/backends/h5netcdf_.py"
+    ]
+  },
+  "error": null,
+  "repo": "pydata/xarray",
+  "llm_tokens": 17037,
+  "llm_latency": 32.66662287712097
+}

@@ -1,0 +1,22 @@
+{
+  "instance_id": "mwaskom__seaborn-2389",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-08T18:48:05.303271",
+  "status": "success",
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n1. **IDENTIFICATION**: The `_convert_colors` function in `seaborn/matrix.py` has the inefficiency.\n2. **DIAGNOSIS**: The function converts colors using `mpl.colors.colorConverter.to_rgb`, which is called repeatedly inside nested loops. This results in O(N^2) complexity due to the nested iterations over the colors.\n3. **HYPOTHESIS**: By converting the color conversion outside the nested loops, we can reduce the complexity to O(N).\n\n### SECTION 2: PATCH\n\n### seaborn/matrix.py\n<<<<<<< SEARCH\ndef _convert_colors(colors):\n    \"\"\"Convert either a list of colors or nested lists of colors to RGB.\"\"\"\n    to_rgb = mpl.colors.colorConverter.to_rgb\n\n    if isinstance(colors, pd.DataFrame):\n        # Convert dataframe\n        return pd.DataFrame({col: colors[col].map(to_rgb)\n                            for col in colors})\n    elif isinstance(colors, pd.Series):\n        return colors.map(to_rgb)\n    else:\n        try:\n            to_rgb(colors[0])\n            # If this works, there is only one level of colors\n            return list(map(to_rgb, colors))\n        except ValueError:\n            # If we get here, we have nested lists\n            return [list(map(to_rgb, l)) for l in colors]\n=======\ndef _convert_colors(colors):\n    \"\"\"Convert either a list of colors or nested lists of colors to RGB.\"\"\"\n    to_rgb = mpl.colors.colorConverter.to_rgb\n\n    if isinstance(colors, pd.DataFrame):\n        # Convert dataframe\n        return pd.DataFrame({col: colors[col].apply(to_rgb)\n                            for col in colors})\n    elif isinstance(colors, pd.Series):\n        return colors.apply(to_rgb)\n    else:\n        try:\n            to_rgb(colors[0])\n            # If this works, there is only one level of colors\n            return list(map(to_rgb, colors))\n        except ValueError:\n            # If we get here, we have nested lists\n            return [list(map(to_rgb, l)) for l in colors]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "seaborn/matrix.py"
+    ]
+  },
+  "error": null,
+  "repo": "mwaskom/seaborn",
+  "llm_tokens": 12745,
+  "llm_latency": 23.431175231933594
+}

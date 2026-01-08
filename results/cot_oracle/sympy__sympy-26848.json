@@ -1,0 +1,22 @@
+{
+  "instance_id": "sympy__sympy-26848",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-08T19:55:33.352281",
+  "status": "success",
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n1. **IDENTIFICATION**: The function `mrv_leadterm` in `sympy/series/gruntz.py` has inefficiencies.\n2. **DIAGNOSIS**: The function performs repeated calculations and does not utilize memoization effectively, leading to redundant computations.\n3. **HYPOTHESIS**: By implementing memoization and optimizing the calculation of the lead term, we can significantly improve the performance of the function.\n\n### SECTION 2: PATCH\n\n### sympy/series/gruntz.py\n<<<<<<< SEARCH\ndef mrv_leadterm(e, x):\n    \"\"\"Returns (c0, e0) for e.\"\"\"\n    Omega = SubsSet()\n    if not e.has(x):\n        return (e, S.Zero)\n    if Omega == SubsSet():\n        Omega, exps = mrv(e, x)\n    if not Omega:\n        # e really does not depend on x after simplification\n        return exps, S.Zero\n    if x in Omega:\n        # move the whole omega up (exponentiate each term):\n        Omega_up = moveup2(Omega, x)\n        exps_up = moveup([exps], x)[0]\n        # NOTE: there is no need to move this down!\n        Omega = Omega_up\n        exps = exps_up\n    #\n    # The positive dummy, w, is used here so log(w*2) etc. will expand;\n    # a unique dummy is needed in this algorithm\n    #\n    # For limits of complex functions, the algorithm would have to be\n    # improved, or just find limits of Re and Im components separately.\n    #\n    w = Dummy(\"w\", positive=True)\n    f, logw = rewrite(exps, Omega, x, w)\n    try:\n        lt = f.leadterm(w, logx=logw)\n    except (NotImplementedError, PoleError, ValueError):\n        n0 = 1\n        _series = Order(1)\n        incr = S.One\n        while _series.is_Order:\n            _series = f._eval_nseries(w, n=n0+incr, logx=logw)\n            incr *= 2\n        series = _series.expand().removeO()\n        try:\n            lt = series.leadterm(w, logx=logw)\n        except (NotImplementedError, PoleError, ValueError):\n            lt = f.as_coeff_exponent(w)\n            if lt[0].has(w):\n                base = f.as_base_exp()[0].as_coeff_exponent(w)\n                ex = f.as_base_exp()[1]\n                lt = (base[0]**ex, base[1]*ex)\n    return (lt[0].subs(log(w), logw), lt[1])\n=======\nfrom sympy.core.cache import cacheit\n\n@cacheit\ndef mrv_leadterm(e, x):\n    \"\"\"Returns (c0, e0) for e.\"\"\"\n    Omega = SubsSet()\n    if not e.has(x):\n        return (e, S.Zero)\n    if Omega == SubsSet():\n        Omega, exps = mrv(e, x)\n    if not Omega:\n        # e really does not depend on x after simplification\n        return exps, S.Zero\n    if x in Omega:\n        # move the whole omega up (exponentiate each term):\n        Omega_up = moveup2(Omega, x)\n        exps_up = moveup([exps], x)[0]\n        # NOTE: there is no need to move this down!\n        Omega = Omega_up\n        exps = exps_up\n    #\n    # The positive dummy, w, is used here so log(w*2) etc. will expand;\n    # a unique dummy is needed in this algorithm\n    #\n    # For limits of complex functions, the algorithm would have to be\n    # improved, or just find limits of Re and Im components separately.\n    #\n    w = Dummy(\"w\", positive=True)\n    f, logw = rewrite(exps, Omega, x, w)\n    try:\n        lt = f.leadterm(w, logx=logw)\n    except (NotImplementedError, PoleError, ValueError):\n        n0 = 1\n        _series = Order(1)\n        incr = S.One\n        while _series.is_Order:\n            _series = f._eval_nseries(w, n=n0+incr, logx=logw)\n            incr *= 2\n        series = _series.expand().removeO()\n        try:\n            lt = series.leadterm(w, logx=logw)\n        except (NotImplementedError, PoleError, ValueError):\n            lt = f.as_coeff_exponent(w)\n            if lt[0].has(w):\n                base = f.as_base_exp()[0].as_coeff_exponent(w)\n                ex = f.as_base_exp()[1]\n                lt = (base[0]**ex, base[1]*ex)\n    return (lt[0].subs(log(w), logw), lt[1])\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/series/gruntz.py"
+    ]
+  },
+  "error": null,
+  "repo": "sympy/sympy",
+  "llm_tokens": 15544,
+  "llm_latency": 59.69298815727234
+}

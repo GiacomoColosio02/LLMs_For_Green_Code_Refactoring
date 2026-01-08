@@ -1,0 +1,12 @@
+{
+  "instance_id": "pydata__xarray-9243",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-08T20:00:12.190583",
+  "status": "error",
+  "llm_response": "",
+  "patch_result": null,
+  "error": "Error code: 400 - {'error': {'message': \"'max_tokens' or 'max_completion_tokens' is too large: 4096. This model's maximum context length is 32768 tokens and your request has 30798 input tokens (4096 > 32768 - 30798). None\", 'type': 'BadRequestError', 'param': None, 'code': 400}}",
+  "repo": "pydata/xarray"
+}

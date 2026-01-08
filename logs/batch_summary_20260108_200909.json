@@ -1,0 +1,33 @@
+{
+  "start_time": "2026-01-08T19:58:35.791107",
+  "dataset": "/home/giacomo/LLMs_For_Green_Code_Refactoring/data/processed/swe_perf_reduced_test.json",
+  "strategies": [
+    "realistic"
+  ],
+  "results": {
+    "realistic": {
+      "total": 12,
+      "skipped": 0,
+      "processed": 12,
+      "success": 6,
+      "failed": 3,
+      "patch_failed": 3,
+      "errors": [
+        {
+          "instance_id": "pydata__xarray-9243",
+          "error": "Error code: 400 - {'error': {'message': \"'max_tokens' or 'max_completion_tokens' is too large: 4096. This model's maximum context length is 32768 tokens and your request has 30798 input tokens (4096 > 32768 - 30798). None\", 'type': 'BadRequestError', 'param': None, 'code': 400}}"
+        },
+        {
+          "instance_id": "pydata__xarray-7209",
+          "error": "Error code: 400 - {'error': {'message': \"This model's maximum context length is 32768 tokens. However, your request has 43754 input tokens. Please reduce the length of the input messages. None\", 'type': 'BadRequestError', 'param': None, 'code': 400}}"
+        },
+        {
+          "instance_id": "sympy__sympy-26848",
+          "error": "Error code: 400 - {'error': {'message': \"'max_tokens' or 'max_completion_tokens' is too large: 4096. This model's maximum context length is 32768 tokens and your request has 30865 input tokens (4096 > 32768 - 30865). None\", 'type': 'BadRequestError', 'param': None, 'code': 400}}"
+        }
+      ]
+    }
+  },
+  "end_time": "2026-01-08T20:09:09.123856",
+  "total_duration_seconds": 633.3327486515045
+}

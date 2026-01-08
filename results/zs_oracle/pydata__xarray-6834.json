@@ -1,0 +1,24 @@
+{
+  "instance_id": "pydata__xarray-6834",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-08T19:27:55.240984",
+  "status": "success",
+  "llm_response": "### xarray/core/accessor_str.py\n<<<<<<< SEARCH\ndef _apply_str_ufunc(\n    *,\n    func: Callable,\n    obj: Any,\n    dtype: DTypeLike = None,\n    output_core_dims: list | tuple = ((),),\n    output_sizes: Mapping[Any, int] = None,\n    func_args: tuple = (),\n    func_kwargs: Mapping = {},\n) -> Any:\n    # TODO handling of na values ?\n    if dtype is None:\n        dtype = obj.dtype\n\n    dask_gufunc_kwargs = dict()\n    if output_sizes is not None:\n        dask_gufunc_kwargs[\"output_sizes\"] = output_sizes\n\n    return apply_ufunc(\n        func,\n        obj,\n        *func_args,\n        vectorize=True,\n        dask=\"parallelized\",\n        output_dtypes=[dtype],\n        output_core_dims=output_core_dims,\n        dask_gufunc_kwargs=dask_gufunc_kwargs,\n        **func_kwargs,\n    )\n=======\ndef _apply_str_ufunc(\n    *,\n    func: Callable,\n    obj: Any,\n    dtype: DTypeLike = None,\n    output_core_dims: list | tuple = ((),),\n    output_sizes: Mapping[Any, int] = None,\n    func_args: tuple = (),\n    func_kwargs: Mapping = {},\n) -> Any:\n    if dtype is None:\n        dtype = obj.dtype\n\n    dask_gufunc_kwargs = {}\n    if output_sizes is not None:\n        dask_gufunc_kwargs[\"output_sizes\"] = output_sizes\n\n    return apply_ufunc(\n        func,\n        obj,\n        *func_args,\n        vectorize=True,\n        dask=\"parallelized\",\n        output_dtypes=[dtype],\n        output_core_dims=output_core_dims,\n        dask_gufunc_kwargs=dask_gufunc_kwargs,\n        **func_kwargs,\n    )\n>>>>>>> REPLACE\n\n### xarray/core/duck_array_ops.py\n<<<<<<< SEARCH\ndef gradient(x, coord, axis, edge_order):\n    if is_duck_dask_array(x):\n        return dask_array.gradient(x, coord, axis=axis, edge_order=edge_order)\n    return np.gradient(x, coord, axis=axis, edge_order=edge_order)\n=======\ndef gradient(x, coord, axis, edge_order):\n    if is_duck_dask_array(x):\n        return dask_array.gradient(x, coord, axis=axis, edge_order=edge_order)\n    return np.gradient(x, coord, axis=axis, edge_order=edge_order)\n>>>>>>> REPLACE\n\n### xarray/core/groupby.py\n<<<<<<< SEARCH\ndef _inverse_permutation_indices(positions):\n    \"\"\"Like inverse_permutation, but also handles slices.\n\n    Parameters\n    ----------\n    positions : list of ndarray or slice\n        If slice objects, all are assumed to be slices.\n\n    Returns\n    -------\n    np.ndarray of indices or None, if no permutation is necessary.\n    \"\"\"\n    if not positions:\n        return None\n\n    if isinstance(positions[0], slice):\n        positions = _consolidate_slices(positions)\n        if positions == slice(None):\n            return None\n        positions = [np.arange(sl.start, sl.stop, sl.step) for sl in positions]\n\n    return nputils.inverse_permutation(np.concatenate(positions))\n=======\ndef _inverse_permutation_indices(positions):\n    \"\"\"Like inverse_permutation, but also handles slices.\n\n    Parameters\n    ----------\n    positions : list of ndarray or slice\n        If slice objects, all are assumed to be slices.\n\n    Returns\n    -------\n    np.ndarray of indices or None, if no permutation is necessary.\n    \"\"\"\n    if not positions:\n        return None\n\n    if isinstance(positions[0], slice):\n        positions = _consolidate_slices(positions)\n        if positions == slice(None):\n            return None\n        positions = [np.arange(sl.start, sl.stop, sl.step) for sl in positions]\n\n    return nputils.inverse_permutation(np.concatenate(positions))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 3,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/accessor_str.py",
+      "xarray/core/duck_array_ops.py",
+      "xarray/core/groupby.py"
+    ]
+  },
+  "error": null,
+  "repo": "pydata/xarray",
+  "llm_tokens": 16485,
+  "llm_latency": 46.54904103279114
+}

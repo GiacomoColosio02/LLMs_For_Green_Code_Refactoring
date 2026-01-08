@@ -1,0 +1,22 @@
+{
+  "instance_id": "pydata__xarray-9451",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-08T18:50:03.388824",
+  "status": "success",
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n1. **IDENTIFICATION**: The inefficiencies are likely in the `_to_new_dataset` function in `datatree.py` and the `_update_coords` method in `coordinates.py`.\n\n2. **DIAGNOSIS**: \n   - `_to_new_dataset`: This function creates a new `Dataset` object by copying the input `Dataset` object. However, if the input is already a `Dataset`, it performs unnecessary copying, leading to increased memory usage and slower execution times.\n   - `_update_coords`: This method updates the coordinates of a `Dataset` object. However, it does not handle the case where the input is a `Dataset` object, leading to potential inefficiencies.\n\n3. **HYPOTHESIS**: By optimizing these functions, we can reduce memory usage and improve execution speed. Specifically, we can avoid unnecessary copying in `_to_new_dataset` and handle the case where the input is a `Dataset` object in `_update_coords`.\n\n### SECTION 2: PATCH\n\n### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data.copy(deep=False)\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n=======\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n>>>>>>> REPLACE\n\n### xarray/core/coordinates.py\n<<<<<<< SEARCH\ndef _update_coords(self, coords: dict[Hashable, Variable], indexes: Mapping[Any, Index]) -> None:\n    variables = self._data._variables.copy()\n    variables.update(coords)\n\n    # check for inconsistent state *before* modifying anything in-place\n    dims = calculate_dimensions(variables)\n    new_coord_names = set(coords)\n    for dim, size in dims.items():\n        if dim in variables:\n            new_coord_names.add(dim)\n\n    self._data._variables = variables\n    self._data._coord_names.update(new_coord_names)\n    self._data._dims = dims\n\n    # TODO(shoyer): once ._indexes is always populated by a dict, modify\n    # it to update inplace instead.\n    original_indexes = dict(self._data.xindexes)\n    original_indexes.update(indexes)\n    self._data._indexes = original_indexes\n=======\ndef _update_coords(self, coords: dict[Hashable, Variable], indexes: Mapping[Any, Index]) -> None:\n    if isinstance(coords, Dataset):\n        variables = coords._variables\n        dims = coords._dims\n        indexes = coords._indexes\n    else:\n        variables = self._data._variables.copy()\n        variables.update(coords)\n\n        # check for inconsistent state *before* modifying anything in-place\n        dims = calculate_dimensions(variables)\n        new_coord_names = set(coords)\n        for dim, size in dims.items():\n            if dim in variables:\n                new_coord_names.add(dim)\n\n    self._data._variables = variables\n    self._data._coord_names.update(new_coord_names)\n    self._data._dims = dims\n\n    # TODO(shoyer): once ._indexes is always populated by a dict, modify\n    # it to update inplace instead.\n    original_indexes = dict(self._data.xindexes)\n    original_indexes.update(indexes)\n    self._data._indexes = original_indexes\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/datatree.py"
+    ]
+  },
+  "error": null,
+  "repo": "pydata/xarray",
+  "llm_tokens": 14773,
+  "llm_latency": 43.16533398628235
+}

@@ -1,0 +1,21 @@
+{
+  "instance_id": "pydata__xarray-9451",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-08T16:57:49.891249",
+  "status": "success",
+  "llm_response": "### xarray/core/coordinates.py\n<<<<<<< SEARCH\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data.copy(deep=False)\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n=======\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    return data.copy(deep=False) if isinstance(data, Dataset) else Dataset()\n>>>>>>> REPLACE\n\n### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _check_alignment(\n    path: str,\n    node_ds: Dataset,\n    parent_ds: Dataset | None,\n    children: Mapping[str, DataTree],\n) -> None:\n    if parent_ds is not None:\n        try:\n            align(node_ds, parent_ds, join=\"exact\")\n        except ValueError as e:\n            node_repr = _indented(_without_header(repr(node_ds)))\n            parent_repr = _indented(dims_and_coords_repr(parent_ds))\n            raise ValueError(\n                f\"group {path!r} is not aligned with its parents:\\n\"\n                f\"Group:\\n{node_repr}\\nFrom parents:\\n{parent_repr}\"\n            ) from e\n\n    if children:\n        if parent_ds is not None:\n            base_ds = _inherited_dataset(node_ds, parent_ds)\n        else:\n            base_ds = node_ds\n\n        for child_name, child in children.items():\n            child_path = str(NodePath(path) / child_name)\n            child_ds = child.to_dataset(inherited=False)\n            _check_alignment(child_path, child_ds, base_ds, child.children)\n=======\ndef _check_alignment(\n    path: str,\n    node_ds: Dataset,\n    parent_ds: Dataset | None,\n    children: Mapping[str, DataTree],\n) -> None:\n    if parent_ds is not None:\n        align(node_ds, parent_ds, join=\"exact\")\n\n    if children:\n        base_ds = _inherited_dataset(node_ds, parent_ds) if parent_ds is not None else node_ds\n        for child_name, child in children.items():\n            child_path = str(NodePath(path) / child_name)\n            child_ds = child.to_dataset(inherited=False)\n            _check_alignment(child_path, child_ds, base_ds, child.children)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 2,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/datatree.py"
+    ]
+  },
+  "error": null,
+  "repo": "pydata/xarray",
+  "llm_tokens": 14667,
+  "llm_latency": 28.517428159713745
+}

@@ -1,0 +1,23 @@
+{
+  "instance_id": "pydata__xarray-9243",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-08T16:59:05.632016",
+  "status": "success",
+  "llm_response": "### xarray/backends/common.py\n<<<<<<< SEARCH\ndef _iter_nc_groups(root, parent=\"/\"):\n    from xarray.core.treenode import NodePath\n\n    parent = NodePath(parent)\n    for path, group in root.groups.items():\n        gpath = parent / path\n        yield str(gpath)\n        yield from _iter_nc_groups(group, parent=gpath)\n=======\ndef _iter_nc_groups(root, parent=\"/\"):\n    from xarray.core.treenode import NodePath\n\n    parent = NodePath(parent)\n    stack = [(root, parent)]\n    while stack:\n        current_root, current_parent = stack.pop()\n        for path, group in current_root.groups.items():\n            gpath = current_parent / path\n            yield str(gpath)\n            stack.append((group, gpath))\n>>>>>>> REPLACE\n\n### xarray/backends/netCDF4_.py\n<<<<<<< SEARCH\ndef _nc4_require_group(ds, group, mode, create_group=_netcdf4_create_group):\n    if group in {None, \"\", \"/\"}:\n        # use the root group\n        return ds\n    else:\n        # make sure it's a string\n        if not isinstance(group, str):\n            raise ValueError(\"group must be a string or None\")\n        # support path-like syntax\n        path = group.strip(\"/\").split(\"/\")\n        for key in path:\n            try:\n                ds = ds.groups[key]\n            except KeyError as e:\n                if mode != \"r\":\n                    ds = create_group(ds, key)\n                else:\n                    # wrap error to provide slightly more helpful message\n                    raise OSError(f\"group not found: {key}\", e)\n        return ds\n=======\ndef _nc4_require_group(ds, group, mode, create_group=_netcdf4_create_group):\n    if group in {None, \"\", \"/\"}:\n        return ds\n    path_parts = group.strip(\"/\").split(\"/\")\n    for part in path_parts:\n        try:\n            ds = ds.groups[part]\n        except KeyError:\n            if mode != \"r\":\n                ds = create_group(ds, part)\n            else:\n                raise OSError(f\"group not found: {part}\")\n    return ds\n>>>>>>> REPLACE\n\n### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _check_alignment(\n    path: str,\n    node_ds: Dataset,\n    parent_ds: Dataset | None,\n    children: Mapping[str, DataTree],\n) -> None:\n    if parent_ds is not None:\n        try:\n            align(node_ds, parent_ds, join=\"exact\")\n        except ValueError as e:\n            node_repr = _indented(_without_header(repr(node_ds)))\n            parent_repr = _indented(dims_and_coords_repr(parent_ds))\n            raise ValueError(\n                f\"group {path!r} is not aligned with its parents:\\n\"\n                f\"Group:\\n{node_repr}\\nFrom parents:\\n{parent_repr}\"\n            ) from e\n\n    if children:\n        if parent_ds is not None:\n            base_ds = _inherited_dataset(node_ds, parent_ds)\n        else:\n            base_ds = node_ds\n\n        for child_name, child in children.items():\n            child_path = str(NodePath(path) / child_name)\n            child_ds = child.to_dataset(inherited=False)\n            _check_alignment(child_path, child_ds, base_ds, child.children)\n=======\ndef _check_alignment(\n    path: str,\n    node_ds: Dataset,\n    parent_ds: Dataset | None,\n    children: Mapping[str, DataTree],\n) -> None:\n    if parent_ds is not None:\n        try:\n            align(node_ds, parent_ds, join=\"exact\")\n        except ValueError as e:\n            node_repr = _indented(_without_header(repr(node_ds)))\n            parent_repr = _indented(dims_and_coords_repr(parent_ds))\n            raise ValueError(\n                f\"group {path!r} is not aligned with its parents:\\n\"\n                f\"Group:\\n{node_repr}\\nFrom parents:\\n{parent_repr}\"\n            ) from e\n\n    if children:\n        base_ds = _inherited_dataset(node_ds, parent_ds) if parent_ds else node_ds\n        for child_name, child in children.items():\n            child_path = str(NodePath(path) / child_name)\n            child_ds = child.to_dataset(inherited=False)\n            _check_alignment(child_path, child_ds, base_ds, child.children)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 3,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/backends/common.py",
+      "xarray/backends/netCDF4_.py",
+      "xarray/core/datatree.py"
+    ]
+  },
+  "error": null,
+  "repo": "pydata/xarray",
+  "llm_tokens": 14842,
+  "llm_latency": 51.13837027549744
+}
