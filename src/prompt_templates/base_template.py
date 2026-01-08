@@ -9,47 +9,80 @@ from enum import Enum
 
 
 class ProblemStatementType(Enum):
-    """Type of problem statement provided to LLM"""
-    ORACLE = "oracle"       # File-level: known target functions + relevant files
-    REALISTIC = "realistic" # Repo-level: all functions + entire repository + repo map
+    """
+    Type of problem statement / context provided to LLM.
+    
+    ORACLE: File-level context - LLM receives exact files that need modification.
+            This is the "gold" setting where we know the target.
+            
+    REALISTIC: Repo-level context - LLM receives retrieved files based on test analysis.
+               May contain noise. LLM must identify the bottleneck first.
+    """
+    ORACLE = "oracle"
+    REALISTIC = "realistic"
 
 
 class PromptStrategy(Enum):
-    """Strategy for prompt generation"""
-    ZERO_SHOT = "zero_shot"              # Single-turn direct request
-    FEW_SHOT = "few_shot"                # Single-turn with examples
-    COT = "cot"                          # Single-turn with Chain-of-Thought
-    SELF_COLLABORATION = "self_collaboration"  # Multi-turn with roles
-    LDB = "ldb"                          # Iterative Debugging
+    """
+    Strategy for prompt generation.
+    
+    ZERO_SHOT: Single-turn direct request without examples
+    FEW_SHOT: Single-turn with optimization examples
+    COT: Chain-of-Thought reasoning before optimization
+    SELF_COLLABORATION: Multi-turn with different expert roles
+    LDB: Iterative debugging with feedback loop
+    """
+    ZERO_SHOT = "zero_shot"
+    FEW_SHOT = "few_shot"
+    COT = "cot"
+    SELF_COLLABORATION = "self_collaboration"
+    LDB = "ldb"
 
 
 @dataclass
 class PromptContext:
-    """Context information for prompt generation"""
+    """
+    Context information for prompt generation.
+    
+    Contains all information needed to generate a prompt for code optimization:
+    - Instance metadata (ID, type)
+    - Code context (files, functions)
+    - Performance context (description, tests, metrics)
+    - Repository context (name, commit)
+    """
     
     # Instance metadata
     instance_id: str = ""
     problem_statement_type: ProblemStatementType = ProblemStatementType.ORACLE
     
     # Code context
-    # Flexible type to accept string filenames (from Runner) or detailed dicts
-    target_functions: List[Any] = field(default_factory=list) 
-    code_files: Dict[str, str] = field(default_factory=dict)  # filename -> content
+    target_functions: List[Any] = field(default_factory=list)  # Functions to optimize
+    code_files: Dict[str, str] = field(default_factory=dict)   # filename -> content
     
-    # REALISTIC Context (Added for Realistic Runner)
-    repo_map: Optional[str] = None
+    # REALISTIC-specific context
+    repo_map: Optional[str] = None  # Repository structure (tree output)
     
     # Performance context
-    problem_description: str = ""
-    test_command: str = ""
-    baseline_metrics: Optional[Dict[str, float]] = None
+    problem_description: str = ""                      # What to optimize
+    test_command: str = ""                             # How to run tests
+    baseline_metrics: Optional[Dict[str, float]] = None  # Pre-optimization metrics
     
     # Repository context
-    repo_name: str = ""
-    base_commit: str = ""
+    repo_name: str = ""      # e.g., "mwaskom/seaborn"
+    base_commit: str = ""    # Commit hash
     
     def get_target_functions_str(self) -> str:
-        """Format target functions as string, handling both Dict and str inputs"""
+        """
+        Format target functions as readable string.
+        
+        Handles both dict format (from dataset) and string format (from runner).
+        
+        Returns:
+            Formatted string listing target functions
+        """
+        if not self.target_functions:
+            return "No specific target functions identified."
+        
         result = []
         for func in self.target_functions:
             if isinstance(func, dict):
@@ -57,76 +90,129 @@ class PromptContext:
                 file_path = func.get('file', 'unknown')
                 result.append(f"- {func_name} in {file_path}")
             elif isinstance(func, str):
-                # Fallback if runner passes just filenames
-                result.append(f"- File: {func}")
+                result.append(f"- {func}")
             else:
                 result.append(f"- {str(func)}")
         return "\n".join(result)
     
     def get_formatted_code(self, add_line_numbers: bool = False) -> str:
         """
-        Formats code files strictly following SWE-perf conventions.
+        Format code files following SWE-perf conventions.
+        
         Format:
-        [start of filename]
-        content
-        [end of filename]
+            [start of filename]
+            content
+            [end of filename]
+        
+        Args:
+            add_line_numbers: If True, prefix each line with line number
+            
+        Returns:
+            Formatted code string
         """
-        all_text = ""
+        if not self.code_files:
+            return "No code files provided."
+        
+        sections = []
+        
         # Sort files for deterministic output
         for filename, content in sorted(self.code_files.items()):
-            all_text += f"[start of {filename}]\n"
+            section = f"[start of {filename}]\n"
+            
             if add_line_numbers:
-                lines = [f"{i+1} {line}" for i, line in enumerate(content.splitlines())]
-                all_text += "\n".join(lines)
+                lines = content.splitlines()
+                numbered = [f"{i+1:4d} | {line}" for i, line in enumerate(lines)]
+                section += "\n".join(numbered)
             else:
-                all_text += content
-            all_text += f"\n[end of {filename}]\n"
-        return all_text.strip("\n")
+                section += content
+            
+            section += f"\n[end of {filename}]"
+            sections.append(section)
+        
+        return "\n\n".join(sections)
+    
+    def get_total_code_size(self) -> int:
+        """Get total character count of all code files."""
+        return sum(len(content) for content in self.code_files.values())
+    
+    def get_file_count(self) -> int:
+        """Get number of code files."""
+        return len(self.code_files)
 
 
 class BasePromptTemplate(ABC):
-    """Abstract base class for prompt templates"""
+    """
+    Abstract base class for prompt templates.
+    
+    All prompt strategies (zero-shot, few-shot, CoT, etc.) inherit from this.
+    Provides common utilities and defines the interface.
+    """
     
     def __init__(self, strategy: PromptStrategy):
+        """
+        Initialize template with strategy type.
+        
+        Args:
+            strategy: The prompting strategy this template implements
+        """
         self.strategy = strategy
     
     @abstractmethod
     def generate_prompt(self, context: PromptContext) -> Union[str, List[Dict[str, str]]]:
         """
-        Generate prompt(s) based on context
+        Generate prompt(s) based on context.
+        
+        Args:
+            context: PromptContext with all necessary information
+            
+        Returns:
+            Either a single prompt string, or a list of message dicts
+            for multi-turn strategies
         """
         pass
-
-    # Alias for compatibility if Runner calls build_prompt
-    def build_prompt(self, context: PromptContext) -> Union[str, List[Dict[str, str]]]:
-        return self.generate_prompt(context)
     
     @abstractmethod
     def extract_code_from_response(self, response: str) -> str:
         """
-        Extract optimized code from LLM response
+        Extract optimized code from LLM response.
+        
+        Args:
+            response: Raw LLM response text
+            
+        Returns:
+            Extracted code/patch content
         """
         pass
-
-    # Alias for compatibility if Runner calls extract_code
+    
+    # Aliases for backward compatibility
+    def build_prompt(self, context: PromptContext) -> Union[str, List[Dict[str, str]]]:
+        """Alias for generate_prompt (backward compatibility)."""
+        return self.generate_prompt(context)
+    
     def extract_code(self, response: str, *args, **kwargs) -> str:
+        """Alias for extract_code_from_response (backward compatibility)."""
         return self.extract_code_from_response(response)
     
+    # =========================================================================
+    # SHARED PROMPT COMPONENTS
+    # =========================================================================
+    
     def _get_sweperf_header(self) -> str:
-        """Standard premise from SWE-perf"""
+        """Standard SWE-perf premise."""
         return (
             "You will be provided with a partial code base and objective functions. "
             "You need to improve the objective function's efficiency and execution speed "
             "by editing the code base."
         )
-
+    
     def _get_search_replace_format_instruction(self) -> str:
         """
-        Exact copy of SWE-perf SEARCH/REPLACE instructions.
-        Crucial for parsing compatibility.
+        SEARCH/REPLACE format instructions from SWE-perf.
+        
+        This is the standard format that the PatchEngine expects.
         """
         return """
-Please improve its efficiency and execution speed by generate *SEARCH/REPLACE* edits to fix the issue.
+Please improve its efficiency and execution speed by generating *SEARCH/REPLACE* edits.
 
 Every *SEARCH/REPLACE* edit must use this format:
 1. The file path
@@ -135,12 +221,14 @@ Every *SEARCH/REPLACE* edit must use this format:
 4. The dividing line: =======
 5. The lines to replace into the source code
 6. The end of the replace block: >>>>>>> REPLACE
-7. You can't edit the test case, only the code base.
-8. Only use standard python libraries, don't suggest installing any packages.
 
-Here is an example:
+**Important:**
+- Only edit the source code, NOT the test files
+- Only use standard Python libraries or existing project dependencies
+- Keep SEARCH blocks small and unique
 
-```python
+**Example:**
+
 ### mathweb/flask/app.py
 <<<<<<< SEARCH
 from flask import Flask
@@ -149,3 +237,14 @@ import math
 from flask import Flask
 >>>>>>> REPLACE
 """
+    
+    def _get_green_software_context(self) -> str:
+        """Context about green software optimization goals."""
+        return (
+            "### Green Software Optimization Goals:\n"
+            "- Reduce CPU cycles and execution time\n"
+            "- Minimize memory allocations and peak usage\n"
+            "- Optimize I/O operations\n"
+            "- Use efficient algorithms and data structures\n"
+            "- Avoid redundant computations\n"
+        )

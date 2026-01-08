@@ -1,15 +1,43 @@
 """
-Prompt Templates Module.
-Exposes the strategies available for the experiment runner.
-"""
-from .base_template import BasePromptTemplate, PromptStrategy, ProblemStatementType, PromptContext
-from .template_manager import PromptTemplateManager
+Prompt Templates module for LLM-based code optimization.
 
-# Esportiamo solo ciò che è stabile
+Available templates:
+- ZeroShotTemplate: Direct optimization request (handles both oracle and realistic)
+- ZeroShotOracleTemplate: Alias for oracle mode
+- ZeroShotRealisticTemplate: Alias for realistic mode
+
+Usage:
+    from src.prompt_templates import ZeroShotTemplate, PromptContext, ProblemStatementType
+    
+    template = ZeroShotTemplate()
+    context = PromptContext(
+        problem_statement_type=ProblemStatementType.ORACLE,
+        code_files={"path/to/file.py": "content..."},
+        problem_description="Optimize energy efficiency",
+        repo_name="owner/repo"
+    )
+    prompt = template.generate_prompt(context)
+"""
+from .base_template import (
+    BasePromptTemplate,
+    PromptContext,
+    PromptStrategy,
+    ProblemStatementType
+)
+from .zero_shot import (
+    ZeroShotTemplate,
+    ZeroShotOracleTemplate,
+    ZeroShotRealisticTemplate
+)
+
 __all__ = [
-    "BasePromptTemplate",
-    "PromptStrategy", 
-    "ProblemStatementType",
-    "PromptContext",
-    "PromptTemplateManager"
+    # Base classes
+    'BasePromptTemplate',
+    'PromptContext', 
+    'PromptStrategy',
+    'ProblemStatementType',
+    # Templates
+    'ZeroShotTemplate',
+    'ZeroShotOracleTemplate',
+    'ZeroShotRealisticTemplate',
 ]
