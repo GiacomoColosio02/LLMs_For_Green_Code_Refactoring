@@ -46,7 +46,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 RESULTS_DIR = PROJECT_ROOT / "results"
 GREEN_DIR = PROJECT_ROOT / "data" / "processed" / "green"
 RAW_MEASUREMENTS_DIR = PROJECT_ROOT / "data" / "raw" / "measurements"
-REDUCED_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced_test.json"
+REDUCED_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced.json"
 
 # GREEN DATASET WITH BASE/HEAD - This is the source of truth for Base/Head measurements
 GREEN_K3_DATASET = GREEN_DIR / "swe_perf_green_k3.json"
