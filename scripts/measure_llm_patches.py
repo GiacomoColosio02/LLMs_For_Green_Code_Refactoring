@@ -4,11 +4,19 @@ LLM Patch Measurement Engine for Green Code Refactoring.
 Measures energy consumption of LLM-generated patches using the same
 infrastructure as measure_instance.py (which works correctly).
 
+Supports all prompt types:
+- zero_shot: Zero-Shot prompting
+- cot: Chain-of-Thought prompting
+- self_collab: Self-Collaboration (multi-turn)
+- ldb: LDB iterative refinement
+
 Output format:
     data/processed/green/[MODEL]_[PROMPT_TYPE]_[STRATEGY]_k[REPS].json
 
 Usage:
     python measure_llm_patches.py --strategy oracle --prompt-type cot --repetitions 5
+    python measure_llm_patches.py --strategy oracle --prompt-type self_collab -k 3
+    python measure_llm_patches.py --dataset data/processed/swe_perf_reduced.json -k 3
 """
 import sys
 import os
@@ -47,10 +55,25 @@ logging.basicConfig(
 logger = logging.getLogger("MeasureLLMPatches")
 
 # --- CONSTANTS ---
-DEFAULT_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced_test.json"
+DEFAULT_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced.json"
 ORIGINAL_DATASET = PROJECT_ROOT / "data" / "original" / "swe_perf_original_20251124.json"
 GREEN_OUTPUT_DIR = PROJECT_ROOT / "data" / "processed" / "green"
 RESULTS_DIR = PROJECT_ROOT / "results"
+
+# Prompt type mappings
+PROMPT_TYPE_TO_DIR_PREFIX = {
+    "zero_shot": "zs",
+    "cot": "cot",
+    "self_collab": "sc",
+    "ldb": "ldb"
+}
+
+PROMPT_TYPE_TO_CLEAN_NAME = {
+    "zero_shot": "ZeroShot",
+    "cot": "CoT",
+    "self_collab": "SelfCollab",
+    "ldb": "LDB"
+}
 
 # Metrics
 GREEN_METRICS = [
@@ -68,7 +91,7 @@ AGGREGATIONS = ['mean', 'std', 'min', 'max']
 
 def get_results_dir(prompt_type: str, strategy: str) -> Path:
     """Get results directory for prompt type and strategy."""
-    prefix = "zs" if prompt_type.lower() == "zero_shot" else "cot"
+    prefix = PROMPT_TYPE_TO_DIR_PREFIX.get(prompt_type, prompt_type)
     return RESULTS_DIR / f"{prefix}_{strategy}"
 
 
@@ -83,7 +106,7 @@ def sanitize_model_name(model_name: str) -> str:
 def get_output_filename(model_name: str, prompt_type: str, strategy: str, repetitions: int) -> str:
     """Generate output filename."""
     model_clean = sanitize_model_name(model_name)
-    prompt_clean = "ZeroShot" if prompt_type.lower() == "zero_shot" else "CoT"
+    prompt_clean = PROMPT_TYPE_TO_CLEAN_NAME.get(prompt_type, prompt_type)
     return f"{model_clean}_{prompt_clean}_{strategy.capitalize()}_k{repetitions}.json"
 
 
@@ -127,7 +150,7 @@ class LLMPatchMeasurer:
         return {item["instance_id"]: item for item in instances}
     
     def _create_empty_dataset(self, model_name: str, prompt_type: str, strategy: str, repetitions: int) -> Dict:
-        prompt_clean = "ZeroShot" if prompt_type.lower() == "zero_shot" else "CoT"
+        prompt_clean = PROMPT_TYPE_TO_CLEAN_NAME.get(prompt_type, prompt_type)
         return {
             'metadata': {
                 'name': f'LLM Green Dataset - {model_name} - {prompt_clean} - {strategy}',
@@ -202,52 +225,43 @@ class LLMPatchMeasurer:
                 logger.warning(f"    ❌ Failed to install dependencies")
                 return None
             
-            logger.info(f"    ✅ Dependencies installed (python: {python_path})")
+            # 4. Get tests from reduced dataset
+            reduced_instance = self.reduced_data.get(instance_id, {})
+            tests = reduced_instance.get('efficiency_test', [])
             
-            # 4. Get tests
-            tests = instance.get('efficiency_test', [])
-            if isinstance(tests, str):
-                tests = [tests]
+            if not tests:
+                logger.warning(f"    ❌ No tests found")
+                return None
             
-            logger.info(f"    🧪 Measuring {len(tests)} tests (k={repetitions})...")
+            logger.info(f"    🧪 Running {len(tests)} tests x {repetitions} repetitions...")
             
-            # 5. Measure each test using MetricsCollector
+            # 5. Run measurements using MetricsCollector
             test_results = {}
             valid_tests = 0
             
-            collector = MetricsCollector(
-                instance_id=instance_id,
-                country_code=self.country_code
-            )
-            
             for test in tests:
-                test_name = test.split("::")[-1] if "::" in test else test.split("/")[-1]
+                test_name = test.split("::")[-1] if "::" in test else test
                 
                 try:
-                    # Build test command (same format as measure_instance.py)
-                    test_command = f"cd {repo_path} && {python_path} -m pytest '{test}' -x -v"
-                    
-                    result = collector.measure_test_execution(
-                        test_command=test_command,
-                        repetitions=repetitions
+                    collector = MetricsCollector(
+                        repo_path=repo_path,
+                        python_path=python_path,
+                        test_command=test,
+                        repetitions=repetitions,
+                        country_code=self.country_code,
+                        warmup_runs=1
                     )
                     
-                    if result and result.get('aggregated'):
-                        test_results[test_name] = {
-                            'head': result['aggregated']  # LLM patch = head
-                        }
+                    metrics = collector.collect()
+                    
+                    if metrics:
+                        test_results[test_name] = {"head": metrics}
                         valid_tests += 1
-                        logger.info(f"      ✅ {test_name}")
-                    else:
-                        logger.warning(f"      ❌ {test_name} - no valid results")
-                        
                 except Exception as e:
-                    logger.warning(f"      ❌ {test_name} - {str(e)[:100]}")
-            
-            # pass  # cleanup not needed  # Not needed
+                    logger.debug(f"    Test {test_name} failed: {e}")
             
             if valid_tests == 0:
-                logger.warning(f"    ⚠️ No valid test measurements")
+                logger.warning(f"    ❌ No tests passed")
                 return None
             
             # 6. Build result in green dataset format
@@ -341,9 +355,29 @@ class LLMPatchMeasurer:
                 if skip_completed and self._is_instance_in_dataset(output_dataset, instance_id):
                     continue
                 
+                # Get LLM response - handle different formats
+                llm_response = exp_result.get("llm_response", "")
+                if not llm_response:
+                    # Try patch_content for newer format
+                    llm_response = exp_result.get("patch_content", "")
+                if not llm_response:
+                    # Try all_responses for self_collab
+                    all_responses = exp_result.get("all_responses", [])
+                    if all_responses:
+                        llm_response = all_responses[-1]  # Use reviewer's response
+                if not llm_response:
+                    # Try iterations for ldb
+                    iterations = exp_result.get("iterations", [])
+                    if iterations:
+                        llm_response = iterations[-1].get("patch_content", "")
+                
+                if not llm_response:
+                    logger.debug(f"No LLM response found in {result_file.name}")
+                    continue
+                
                 to_measure.append({
                     "instance_id": instance_id,
-                    "llm_response": exp_result.get("llm_response", "")
+                    "llm_response": llm_response
                 })
                 
                 if limit and len(to_measure) >= limit:
@@ -426,20 +460,53 @@ class LLMPatchMeasurer:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Measure LLM patches")
-    parser.add_argument('--strategy', '-s', choices=['oracle', 'realistic', 'both'], default='oracle')
-    parser.add_argument('--prompt-type', '-p', choices=['zero_shot', 'cot'], default='zero_shot')
-    parser.add_argument('--repetitions', '-k', type=int, default=5)
-    parser.add_argument('--limit', '-l', type=int, default=None)
-    parser.add_argument('--no-skip', action='store_true')
+    parser = argparse.ArgumentParser(
+        description="Measure LLM patches for energy consumption",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Measure Zero-Shot Oracle patches
+  python measure_llm_patches.py --strategy oracle --prompt-type zero_shot -k 3
+  
+  # Measure Self-Collaboration patches
+  python measure_llm_patches.py --strategy oracle --prompt-type self_collab -k 3
+  
+  # Measure LDB patches
+  python measure_llm_patches.py --strategy realistic --prompt-type ldb -k 3
+  
+  # Measure both strategies
+  python measure_llm_patches.py --strategy both --prompt-type cot -k 3
+        """
+    )
+    parser.add_argument('--strategy', '-s', 
+                        choices=['oracle', 'realistic', 'both'], 
+                        default='oracle',
+                        help='Strategy to measure')
+    parser.add_argument('--prompt-type', '-p', 
+                        choices=['zero_shot', 'cot', 'self_collab', 'ldb'], 
+                        default='zero_shot',
+                        help='Prompt type to measure')
+    parser.add_argument('--repetitions', '-k', type=int, default=3,
+                        help='Number of measurement repetitions (default: 3)')
+    parser.add_argument('--limit', '-l', type=int, default=None,
+                        help='Limit number of instances to measure')
+    parser.add_argument('--no-skip', action='store_true',
+                        help='Re-measure already completed instances')
+    parser.add_argument('--dataset', '-d', type=str, default=str(DEFAULT_DATASET),
+                        help='Path to reduced dataset (default: swe_perf_reduced.json)')
     
     args = parser.parse_args()
     
     strategies = ['oracle', 'realistic'] if args.strategy == 'both' else [args.strategy]
+    reduced_dataset = Path(args.dataset)
+    
+    if not reduced_dataset.exists():
+        print(f"❌ Dataset not found: {reduced_dataset}")
+        sys.exit(1)
     
     measurer = LLMPatchMeasurer(
         original_dataset_path=ORIGINAL_DATASET,
-        reduced_dataset_path=DEFAULT_DATASET
+        reduced_dataset_path=reduced_dataset
     )
     
     measurer.run(

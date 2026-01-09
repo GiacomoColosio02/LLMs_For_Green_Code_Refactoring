@@ -4,21 +4,30 @@ Batch Experiment Runner for Green Code Refactoring.
 Runs experiments for all instances in a dataset.
 Simply loops through instances and calls run_experiment.py for each.
 
+Supports all prompt types:
+- zero_shot: Zero-Shot prompting
+- cot: Chain-of-Thought prompting
+- self_collab: Self-Collaboration (multi-turn)
+- ldb: LDB iterative refinement
+
 Usage:
     # Run all instances with oracle strategy
-    python run_batch_experiments.py --strategy oracle
+    python run_batch_experiments.py --strategy oracle --prompt-type zero_shot
     
-    # Run all instances with realistic strategy
-    python run_batch_experiments.py --strategy realistic
+    # Run Self-Collaboration
+    python run_batch_experiments.py --strategy oracle --prompt-type self_collab
+    
+    # Run LDB
+    python run_batch_experiments.py --strategy realistic --prompt-type ldb
     
     # Run both strategies
-    python run_batch_experiments.py --strategy both
+    python run_batch_experiments.py --strategy both --prompt-type cot
+    
+    # Use full dataset (131 instances)
+    python run_batch_experiments.py --dataset data/processed/swe_perf_reduced.json
     
     # Limit number of instances (for testing)
     python run_batch_experiments.py --strategy oracle --limit 5
-    
-    # Skip already completed instances (default: yes)
-    python run_batch_experiments.py --strategy oracle --no-skip
 """
 import sys
 import os
@@ -40,6 +49,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from scripts.run_experiment import ExperimentRunner
 
 # --- LOGGING ---
+(PROJECT_ROOT / "logs").mkdir(exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s | %(levelname)-8s | %(message)s',
@@ -51,8 +61,16 @@ logging.basicConfig(
 logger = logging.getLogger("BatchExperiments")
 
 # --- CONSTANTS ---
-DEFAULT_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced_test.json"
+DEFAULT_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced.json"
 RESULTS_DIR = PROJECT_ROOT / "results"
+
+# Prompt type to directory prefix mapping
+PROMPT_TYPE_TO_DIR_PREFIX = {
+    "zero_shot": "zs",
+    "cot": "cot",
+    "self_collab": "sc",
+    "ldb": "ldb"
+}
 
 
 # =============================================================================
@@ -64,6 +82,7 @@ class BatchExperimentRunner:
     Runs experiments for multiple instances.
     
     Features:
+    - Supports all prompt types: zero_shot, cot, self_collab, ldb
     - Skips already completed instances
     - Tracks progress and statistics
     - Handles errors gracefully (continues with next instance)
@@ -84,7 +103,7 @@ class BatchExperimentRunner:
         Args:
             dataset_path: Path to dataset JSON
             strategies: List of strategies to run ("oracle", "realistic", or both)
-            prompt_type: "zero_shot" or "cot"
+            prompt_type: "zero_shot", "cot", "self_collab", or "ldb"
             skip_completed: Skip instances that already have results
             limit: Maximum number of instances to process (None = all)
         """
@@ -94,11 +113,13 @@ class BatchExperimentRunner:
         self.skip_completed = skip_completed
         self.limit = limit
         
+        # Validate prompt type
+        if self.prompt_type not in PROMPT_TYPE_TO_DIR_PREFIX:
+            raise ValueError(f"Invalid prompt_type: {self.prompt_type}. "
+                           f"Valid options: {list(PROMPT_TYPE_TO_DIR_PREFIX.keys())}")
+        
         # Load dataset
         self.instances = self._load_dataset()
-        
-        # Create logs directory
-        (PROJECT_ROOT / "logs").mkdir(exist_ok=True)
         
         logger.info(f"BatchExperimentRunner initialized")
         logger.info(f"  Dataset: {self.dataset_path.name}")
@@ -110,6 +131,9 @@ class BatchExperimentRunner:
     
     def _load_dataset(self) -> List[Dict]:
         """Load dataset from JSON file."""
+        if not self.dataset_path.exists():
+            raise FileNotFoundError(f"Dataset not found: {self.dataset_path}")
+        
         with open(self.dataset_path, 'r') as f:
             data = json.load(f)
         
@@ -117,10 +141,14 @@ class BatchExperimentRunner:
             return data
         return data.get("instances", [])
     
+    def _get_results_dir(self, strategy: str) -> Path:
+        """Get results directory for current prompt type and strategy."""
+        prefix = PROMPT_TYPE_TO_DIR_PREFIX.get(self.prompt_type, self.prompt_type)
+        return RESULTS_DIR / f"{prefix}_{strategy}"
+    
     def _is_completed(self, instance_id: str, strategy: str) -> bool:
-        """Check if instance already has results."""
-        prefix = "zs" if self.prompt_type == "zero_shot" else "cot"
-        result_file = RESULTS_DIR / f"{prefix}_{strategy}" / f"{instance_id}.json"
+        """Check if instance already has successful results."""
+        result_file = self._get_results_dir(strategy) / f"{instance_id}.json"
         
         if not result_file.exists():
             return False
@@ -138,7 +166,9 @@ class BatchExperimentRunner:
         pending = []
         
         for instance in self.instances:
-            instance_id = instance["instance_id"]
+            instance_id = instance.get("instance_id", instance.get("id", ""))
+            if not instance_id:
+                continue
             
             if self.skip_completed and self._is_completed(instance_id, strategy):
                 continue
@@ -163,13 +193,14 @@ class BatchExperimentRunner:
         summary = {
             "start_time": datetime.now().isoformat(),
             "dataset": str(self.dataset_path),
+            "prompt_type": self.prompt_type,
             "strategies": self.strategies,
             "results": {}
         }
         
         for strategy in self.strategies:
             logger.info(f"\n{'='*70}")
-            logger.info(f"🚀 STARTING BATCH: {strategy.upper()}")
+            logger.info(f"🚀 STARTING BATCH: {self.prompt_type.upper()} - {strategy.upper()}")
             logger.info(f"{'='*70}")
             
             strategy_results = self._run_strategy(strategy)
@@ -228,7 +259,7 @@ class BatchExperimentRunner:
         }
         
         for idx, instance in enumerate(pending):
-            instance_id = instance["instance_id"]
+            instance_id = instance.get("instance_id", instance.get("id", ""))
             
             logger.info(f"\n[{idx+1}/{len(pending)}] Processing: {instance_id}")
             
@@ -265,7 +296,7 @@ class BatchExperimentRunner:
                 })
                 logger.error(f"  ❌ Exception: {e}")
             
-            # Progress update
+            # Progress update every 5 instances
             if (idx + 1) % 5 == 0:
                 self._print_progress(results, len(pending), idx + 1)
         
@@ -288,6 +319,7 @@ class BatchExperimentRunner:
         logger.info(f"\n{'='*70}")
         logger.info(f"📊 BATCH EXPERIMENT SUMMARY")
         logger.info(f"{'='*70}")
+        logger.info(f"Prompt Type: {summary['prompt_type'].upper()}")
         
         for strategy, results in summary["results"].items():
             logger.info(f"\n{strategy.upper()}:")
@@ -311,7 +343,8 @@ class BatchExperimentRunner:
     
     def _save_summary(self, summary: Dict):
         """Save summary to JSON file."""
-        summary_file = PROJECT_ROOT / "logs" / f"batch_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        summary_file = PROJECT_ROOT / "logs" / f"batch_{self.prompt_type}_{timestamp}.json"
         
         # Remove timing arrays for cleaner output
         clean_summary = json.loads(json.dumps(summary))
@@ -335,17 +368,20 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run oracle strategy for all instances
-  python run_batch_experiments.py --strategy oracle
+  # Run Zero-Shot oracle strategy for all instances
+  python run_batch_experiments.py --strategy oracle --prompt-type zero_shot
   
-  # Run realistic strategy
-  python run_batch_experiments.py --strategy realistic
+  # Run Chain-of-Thought realistic strategy
+  python run_batch_experiments.py --strategy realistic --prompt-type cot
   
-  # Run both strategies
-  python run_batch_experiments.py --strategy both
+  # Run Self-Collaboration oracle
+  python run_batch_experiments.py --strategy oracle --prompt-type self_collab
   
-  # Run with Chain-of-Thought prompting
-  python run_batch_experiments.py --strategy oracle --prompt-type cot
+  # Run LDB both strategies
+  python run_batch_experiments.py --strategy both --prompt-type ldb
+  
+  # Use full dataset (131 instances)
+  python run_batch_experiments.py --dataset data/processed/swe_perf_reduced.json -p zero_shot
   
   # Test with only 3 instances
   python run_batch_experiments.py --strategy oracle --limit 3
@@ -366,16 +402,16 @@ Examples:
     parser.add_argument(
         '--prompt-type', '-p',
         type=str,
-        choices=['zero_shot', 'cot'],
+        choices=['zero_shot', 'cot', 'self_collab', 'ldb'],
         default='zero_shot',
-        help='Prompt type: zero_shot or cot (chain-of-thought) (default: zero_shot)'
+        help='Prompt type (default: zero_shot)'
     )
     
     parser.add_argument(
         '--dataset', '-d',
         type=str,
         default=str(DEFAULT_DATASET),
-        help='Path to dataset JSON'
+        help='Path to dataset JSON (default: swe_perf_reduced.json)'
     )
     
     parser.add_argument(
@@ -400,19 +436,32 @@ Examples:
         strategies = [args.strategy]
     
     # Run batch
-    runner = BatchExperimentRunner(
-        dataset_path=Path(args.dataset),
-        strategies=strategies,
-        prompt_type=args.prompt_type,
-        skip_completed=not args.no_skip,
-        limit=args.limit
-    )
-    
-    summary = runner.run()
-    
-    # Return exit code based on results
-    total_failed = sum(r.get('failed', 0) for r in summary['results'].values())
-    return 1 if total_failed > 0 else 0
+    try:
+        runner = BatchExperimentRunner(
+            dataset_path=Path(args.dataset),
+            strategies=strategies,
+            prompt_type=args.prompt_type,
+            skip_completed=not args.no_skip,
+            limit=args.limit
+        )
+        
+        summary = runner.run()
+        
+        # Return exit code based on results
+        total_success = sum(r.get('success', 0) for r in summary['results'].values())
+        total_processed = sum(r.get('processed', 0) for r in summary['results'].values())
+        
+        if total_processed == 0:
+            return 0  # Nothing to do is OK
+        
+        return 0 if total_success > 0 else 1
+        
+    except FileNotFoundError as e:
+        logger.error(f"❌ {e}")
+        return 1
+    except Exception as e:
+        logger.error(f"❌ Unexpected error: {e}", exc_info=True)
+        return 1
 
 
 if __name__ == "__main__":

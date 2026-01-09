@@ -10,8 +10,8 @@ This script runs the entire pipeline for ALL prompt strategies:
 Output: data/processed/green/ALL_STRATEGIES_green_dataset.json
 
 Usage:
-    # Run everything
-    python scripts/createpatches_runmeasurements_createdataset.py
+    # Run everything with full dataset (131 instances)
+    python scripts/createpatches_runmeasurements_createdataset.py -k 3
     
     # Skip patch generation (use existing patches)
     python scripts/createpatches_runmeasurements_createdataset.py --skip-patches
@@ -24,6 +24,9 @@ Usage:
     
     # Run only specific strategies
     python scripts/createpatches_runmeasurements_createdataset.py --strategies zero_shot cot
+    
+    # Use test dataset (12 instances) for quick testing
+    python scripts/createpatches_runmeasurements_createdataset.py --test-mode
 """
 import sys
 import os
@@ -46,7 +49,10 @@ sys.path.insert(0, str(PROJECT_ROOT))
 RESULTS_DIR = PROJECT_ROOT / "results"
 GREEN_DIR = PROJECT_ROOT / "data" / "processed" / "green"
 RAW_MEASUREMENTS_DIR = PROJECT_ROOT / "data" / "raw" / "measurements"
-REDUCED_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced.json"
+
+# Datasets - FULL vs TEST
+FULL_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced.json"
+TEST_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced_test.json"
 
 # GREEN DATASET WITH BASE/HEAD - This is the source of truth for Base/Head measurements
 GREEN_K3_DATASET = GREEN_DIR / "swe_perf_green_k3.json"
@@ -65,10 +71,10 @@ PATCH_CONFIGS = [
     # Chain-of-Thought
     {"strategy": "oracle", "prompt_type": "cot", "name": "CoT_Oracle", "results_dir": "cot_oracle"},
     {"strategy": "realistic", "prompt_type": "cot", "name": "CoT_Realistic", "results_dir": "cot_realistic"},
-    # Self-Collaboration (NEW)
+    # Self-Collaboration
     {"strategy": "oracle", "prompt_type": "self_collab", "name": "SC_Oracle", "results_dir": "sc_oracle"},
     {"strategy": "realistic", "prompt_type": "self_collab", "name": "SC_Realistic", "results_dir": "sc_realistic"},
-    # LDB (NEW)
+    # LDB
     {"strategy": "oracle", "prompt_type": "ldb", "name": "LDB_Oracle", "results_dir": "ldb_oracle"},
     {"strategy": "realistic", "prompt_type": "ldb", "name": "LDB_Realistic", "results_dir": "ldb_realistic"},
 ]
@@ -101,9 +107,26 @@ KEY_METRICS_WITH_SUFFIX = [f"{m}_mean" for m in KEY_METRICS_RAW]
 class PipelineRunner:
     """Complete pipeline for patch generation, measurement, and dataset creation."""
     
-    def __init__(self, repetitions: int = 5, strategies: Optional[List[str]] = None):
+    def __init__(self, repetitions: int = 3, strategies: Optional[List[str]] = None, test_mode: bool = False):
         self.repetitions = repetitions
         self.start_time = time.time()
+        self.test_mode = test_mode
+        
+        # Select dataset based on mode
+        if test_mode:
+            self.dataset_path = TEST_DATASET
+            self.log(f"⚠️ TEST MODE: Using {TEST_DATASET.name}")
+        else:
+            self.dataset_path = FULL_DATASET
+        
+        # Verify dataset exists
+        if not self.dataset_path.exists():
+            raise FileNotFoundError(f"Dataset not found: {self.dataset_path}")
+        
+        # Count instances in dataset
+        with open(self.dataset_path) as f:
+            data = json.load(f)
+        self.total_instances = len(data) if isinstance(data, list) else len(data.get('instances', data))
         
         # Filter configurations if specific strategies requested
         if strategies:
@@ -127,34 +150,80 @@ class PipelineRunner:
     def generate_patches(self) -> Dict[str, int]:
         """Generate patches for all configurations."""
         self.log_header("PHASE 1: GENERATING PATCHES")
+        self.log(f"Dataset: {self.dataset_path.name} ({self.total_instances} instances)")
+        self.log(f"Strategies: {[c['name'] for c in self.configs]}")
         
         results = {}
         
-        for config in self.configs:
-            self.log(f"Generating {config['name']} patches...")
+        for i, config in enumerate(self.configs):
+            self.log(f"[{i+1}/{len(self.configs)}] Generating {config['name']} patches...")
             
+            # Build command with explicit dataset path
             cmd = [
                 sys.executable,
                 str(PROJECT_ROOT / "scripts" / "run_batch_experiments.py"),
                 "--strategy", config['strategy'],
-                "--prompt-type", config['prompt_type']
+                "--prompt-type", config['prompt_type'],
+                "--dataset", str(self.dataset_path)
             ]
             
             try:
-                subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, 
-                             capture_output=False)
+                subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, capture_output=False)
                 
                 # Count successful patches
                 results_dir = RESULTS_DIR / config['results_dir']
                 success_count = self._count_successful_patches(results_dir)
                 results[config['name']] = success_count
-                self.log(f"  ✅ {config['name']}: {success_count} patches generated")
+                self.log(f"  ✅ {config['name']}: {success_count}/{self.total_instances} patches generated")
                 
             except subprocess.CalledProcessError as e:
                 self.log(f"  ❌ {config['name']} failed: {e}", "ERROR")
                 results[config['name']] = 0
+            except FileNotFoundError:
+                self.log(f"  ❌ run_batch_experiments.py not found - running individual experiments", "WARN")
+                success_count = self._generate_patches_individually(config)
+                results[config['name']] = success_count
         
         return results
+    
+    def _generate_patches_individually(self, config: Dict) -> int:
+        """Generate patches one by one using run_experiment.py."""
+        with open(self.dataset_path) as f:
+            data = json.load(f)
+        
+        instances = data if isinstance(data, list) else data.get('instances', [])
+        success_count = 0
+        
+        for inst in instances:
+            instance_id = inst.get('instance_id', inst.get('id', ''))
+            if not instance_id:
+                continue
+            
+            cmd = [
+                sys.executable,
+                str(PROJECT_ROOT / "scripts" / "run_experiment.py"),
+                "--instance", instance_id,
+                "--strategy", config['strategy'],
+                "--prompt-type", config['prompt_type'],
+                "--dataset", str(self.dataset_path)
+            ]
+            
+            try:
+                subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, 
+                             capture_output=True, timeout=300)
+                
+                # Check if successful
+                result_file = RESULTS_DIR / config['results_dir'] / f"{instance_id}.json"
+                if result_file.exists():
+                    with open(result_file) as f:
+                        result = json.load(f)
+                    if result.get('status') == 'success':
+                        success_count += 1
+                        
+            except Exception as e:
+                self.log(f"    ⚠️ {instance_id}: {str(e)[:50]}", "WARN")
+        
+        return success_count
     
     def _count_successful_patches(self, results_dir: Path) -> int:
         """Count successful patches in a results directory."""
@@ -179,23 +248,35 @@ class PipelineRunner:
     def run_measurements(self) -> Dict[str, int]:
         """Run measurements for all configurations."""
         self.log_header("PHASE 2: RUNNING MEASUREMENTS")
+        self.log(f"Repetitions: k={self.repetitions}")
         
         results = {}
         
-        for config in self.configs:
-            self.log(f"Measuring {config['name']} patches...")
+        for i, config in enumerate(self.configs):
+            self.log(f"[{i+1}/{len(self.configs)}] Measuring {config['name']} patches...")
+            
+            # Count how many successful patches we have
+            results_dir = RESULTS_DIR / config['results_dir']
+            patch_count = self._count_successful_patches(results_dir)
+            
+            if patch_count == 0:
+                self.log(f"  ⚠️ No successful patches to measure for {config['name']}")
+                results[config['name']] = 0
+                continue
+            
+            self.log(f"  Found {patch_count} successful patches to measure")
             
             cmd = [
                 sys.executable,
                 str(PROJECT_ROOT / "scripts" / "measure_llm_patches.py"),
                 "--strategy", config['strategy'],
                 "--prompt-type", config['prompt_type'],
-                "--repetitions", str(self.repetitions)
+                "--repetitions", str(self.repetitions),
+                "--dataset", str(self.dataset_path)
             ]
             
             try:
-                subprocess.run(cmd, cwd=PROJECT_ROOT, check=True,
-                             capture_output=False)
+                subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, capture_output=False)
                 
                 # Find output file and count instances
                 output_file = self._find_measurement_file(config['prompt_type'], config['strategy'])
@@ -220,12 +301,17 @@ class PipelineRunner:
         prompt_clean = PROMPT_TYPE_CLEAN.get(prompt_type, prompt_type)
         strategy_clean = strategy.capitalize()
         
-        # Pattern: *_SelfCollab_Oracle_k5.json
-        pattern = f"*_{prompt_clean}_{strategy_clean}_k*.json"
-        matches = list(GREEN_DIR.glob(pattern))
+        # Try multiple patterns
+        patterns = [
+            f"*_{prompt_clean}_{strategy_clean}_k*.json",
+            f"*{prompt_clean}*{strategy_clean}*.json",
+        ]
         
-        if matches:
-            return max(matches, key=lambda p: p.stat().st_mtime)
+        for pattern in patterns:
+            matches = list(GREEN_DIR.glob(pattern))
+            if matches:
+                return max(matches, key=lambda p: p.stat().st_mtime)
+        
         return None
     
     # =========================================================================
@@ -247,11 +333,12 @@ class PipelineRunner:
             self.log(f"Loading {config['name']} measurements...")
             measurement_file = self._find_measurement_file(config['prompt_type'], config['strategy'])
             if measurement_file:
+                self.log(f"  Found file: {measurement_file.name}")
                 llm_data[config['name']] = self._load_llm_measurements(measurement_file)
-                self.log(f"  Found {len(llm_data[config['name']])} instances")
+                self.log(f"  Loaded {len(llm_data[config['name']])} instances")
             else:
                 llm_data[config['name']] = {}
-                self.log(f"  ⚠️ No data found")
+                self.log(f"  ⚠️ No measurement file found")
         
         # Get all instance IDs that have LLM data
         llm_instances = set()
@@ -297,6 +384,7 @@ class PipelineRunner:
             'metadata': {
                 'name': 'Green Code Refactoring - All Strategies Comparison Dataset',
                 'description': 'Energy measurements comparing Base, Human (Head), and all LLM strategies',
+                'source_dataset': str(self.dataset_path.name),
                 'variants': variants,
                 'strategies': [c['name'] for c in self.configs],
                 'metrics': KEY_METRICS_RAW,
@@ -540,6 +628,7 @@ class PipelineRunner:
         instances = dataset.get('instances', [])
         variants = dataset['metadata']['variants']
         
+        print(f"Dataset source: {self.dataset_path.name}")
         print(f"Total instances: {len(instances)}")
         print(f"Strategies tested: {len(self.configs)}")
         print(f"Variants: {', '.join(variants)}")
@@ -620,9 +709,19 @@ class PipelineRunner:
         print("🔬 COMPLETE PIPELINE: ALL STRATEGIES")
         print("="*70)
         print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Dataset: {self.dataset_path.name} ({self.total_instances} instances)")
         print(f"Strategies: {[c['name'] for c in self.configs]}")
-        print(f"Repetitions: {self.repetitions}")
+        print(f"Repetitions: k={self.repetitions}")
+        if self.test_mode:
+            print("⚠️  TEST MODE ENABLED")
         print()
+        
+        # Estimate time
+        if not only_dataset:
+            estimated_hours = (self.total_instances * len(self.configs) * 0.5 + 
+                             self.total_instances * len(self.configs) * self.repetitions * 3) / 60
+            print(f"⏱️  Estimated time: {estimated_hours:.1f} hours")
+            print()
         
         # Phase 1: Generate patches
         if not skip_patches and not only_dataset:
@@ -651,7 +750,7 @@ class PipelineRunner:
         elapsed = time.time() - self.start_time
         print(f"\n{'='*70}")
         print(f"✅ PIPELINE COMPLETE!")
-        print(f"   Total time: {elapsed/60:.1f} minutes")
+        print(f"   Total time: {elapsed/60:.1f} minutes ({elapsed/3600:.1f} hours)")
         print(f"   Output JSON: {OUTPUT_JSON}")
         print(f"   Output CSV: {OUTPUT_CSV}")
         print(f"{'='*70}\n")
@@ -659,7 +758,22 @@ class PipelineRunner:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Complete pipeline: Create Patches → Run Measurements → Create Dataset (All Strategies)"
+        description="Complete pipeline: Create Patches → Run Measurements → Create Dataset (All Strategies)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run full pipeline with 131 instances, k=3
+  python scripts/createpatches_runmeasurements_createdataset.py -k 3
+  
+  # Quick test with 12 instances
+  python scripts/createpatches_runmeasurements_createdataset.py --test-mode -k 1
+  
+  # Only run new strategies (SC and LDB)
+  python scripts/createpatches_runmeasurements_createdataset.py --strategies self_collab ldb -k 3
+  
+  # Create dataset from existing measurements
+  python scripts/createpatches_runmeasurements_createdataset.py --only-dataset
+        """
     )
     parser.add_argument('--skip-patches', action='store_true',
                        help='Skip patch generation (use existing patches)')
@@ -667,23 +781,34 @@ def main():
                        help='Skip measurements (use existing measurements)')
     parser.add_argument('--only-dataset', action='store_true',
                        help='Only create dataset from existing data')
-    parser.add_argument('--repetitions', '-k', type=int, default=5,
-                       help='Number of measurement repetitions (default: 5)')
+    parser.add_argument('--repetitions', '-k', type=int, default=3,
+                       help='Number of measurement repetitions (default: 3)')
     parser.add_argument('--strategies', nargs='+', 
                        choices=['zero_shot', 'cot', 'self_collab', 'ldb'],
                        help='Only run specific strategies (default: all)')
+    parser.add_argument('--test-mode', action='store_true',
+                       help='Use test dataset (12 instances) instead of full dataset (131 instances)')
     
     args = parser.parse_args()
     
-    runner = PipelineRunner(
-        repetitions=args.repetitions,
-        strategies=args.strategies
-    )
-    runner.run(
-        skip_patches=args.skip_patches,
-        skip_measurements=args.skip_measurements,
-        only_dataset=args.only_dataset
-    )
+    try:
+        runner = PipelineRunner(
+            repetitions=args.repetitions,
+            strategies=args.strategies,
+            test_mode=args.test_mode
+        )
+        runner.run(
+            skip_patches=args.skip_patches,
+            skip_measurements=args.skip_measurements,
+            only_dataset=args.only_dataset
+        )
+    except FileNotFoundError as e:
+        print(f"❌ Error: {e}")
+        print("Make sure the dataset file exists.")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n⚠️ Pipeline interrupted by user")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
