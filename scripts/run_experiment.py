@@ -4,6 +4,8 @@ Unified Experiment Runner for Green Code Refactoring.
 Runs a single experiment: generates an LLM patch for one instance.
 Supports both ORACLE and REALISTIC strategies.
 
+Version: 2.0 - Improved context management to prevent overflow
+
 Usage:
     # Oracle mode (knows exact files to modify)
     python run_experiment.py --instance mwaskom__seaborn-2389 --strategy oracle
@@ -54,7 +56,31 @@ logger = logging.getLogger("ExperimentRunner")
 # --- CONSTANTS ---
 DEFAULT_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced_test.json"
 RESULTS_DIR = PROJECT_ROOT / "results"
-MAX_CONTEXT_CHARS = 60000  # ~20k tokens, safe for 32k context window
+
+# =============================================================================
+# CONTEXT LIMITS - CRITICAL FOR AVOIDING OVERFLOW
+# =============================================================================
+# For a 32k context model, we need to leave room for:
+# - System prompt (~500 tokens)
+# - Template instructions (~1000 tokens)  
+# - LLM response (~4000 tokens)
+# So max input context should be ~26k tokens = ~78k chars
+# Being conservative: 20k tokens = 60k chars for ORACLE, less for REALISTIC
+
+CONTEXT_LIMITS = {
+    "oracle": {
+        "max_total_chars": 50000,       # ~16k tokens - safe for oracle
+        "max_file_chars": 25000,        # Single file limit
+        "max_files": 5,                 # Max files to include
+    },
+    "realistic": {
+        "max_total_chars": 35000,       # ~12k tokens - more conservative for realistic
+        "max_file_chars": 8000,         # Smaller per-file limit (more files expected)
+        "max_test_chars": 5000,         # Limit for test files
+        "max_retrieved_files": 5,       # Reduce from 10 to 5
+        "max_repo_map_lines": 100,      # Limit repo map
+    }
+}
 
 
 # =============================================================================
@@ -100,6 +126,9 @@ class ExperimentRunner:
         if self.prompt_type not in ("zero_shot", "cot"):
             raise ValueError(f"Prompt type must be 'zero_shot' or 'cot', got: {prompt_type}")
         
+        # Get context limits for this strategy
+        self.limits = CONTEXT_LIMITS[self.strategy]
+        
         # Set output directory based on prompt type and strategy
         if output_dir:
             self.output_dir = Path(output_dir)
@@ -128,6 +157,7 @@ class ExperimentRunner:
         logger.info(f"  Dataset: {self.dataset_path.name} ({len(self.dataset)} instances)")
         logger.info(f"  Output: {self.output_dir}")
         logger.info(f"  Model: {self.llm_client.model_name}")
+        logger.info(f"  Context Limit: {self.limits['max_total_chars']:,} chars")
     
     def _load_dataset(self) -> List[Dict]:
         """Load dataset from JSON file."""
@@ -149,6 +179,43 @@ class ExperimentRunner:
     # CONTEXT BUILDING
     # =========================================================================
     
+    def _truncate_file(self, content: str, max_chars: int, filename: str = "") -> str:
+        """
+        Intelligently truncate a file to max_chars.
+        Tries to keep the most relevant parts (imports, class/function definitions).
+        """
+        if len(content) <= max_chars:
+            return content
+        
+        lines = content.splitlines()
+        
+        # Strategy: Keep first 40% and last 20%, truncate middle
+        total_chars = max_chars - 100  # Reserve for truncation message
+        first_portion = int(total_chars * 0.6)
+        last_portion = int(total_chars * 0.4)
+        
+        # Build first part
+        first_lines = []
+        char_count = 0
+        for line in lines:
+            if char_count + len(line) + 1 > first_portion:
+                break
+            first_lines.append(line)
+            char_count += len(line) + 1
+        
+        # Build last part
+        last_lines = []
+        char_count = 0
+        for line in reversed(lines):
+            if char_count + len(line) + 1 > last_portion:
+                break
+            last_lines.insert(0, line)
+            char_count += len(line) + 1
+        
+        truncation_msg = f"\n# ... [{len(lines) - len(first_lines) - len(last_lines)} lines truncated] ...\n"
+        
+        return "\n".join(first_lines) + truncation_msg + "\n".join(last_lines)
+    
     def _build_oracle_context(
         self, 
         repo_path: Path, 
@@ -157,14 +224,8 @@ class ExperimentRunner:
         """
         Build context for ORACLE mode.
         Extracts exact target files from the gold patch.
-        
-        Args:
-            repo_path: Path to cloned repository
-            instance: Instance data
-            
-        Returns:
-            Tuple of (code_files dict, candidate_files list)
         """
+        limits = self.limits
         patch_content = instance.get("patch", "")
         
         # Extract target files from patch
@@ -179,7 +240,6 @@ class ExperimentRunner:
         
         if not target_files:
             logger.warning("No target files found in patch, using patch_functions")
-            # Fallback: try patch_functions field
             patch_funcs = instance.get("patch_functions", "{}")
             if isinstance(patch_funcs, str):
                 patch_funcs = json.loads(patch_funcs)
@@ -188,10 +248,13 @@ class ExperimentRunner:
         # Load files with size limits
         code_files = {}
         current_chars = 0
+        max_total = limits["max_total_chars"]
+        max_file = limits["max_file_chars"]
+        max_files = limits["max_files"]
         
-        for fname in target_files:
-            if current_chars >= MAX_CONTEXT_CHARS:
-                logger.warning(f"Context limit reached, skipping {fname}")
+        for fname in target_files[:max_files]:
+            if current_chars >= max_total:
+                logger.warning(f"Context limit reached, skipping remaining files")
                 break
             
             fpath = repo_path / fname
@@ -201,20 +264,22 @@ class ExperimentRunner:
             try:
                 content = fpath.read_text(errors='ignore')
                 
-                # Truncate large files
-                if len(content) > 30000 and len(target_files) > 1:
-                    content = content[:30000] + "\n# ... [TRUNCATED FOR CONTEXT LIMIT] ..."
+                # Apply per-file limit
+                if len(content) > max_file:
+                    content = self._truncate_file(content, max_file, fname)
                 
                 # Check total limit
-                if current_chars + len(content) > MAX_CONTEXT_CHARS:
-                    remaining = MAX_CONTEXT_CHARS - current_chars
-                    if remaining > 1000:
-                        content = content[:remaining] + "\n# ... [TRUNCATED] ..."
+                remaining = max_total - current_chars
+                if len(content) > remaining:
+                    if remaining > 2000:
+                        content = self._truncate_file(content, remaining, fname)
                     else:
+                        logger.warning(f"Skipping {fname} - not enough space")
                         continue
                 
                 code_files[fname] = content
                 current_chars += len(content)
+                logger.info(f"   Added {fname}: {len(content):,} chars")
                 
             except Exception as e:
                 logger.warning(f"Could not read {fname}: {e}")
@@ -231,78 +296,76 @@ class ExperimentRunner:
         Build context for REALISTIC mode.
         Uses simulated retrieval based on test file tokens.
         
-        Args:
-            repo_path: Path to cloned repository
-            instance: Instance data
-            
-        Returns:
-            Tuple of (code_files dict, candidate_files list, repo_map string)
+        IMPROVED: Better limits to prevent context overflow.
         """
+        limits = self.limits
+        max_total = limits["max_total_chars"]
+        max_file = limits["max_file_chars"]
+        max_test = limits["max_test_chars"]
+        max_retrieved = limits["max_retrieved_files"]
+        max_repo_lines = limits["max_repo_map_lines"]
+        
         # Get test files
         test_list = instance.get('efficiency_test', [])
         test_files = list(set(t.split("::")[0] for t in test_list))
         
-        # Generate repo map
-        repo_map = self._generate_repo_map(repo_path)
+        # Generate repo map (limited)
+        repo_map = self._generate_repo_map(repo_path, max_lines=max_repo_lines)
         
-        # Simulated retrieval
-        code_files, candidates = self._simulated_retrieval(repo_path, test_files)
+        # Track context size
+        code_files = {}
+        current_chars = 0
         
-        logger.info(f"📂 Realistic context: {len(code_files)} files, {len(candidates)} candidates")
-        return code_files, candidates, repo_map
-    
-    def _generate_repo_map(self, repo_path: Path, max_lines: int = 200) -> str:
-        """Generate repository structure map."""
-        tree = []
-        
-        for root, dirs, files in os.walk(repo_path):
-            # Skip hidden and cache directories
-            dirs[:] = [d for d in dirs if not d.startswith(('.', '__'))]
-            
-            level = root.replace(str(repo_path), '').count(os.sep)
-            indent = '    ' * level
-            tree.append(f"{indent}{os.path.basename(root)}/")
-            
-            subindent = '    ' * (level + 1)
-            for f in files:
-                if f.endswith('.py'):
-                    tree.append(f"{subindent}{f}")
-        
-        if len(tree) > max_lines:
-            return "\n".join(tree[:max_lines]) + "\n... (truncated)"
-        return "\n".join(tree)
-    
-    def _simulated_retrieval(
-        self,
-        repo_path: Path,
-        test_files: List[str]
-    ) -> Tuple[Dict[str, str], List[str]]:
-        """
-        Simulate code retrieval based on test file tokens.
-        
-        Args:
-            repo_path: Repository path
-            test_files: List of test file paths
-            
-        Returns:
-            Tuple of (code_files dict, candidate_files list)
-        """
-        # Extract tokens from test files
-        query_tokens = set()
+        # =====================================================================
+        # STEP 1: Add test files (with strict limits)
+        # =====================================================================
         test_contents = {}
         
-        for tf in test_files:
+        for tf in test_files[:3]:  # Max 3 test files
             fpath = repo_path / tf
-            if fpath.exists():
+            if not fpath.exists():
+                continue
+            
+            try:
                 content = fpath.read_text(errors='ignore')
+                
+                # Strict limit on test files - we only need them for context
+                if len(content) > max_test:
+                    # For tests, keep only the relevant test functions
+                    content = self._extract_relevant_tests(content, test_list, max_test)
+                
                 test_contents[tf] = content
-                query_tokens.update(self._tokenize(content))
+                
+            except Exception as e:
+                logger.warning(f"Could not read test file {tf}: {e}")
+        
+        # Add test files to context
+        for tf, content in test_contents.items():
+            if current_chars + len(content) > max_total * 0.4:  # Tests max 40% of context
+                logger.warning(f"Test context limit reached, truncating {tf}")
+                remaining = int(max_total * 0.4) - current_chars
+                if remaining > 1000:
+                    content = content[:remaining] + "\n# ... [TRUNCATED]"
+                else:
+                    continue
+            
+            code_files[tf] = content
+            current_chars += len(content)
+            logger.info(f"   Added test {tf}: {len(content):,} chars")
+        
+        # =====================================================================
+        # STEP 2: Retrieve source files using BM25-style scoring
+        # =====================================================================
+        query_tokens = set()
+        for content in test_contents.values():
+            query_tokens.update(self._tokenize(content))
         
         # Remove stopwords
         stopwords = {
             'def', 'class', 'self', 'import', 'from', 'in', 'if', 'else', 
             'return', 'assert', 'test', 'none', 'true', 'false', 'and', 
-            'or', 'pytest', 'for', 'while', 'with', 'as', 'try', 'except'
+            'or', 'pytest', 'for', 'while', 'with', 'as', 'try', 'except',
+            'is', 'not', 'the', 'to', 'of', 'a', 'an'
         }
         query_tokens -= stopwords
         
@@ -315,59 +378,192 @@ class ExperimentRunner:
                 
                 rel_path = os.path.relpath(os.path.join(root, fname), repo_path)
                 
-                # Skip test files
-                if rel_path in test_files:
+                # Skip test files and __init__.py
+                if rel_path in test_files or fname == '__init__.py':
+                    continue
+                
+                # Skip test directories
+                if '/tests/' in rel_path or '/test_' in rel_path:
                     continue
                 
                 try:
                     content = (repo_path / rel_path).read_text(errors='ignore')
                     file_tokens = self._tokenize(content)
+                    
+                    # BM25-style scoring: penalize very common tokens
                     score = len(query_tokens & file_tokens)
+                    
+                    # Boost files that match test file names
+                    for tf in test_files:
+                        test_name = Path(tf).stem.replace('test_', '')
+                        if test_name in rel_path:
+                            score *= 2
+                    
                     if score > 0:
-                        scores[rel_path] = score
+                        scores[rel_path] = (score, len(content))
                 except:
                     pass
         
-        # Build context with limits
-        code_files = {}
-        current_chars = 0
+        # =====================================================================
+        # STEP 3: Add top retrieved files (with strict limits)
+        # =====================================================================
+        # Sort by score, then by file size (prefer smaller files)
+        top_files = sorted(
+            scores.items(), 
+            key=lambda x: (x[1][0], -x[1][1]),  # High score, low size
+            reverse=True
+        )
         
-        # First add test files (limited)
-        TEST_LIMIT = 20000
-        for tf, content in test_contents.items():
-            if len(content) > TEST_LIMIT:
-                code_files[tf] = content[:TEST_LIMIT] + "\n# ... [TRUNCATED]"
-                current_chars += TEST_LIMIT
-            else:
-                code_files[tf] = content
-                current_chars += len(content)
-        
-        # Then add top retrieved files
-        top_files = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-        
-        for fname, _ in top_files[:10]:  # Max 10 retrieved files
-            if current_chars >= MAX_CONTEXT_CHARS:
+        files_added = 0
+        for fname, (score, _) in top_files:
+            if files_added >= max_retrieved:
+                break
+            
+            if current_chars >= max_total:
+                logger.warning(f"Context limit reached at {current_chars:,} chars")
                 break
             
             try:
                 content = (repo_path / fname).read_text(errors='ignore')
                 
-                if current_chars + len(content) < MAX_CONTEXT_CHARS:
-                    code_files[fname] = content
-                    current_chars += len(content)
-                else:
-                    remaining = MAX_CONTEXT_CHARS - current_chars
-                    if remaining > 1000:
-                        code_files[fname] = content[:remaining] + "\n# ... [TRUNCATED]"
-                        current_chars += remaining
-            except:
-                pass
+                # Apply per-file limit
+                if len(content) > max_file:
+                    content = self._truncate_file(content, max_file, fname)
+                
+                # Check remaining space
+                remaining = max_total - current_chars
+                if len(content) > remaining:
+                    if remaining > 2000:
+                        content = self._truncate_file(content, remaining, fname)
+                    else:
+                        logger.warning(f"Skipping {fname} - not enough space ({remaining} remaining)")
+                        continue
+                
+                code_files[fname] = content
+                current_chars += len(content)
+                files_added += 1
+                logger.info(f"   Added retrieved {fname}: {len(content):,} chars (score: {score})")
+                
+            except Exception as e:
+                logger.warning(f"Could not read {fname}: {e}")
         
-        return code_files, list(code_files.keys())
+        logger.info(f"📂 Realistic context: {len(code_files)} files, {current_chars:,} chars")
+        logger.info(f"   Tests: {len(test_contents)}, Retrieved: {files_added}")
+        
+        return code_files, list(code_files.keys()), repo_map
+    
+    def _extract_relevant_tests(
+        self, 
+        content: str, 
+        test_list: List[str], 
+        max_chars: int
+    ) -> str:
+        """
+        Extract only relevant test functions from a test file.
+        """
+        # Get test function names from test_list
+        test_names = set()
+        for t in test_list:
+            if "::" in t:
+                parts = t.split("::")
+                for p in parts[1:]:
+                    # Handle parametrized tests like test_foo[param1-param2]
+                    name = p.split("[")[0]
+                    test_names.add(name)
+        
+        if not test_names:
+            # No specific tests, truncate normally
+            return self._truncate_file(content, max_chars)
+        
+        lines = content.splitlines()
+        result_lines = []
+        in_relevant_function = False
+        current_indent = 0
+        
+        # Always keep imports and class definitions
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            
+            # Keep imports
+            if stripped.startswith(('import ', 'from ')):
+                result_lines.append(line)
+                continue
+            
+            # Keep class definitions
+            if stripped.startswith('class '):
+                result_lines.append(line)
+                continue
+            
+            # Check if this is a relevant test function
+            if stripped.startswith('def '):
+                func_name = stripped[4:].split('(')[0]
+                if func_name in test_names or any(tn in func_name for tn in test_names):
+                    in_relevant_function = True
+                    current_indent = len(line) - len(stripped)
+                    result_lines.append(line)
+                    continue
+                else:
+                    in_relevant_function = False
+            
+            # If inside relevant function, keep the line
+            if in_relevant_function:
+                line_indent = len(line) - len(line.lstrip()) if line.strip() else current_indent + 1
+                if line.strip() and line_indent <= current_indent and not stripped.startswith(('@', '#')):
+                    in_relevant_function = False
+                else:
+                    result_lines.append(line)
+        
+        result = "\n".join(result_lines)
+        
+        # If still too long, truncate
+        if len(result) > max_chars:
+            result = result[:max_chars] + "\n# ... [TRUNCATED]"
+        
+        return result
+    
+    def _generate_repo_map(self, repo_path: Path, max_lines: int = 100) -> str:
+        """Generate repository structure map (limited)."""
+        tree = []
+        
+        for root, dirs, files in os.walk(repo_path):
+            # Skip hidden and cache directories
+            dirs[:] = [d for d in dirs if not d.startswith(('.', '__'))]
+            
+            level = root.replace(str(repo_path), '').count(os.sep)
+            
+            # Limit depth
+            if level > 3:
+                continue
+            
+            indent = '    ' * level
+            tree.append(f"{indent}{os.path.basename(root)}/")
+            
+            subindent = '    ' * (level + 1)
+            py_files = [f for f in files if f.endswith('.py')][:10]  # Max 10 files per dir
+            for f in py_files:
+                tree.append(f"{subindent}{f}")
+            
+            if len(tree) > max_lines:
+                break
+        
+        if len(tree) > max_lines:
+            return "\n".join(tree[:max_lines]) + "\n... (truncated)"
+        return "\n".join(tree)
+    
+    def _simulated_retrieval(
+        self,
+        repo_path: Path,
+        test_files: List[str]
+    ) -> Tuple[Dict[str, str], List[str]]:
+        """
+        Simulate code retrieval based on test file tokens.
+        DEPRECATED: Use _build_realistic_context instead.
+        """
+        return self._build_realistic_context(repo_path, {"efficiency_test": test_files})[:2]
     
     def _tokenize(self, text: str) -> set:
         """Extract identifier tokens from text."""
-        return set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text))
+        return set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text.lower()))
     
     # =========================================================================
     # PROMPT GENERATION
@@ -461,7 +657,8 @@ class ExperimentRunner:
             "status": "error",
             "llm_response": "",
             "patch_result": None,
-            "error": None
+            "error": None,
+            "context_stats": {}
         }
         
         temp_dir = None
@@ -490,6 +687,14 @@ class ExperimentRunner:
             if not code_files:
                 raise ValueError("No code files found for context")
             
+            # Store context stats
+            total_chars = sum(len(c) for c in code_files.values())
+            result["context_stats"] = {
+                "num_files": len(code_files),
+                "total_chars": total_chars,
+                "files": {f: len(c) for f, c in code_files.items()}
+            }
+            
             # 4. Generate prompt
             logger.info("📝 Generating prompt...")
             context = self._build_prompt_context(instance, code_files, candidates, repo_map)
@@ -498,7 +703,12 @@ class ExperimentRunner:
             
             # Log prompt size
             total_prompt_size = len(system_prompt) + len(user_prompt)
-            logger.info(f"   Prompt size: {total_prompt_size:,} chars (~{total_prompt_size//4:,} tokens)")
+            estimated_tokens = total_prompt_size // 3  # ~3 chars per token
+            logger.info(f"   Prompt size: {total_prompt_size:,} chars (~{estimated_tokens:,} tokens)")
+            
+            # Check for potential overflow
+            if estimated_tokens > 28000:
+                logger.warning(f"⚠️ Prompt may be too large! ({estimated_tokens:,} tokens)")
             
             # 5. Call LLM
             logger.info("🤖 Querying LLM...")
@@ -657,6 +867,11 @@ Examples:
         print(f"  Files: {pr.get('modified_files', [])}")
     elif result.get("error"):
         print(f"  Error: {result['error']}")
+    
+    # Print context stats
+    ctx = result.get("context_stats", {})
+    if ctx:
+        print(f"\n  Context: {ctx.get('num_files', 0)} files, {ctx.get('total_chars', 0):,} chars")
     
     return 0 if result["status"] == "success" else 1
 

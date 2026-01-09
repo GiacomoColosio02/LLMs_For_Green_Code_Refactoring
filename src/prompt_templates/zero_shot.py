@@ -4,6 +4,8 @@ Handles both ORACLE and REALISTIC settings via PromptContext.
 
 ORACLE: LLM receives exact target files (gold context) - pure optimization task.
 REALISTIC: LLM receives retrieved files + repo map - must identify bottleneck first.
+
+Version: 2.0 - Enhanced with explicit output format examples
 """
 from typing import Union, List, Dict
 from .base_template import BasePromptTemplate, PromptStrategy, PromptContext, ProblemStatementType
@@ -170,29 +172,24 @@ class ZeroShotTemplate(BasePromptTemplate):
     def _get_search_replace_format_instruction(self) -> str:
         """
         SEARCH/REPLACE format instructions.
-        Enhanced from SWE-perf with clearer examples.
+        Enhanced with multiple examples and common mistakes to avoid.
         """
-        return '''### OUTPUT FORMAT:
+        return '''### OUTPUT FORMAT (CRITICAL - FOLLOW EXACTLY)
 
 Generate your changes using *SEARCH/REPLACE* blocks with this exact format:
 
-```
 ### path/to/file.py
 <<<<<<< SEARCH
 [exact lines from the original file to find]
 =======
 [your optimized replacement code]
 >>>>>>> REPLACE
-```
 
-**Rules for SEARCH/REPLACE blocks:**
-1. Always specify the file path on the line before `<<<<<<< SEARCH`
-2. The SEARCH section must match the original code EXACTLY (including whitespace)
-3. Keep SEARCH blocks SMALL - just enough lines to uniquely identify the location
-4. You can have multiple SEARCH/REPLACE blocks for different changes
-5. Only use standard Python libraries or modules already imported in the file
+---
 
-**Example:**
+**CORRECT EXAMPLES:**
+
+**Example 1: List comprehension optimization**
 
 ### myproject/utils.py
 <<<<<<< SEARCH
@@ -205,6 +202,72 @@ def process_items(items):
 def process_items(items):
     return [transform(item) for item in items]
 >>>>>>> REPLACE
+
+**Example 2: Adding caching**
+
+### myproject/compute.py
+<<<<<<< SEARCH
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+=======
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+>>>>>>> REPLACE
+
+**Example 3: Multiple changes in same file**
+
+### myproject/data.py
+<<<<<<< SEARCH
+    for key in dict.keys():
+        process(key)
+=======
+    for key in dict:
+        process(key)
+>>>>>>> REPLACE
+
+### myproject/data.py
+<<<<<<< SEARCH
+    if len(items) > 0:
+=======
+    if items:
+>>>>>>> REPLACE
+
+---
+
+**WRONG - DO NOT DO THIS:**
+
+WRONG (missing file path):
+<<<<<<< SEARCH
+def foo():
+=======
+def foo():
+>>>>>>> REPLACE
+
+WRONG (wrapped in code blocks):
+```python
+### file.py
+<<<<<<< SEARCH
+```
+
+WRONG (explanation instead of code):
+To optimize this, you should use a dictionary...
+
+---
+
+**RULES:**
+1. Always specify file path on line before <<<<<<< SEARCH
+2. SEARCH must match original code EXACTLY (including whitespace)
+3. Keep SEARCH blocks SMALL - just enough to locate uniquely
+4. Multiple SEARCH/REPLACE blocks allowed for different changes
+5. Do NOT wrap in ```python``` code blocks
+6. Start your response directly with ### path/to/file.py
 '''
 
     def extract_code_from_response(self, response: str) -> str:

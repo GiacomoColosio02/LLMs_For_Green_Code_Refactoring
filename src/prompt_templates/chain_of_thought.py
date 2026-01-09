@@ -1,5 +1,7 @@
 """
 Chain-of-Thought (CoT) Prompt Templates for Green Code Optimization.
+
+Version: 2.0 - Enhanced with explicit output format examples and better parsing
 """
 
 import re
@@ -20,17 +22,19 @@ class CoTResponse:
 
 def parse_cot_response(response: str) -> CoTResponse:
     """Parse a CoT response into its structured components."""
+    # Remove <think> tags if present (for reasoning models)
     clean_response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
     
     analysis_section = ""
     patch_section = ""
     
+    # Try multiple patterns for section markers
     section1_match = re.search(
-        r'SECTION\s*1\s*:?\s*ANALYSIS(.*?)(?=SECTION\s*2|$)', 
+        r'(?:SECTION\s*1|##\s*SECTION\s*1|###\s*SECTION\s*1)\s*:?\s*(?:ANALYSIS)?(.*?)(?=SECTION\s*2|##\s*SECTION\s*2|###\s*SECTION\s*2|<<<<<<< SEARCH|$)', 
         clean_response, re.IGNORECASE | re.DOTALL
     )
     section2_match = re.search(
-        r'SECTION\s*2\s*:?\s*PATCH(.*?)$', 
+        r'(?:SECTION\s*2|##\s*SECTION\s*2|###\s*SECTION\s*2)\s*:?\s*(?:PATCH)?(.*?)$', 
         clean_response, re.IGNORECASE | re.DOTALL
     )
     
@@ -39,12 +43,21 @@ def parse_cot_response(response: str) -> CoTResponse:
     if section2_match:
         patch_section = section2_match.group(1).strip()
     
+    # Fallback: if no section markers but SEARCH/REPLACE exists
     if not patch_section and "<<<<<<< SEARCH" in clean_response:
         search_start = clean_response.find("<<<<<<< SEARCH")
-        pre_search = clean_response[:search_start]
-        last_newline = pre_search.rfind('\n')
-        patch_section = clean_response[max(0, last_newline):].strip()
-        analysis_section = clean_response[:max(0, last_newline)].strip()
+        
+        # Look for file path marker before SEARCH
+        file_path_match = re.search(r'(###\s+[\w/._-]+\.py\s*\n)', clean_response[:search_start])
+        if file_path_match:
+            patch_start = file_path_match.start()
+        else:
+            pre_search = clean_response[:search_start]
+            last_newline = pre_search.rfind('\n')
+            patch_start = max(0, last_newline)
+        
+        patch_section = clean_response[patch_start:].strip()
+        analysis_section = clean_response[:patch_start].strip()
     
     has_valid_structure = bool(patch_section and "<<<<<<< SEARCH" in patch_section)
     
@@ -63,21 +76,18 @@ def extract_patch_from_cot(response: str) -> str:
     patch = parsed.patch_section if parsed.patch_section else response
     
     # Remove markdown code block wrappers (```python ... ```)
-    # This handles cases where the model wraps the patch in code blocks
-    patch = re.sub(r'^```(?:python|diff)?\s*\n?', '', patch, flags=re.MULTILINE)
+    patch = re.sub(r'^```(?:python|diff|text)?\s*\n?', '', patch, flags=re.MULTILINE)
     patch = re.sub(r'\n?```\s*$', '', patch, flags=re.MULTILINE)
     
     # Also try to extract from within code blocks if SEARCH is inside
     if "<<<<<<< SEARCH" not in patch and "<<<<<<< SEARCH" in response:
-        # Find content between ``` markers that contains SEARCH/REPLACE
-        code_block_match = re.search(r'```(?:python|diff)?\s*\n(.*?<<<<<<< SEARCH.*?)```', 
+        code_block_match = re.search(r'```(?:python|diff|text)?\s*\n(.*?<<<<<<< SEARCH.*?)```', 
                                       response, re.DOTALL)
         if code_block_match:
             patch = code_block_match.group(1).strip()
     
     # Final cleanup: ensure we have the file path marker
     if "<<<<<<< SEARCH" in patch and "### " not in patch:
-        # Try to find file path before the code block
         file_match = re.search(r'###\s+([\w/._-]+\.py)', response)
         if file_match:
             patch = f"### {file_match.group(1)}\n{patch}"
@@ -103,23 +113,28 @@ class ChainOfThoughtTemplate(BasePromptTemplate):
         return extract_patch_from_cot(response)
     
     def _get_cot_instructions(self) -> str:
+        """Enhanced CoT instructions with explicit examples."""
         return '''
-## RESPONSE FORMAT
+## RESPONSE FORMAT (MUST FOLLOW EXACTLY)
 
-Your response MUST follow this EXACT structure:
+Your response MUST have TWO clearly separated sections:
+
+---
 
 ### SECTION 1: ANALYSIS
 
-Start by writing: "Let's think step by step."
+Start with: "Let's think step by step."
 
-Then address:
+Then briefly address (3-5 sentences total):
 1. **IDENTIFICATION**: What function/code has the inefficiency?
 2. **DIAGNOSIS**: Why is it inefficient? (O(N^2), memory spikes, redundant computation, etc.)
-3. **HYPOTHESIS**: What will your fix achieve? (O(1) lookup, caching, etc.)
+3. **SOLUTION**: What optimization will you apply?
+
+---
 
 ### SECTION 2: PATCH
 
-Only AFTER the analysis, provide code changes using this EXACT format (no code blocks):
+After analysis, provide code changes using this EXACT format:
 
 ### path/to/file.py
 <<<<<<< SEARCH
@@ -128,11 +143,70 @@ original code (minimum unique context)
 optimized code
 >>>>>>> REPLACE
 
-CRITICAL RULES:
-- Do NOT wrap the patch in ```python``` code blocks
-- Use SMALL SEARCH blocks - just enough to locate uniquely
-- Preserve functionality - tests MUST still pass
-- Do NOT add new dependencies
+---
+
+## COMPLETE CORRECT EXAMPLE
+
+### SECTION 1: ANALYSIS
+
+Let's think step by step.
+
+**IDENTIFICATION**: The `find_duplicates` function in `utils.py` is the bottleneck.
+**DIAGNOSIS**: It uses nested loops giving O(n²) complexity - for each element, it scans the entire list.
+**SOLUTION**: Use a set for O(1) lookups, reducing complexity to O(n).
+
+### SECTION 2: PATCH
+
+### myproject/utils.py
+<<<<<<< SEARCH
+def find_duplicates(items):
+    duplicates = []
+    for i, item in enumerate(items):
+        for j, other in enumerate(items):
+            if i != j and item == other and item not in duplicates:
+                duplicates.append(item)
+    return duplicates
+=======
+def find_duplicates(items):
+    seen = set()
+    duplicates = set()
+    for item in items:
+        if item in seen:
+            duplicates.add(item)
+        seen.add(item)
+    return list(duplicates)
+>>>>>>> REPLACE
+
+---
+
+## WRONG EXAMPLES - DO NOT DO THIS
+
+WRONG (missing SECTION markers):
+The function is slow because... [then patch without structure]
+
+WRONG (patch wrapped in code blocks):
+```python
+### myproject/utils.py
+<<<<<<< SEARCH
+```
+
+WRONG (missing file path):
+<<<<<<< SEARCH
+def foo():
+=======
+
+WRONG (only explanation, no patch):
+To fix this, you should use a dictionary instead of a list...
+
+---
+
+## CRITICAL RULES
+- Include BOTH Section 1 (Analysis) AND Section 2 (Patch)
+- Do NOT wrap patch in ```python``` code blocks
+- ALWAYS include file path before <<<<<<< SEARCH
+- Keep SEARCH blocks SMALL - just enough to locate uniquely
+- Do NOT add new external dependencies
+- Do NOT modify test files
 '''
 
     def _generate_oracle_prompt(self, context: PromptContext) -> str:
@@ -142,6 +216,7 @@ CRITICAL RULES:
 
 ## TASK
 Optimize the provided code for energy efficiency and execution speed.
+Use Chain-of-Thought reasoning: first ANALYZE the code, then provide the PATCH.
 
 ## CONTEXT
 **Repository:** `{context.repo_name}`
@@ -151,6 +226,10 @@ Optimize the provided code for energy efficiency and execution speed.
 {code_section}
 
 {self._get_cot_instructions()}
+
+---
+
+## YOUR RESPONSE (start with SECTION 1)
 '''
         return prompt.strip()
     
@@ -162,6 +241,7 @@ Optimize the provided code for energy efficiency and execution speed.
 
 ## TASK
 Find and fix the performance bottleneck in this codebase.
+Use Chain-of-Thought reasoning: first ANALYZE to identify the bottleneck, then provide the PATCH.
 
 ## CONTEXT
 **Repository:** `{context.repo_name}`
@@ -169,10 +249,14 @@ Find and fix the performance bottleneck in this codebase.
 
 {repo_map_section}
 
-## RETRIEVED CODE (some may be noise - identify the hotspot!)
+## RETRIEVED CODE (WARNING: some files may be noise - identify the real bottleneck!)
 {code_section}
 
 {self._get_cot_instructions()}
+
+---
+
+## YOUR RESPONSE (start with SECTION 1)
 '''
         return prompt.strip()
     
@@ -180,7 +264,7 @@ Find and fix the performance bottleneck in this codebase.
         if not code_files:
             return "*No code files provided*"
         sections = []
-        for filepath, content in code_files.items():
+        for filepath, content in sorted(code_files.items()):
             sections.append(f"[start of {filepath}]\n{content}\n[end of {filepath}]")
         return "\n\n".join(sections)
 
