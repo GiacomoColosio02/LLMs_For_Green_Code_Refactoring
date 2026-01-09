@@ -316,40 +316,41 @@ Now propose your optimizations:"""
     # =========================================================================
     
     def _get_reviewer_prompt(self) -> str:
-        return """## YOUR ROLE: REVIEWER
+        return """## YOUR ROLE: REVIEWER - PRODUCE THE FINAL PATCH
 
-You are a Code Reviewer. Validate the Optimizer's proposals and produce the final patch.
+You MUST produce a working SEARCH/REPLACE patch. This is your PRIMARY task.
 
-**Your Tasks:**
-1. VALIDATE: Check each proposed optimization for correctness
-2. VERIFY: Ensure changes won't break functionality
-3. REFINE: Improve or adjust optimizations if needed
-4. FORMAT: Produce the final patch in SEARCH/REPLACE format
-
-**Output Format:**
-
-First, briefly validate:
-```
-## VALIDATION
-- Fix 1: ✓ Valid / ✗ Issue: [problem]
-- Fix 2: ✓ Valid / ✗ Issue: [problem]
-```
-
-Then provide the FINAL PATCH:
+**Your ONLY output should be the patch in this format:**
 
 ### path/to/file.py
 <<<<<<< SEARCH
-[exact original code]
+[exact original code from the file - copy it exactly]
 =======
-[optimized code]
+[optimized replacement code]
 >>>>>>> REPLACE
 
 **CRITICAL RULES:**
-- SEARCH must match original code EXACTLY
-- Keep SEARCH blocks SMALL and UNIQUE
-- Do NOT add new external dependencies
-- Do NOT modify test files
-- Output ONLY valid SEARCH/REPLACE blocks after validation"""
+1. You MUST output at least one SEARCH/REPLACE block
+2. SEARCH must match original code EXACTLY (copy from the code context above)
+3. Keep SEARCH blocks SMALL - just enough to locate uniquely (5-15 lines max)
+4. Do NOT wrap in ```python``` code blocks
+5. Do NOT add explanations before or after the patch
+6. Do NOT add new external dependencies
+7. If the Optimizer's suggestions have issues, FIX them and still produce a patch
+
+**EXAMPLE OUTPUT:**
+
+### xarray/core/rolling.py
+<<<<<<< SEARCH
+def _counts(self):
+    counts = self._dataset.count()
+    return counts
+=======
+def _counts(self):
+    return self._dataset.count()
+>>>>>>> REPLACE
+
+START YOUR PATCH NOW (no explanations, just the patch):"""
     
     def _build_reviewer_turn(
         self, 
@@ -358,19 +359,20 @@ Then provide the FINAL PATCH:
         analyst_output: str,
         optimizer_output: str
     ) -> str:
-        return f"""## ANALYST'S FINDINGS
+        return f"""## TASK: PRODUCE THE FINAL PATCH
 
-{analyst_output}
+The Analyst found bottlenecks and the Optimizer proposed fixes.
+Your job: Convert the best optimization into a working SEARCH/REPLACE patch.
 
 ---
 
-## OPTIMIZER'S PROPOSALS
+## OPTIMIZER'S PROPOSED CHANGES:
 
 {optimizer_output}
 
 ---
 
-## CODE CONTEXT (for reference)
+## ORIGINAL CODE (copy EXACTLY from here for your SEARCH blocks):
 
 {code_section}
 
