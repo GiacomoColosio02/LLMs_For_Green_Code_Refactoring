@@ -318,39 +318,32 @@ Now propose your optimizations:"""
     def _get_reviewer_prompt(self) -> str:
         return """## YOUR ROLE: REVIEWER - PRODUCE THE FINAL PATCH
 
-You MUST produce a working SEARCH/REPLACE patch. This is your PRIMARY task.
+⚠️ **CRITICAL: You MUST copy code EXACTLY from the ORIGINAL CODE section above.**
+⚠️ **DO NOT type code from memory. DO NOT reconstruct code. COPY-PASTE EXACTLY.**
 
-**Your ONLY output should be the patch in this format:**
+**OUTPUT FORMAT (no other text allowed):**
 
 ### path/to/file.py
 <<<<<<< SEARCH
-[exact original code from the file - copy it exactly]
+[COPY exact lines from ORIGINAL CODE above - same whitespace, same everything]
 =======
-[optimized replacement code]
+[your optimized version]
 >>>>>>> REPLACE
 
-**CRITICAL RULES:**
-1. You MUST output at least one SEARCH/REPLACE block
-2. SEARCH must match original code EXACTLY (copy from the code context above)
-3. Keep SEARCH blocks SMALL - just enough to locate uniquely (5-15 lines max)
-4. Do NOT wrap in ```python``` code blocks
-5. Do NOT add explanations before or after the patch
-6. Do NOT add new external dependencies
-7. If the Optimizer's suggestions have issues, FIX them and still produce a patch
+**RULES:**
+1. SEARCH block = EXACT copy from ORIGINAL CODE section (even whitespace matters!)
+2. Find the specific lines in ORIGINAL CODE, copy them character-for-character
+3. Keep SEARCH blocks SMALL (5-15 lines) - just enough to be unique
+4. Do NOT invent or reconstruct code - if you can't find it above, don't patch it
+5. No ```python``` blocks, no explanations, no comments - ONLY the patch
 
-**EXAMPLE OUTPUT:**
+**HOW TO DO IT:**
+1. Look at Optimizer's suggestion (which function to change)
+2. Find that EXACT function in ORIGINAL CODE section above
+3. COPY those lines exactly into your SEARCH block
+4. Write your improved version in REPLACE block
 
-### xarray/core/rolling.py
-<<<<<<< SEARCH
-def _counts(self):
-    counts = self._dataset.count()
-    return counts
-=======
-def _counts(self):
-    return self._dataset.count()
->>>>>>> REPLACE
-
-START YOUR PATCH NOW (no explanations, just the patch):"""
+**START YOUR PATCH NOW** (first line must be ### path/to/file.py):"""
     
     def _build_reviewer_turn(
         self, 
@@ -361,26 +354,22 @@ START YOUR PATCH NOW (no explanations, just the patch):"""
     ) -> str:
         return f"""## TASK: PRODUCE THE FINAL PATCH
 
-The Analyst found bottlenecks and the Optimizer proposed fixes.
-Your job: Convert the best optimization into a working SEARCH/REPLACE patch.
-
 ---
 
-## OPTIMIZER'S PROPOSED CHANGES:
+## OPTIMIZER'S SUGGESTION (what to optimize):
 
 {optimizer_output}
 
 ---
 
-## ORIGINAL CODE (copy EXACTLY from here for your SEARCH blocks):
+## ⚠️ ORIGINAL CODE - COPY EXACTLY FROM HERE ⚠️
+## (Your SEARCH block MUST be an exact copy from this section)
 
 {code_section}
 
 ---
 
-{self._get_reviewer_prompt()}
-
-Now validate and produce the final patch:"""
+{self._get_reviewer_prompt()}"""
     
     # =========================================================================
     # RESPONSE PARSING
