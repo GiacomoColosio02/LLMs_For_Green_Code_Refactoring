@@ -1,12 +1,13 @@
 """
 Complete Pipeline: Create Patches → Run Measurements → Create Dataset
 
-This script runs the entire pipeline:
-1. Generate LLM patches for all strategies (ZS Oracle, ZS Realistic, CoT Oracle, CoT Realistic)
-2. Measure energy consumption of all successful patches
-3. Create consolidated dataset with Base, Head, and LLM variants
+This script runs the entire pipeline for ALL prompt strategies:
+- Zero-Shot (Oracle & Realistic)
+- Chain-of-Thought (Oracle & Realistic)
+- Self-Collaboration (Oracle & Realistic)
+- LDB (Oracle & Realistic)
 
-Output: data/processed/green/ZS_COT_green_dataset.csv
+Output: data/processed/green/ALL_STRATEGIES_green_dataset.json
 
 Usage:
     # Run everything
@@ -20,6 +21,9 @@ Usage:
     
     # Only create dataset from existing data
     python scripts/createpatches_runmeasurements_createdataset.py --only-dataset
+    
+    # Run only specific strategies
+    python scripts/createpatches_runmeasurements_createdataset.py --strategies zero_shot cot
 """
 import sys
 import os
@@ -48,16 +52,34 @@ REDUCED_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced_test.j
 GREEN_K3_DATASET = GREEN_DIR / "swe_perf_green_k3.json"
 
 # Output files
-OUTPUT_JSON = GREEN_DIR / "ZS_COT_green_dataset.json"
-OUTPUT_CSV = GREEN_DIR / "ZS_COT_green_dataset.csv"
+OUTPUT_JSON = GREEN_DIR / "ALL_STRATEGIES_green_dataset.json"
+OUTPUT_CSV = GREEN_DIR / "ALL_STRATEGIES_green_dataset.csv"
 
-# Configurations
+# =============================================================================
+# ALL 8 CONFIGURATIONS (4 prompt types × 2 strategies)
+# =============================================================================
 PATCH_CONFIGS = [
+    # Zero-Shot
     {"strategy": "oracle", "prompt_type": "zero_shot", "name": "ZS_Oracle", "results_dir": "zs_oracle"},
     {"strategy": "realistic", "prompt_type": "zero_shot", "name": "ZS_Realistic", "results_dir": "zs_realistic"},
+    # Chain-of-Thought
     {"strategy": "oracle", "prompt_type": "cot", "name": "CoT_Oracle", "results_dir": "cot_oracle"},
     {"strategy": "realistic", "prompt_type": "cot", "name": "CoT_Realistic", "results_dir": "cot_realistic"},
+    # Self-Collaboration (NEW)
+    {"strategy": "oracle", "prompt_type": "self_collab", "name": "SC_Oracle", "results_dir": "sc_oracle"},
+    {"strategy": "realistic", "prompt_type": "self_collab", "name": "SC_Realistic", "results_dir": "sc_realistic"},
+    # LDB (NEW)
+    {"strategy": "oracle", "prompt_type": "ldb", "name": "LDB_Oracle", "results_dir": "ldb_oracle"},
+    {"strategy": "realistic", "prompt_type": "ldb", "name": "LDB_Realistic", "results_dir": "ldb_realistic"},
 ]
+
+# Prompt type to clean name mapping (for measurement files)
+PROMPT_TYPE_CLEAN = {
+    "zero_shot": "ZeroShot",
+    "cot": "CoT",
+    "self_collab": "SelfCollab",
+    "ldb": "LDB"
+}
 
 # Metrics
 GREEN_METRICS = [
@@ -71,7 +93,7 @@ EFFICIENCY_METRICS = [
 ]
 ALL_METRICS = GREEN_METRICS + EFFICIENCY_METRICS
 
-# Key metrics we want to extract (with _mean suffix as in swe_perf_green_k3.json)
+# Key metrics we want to extract
 KEY_METRICS_RAW = ['total_energy_joules', 'duration_seconds', 'power_watts', 'carbon_grams', 'cpu_usage_mean_percent']
 KEY_METRICS_WITH_SUFFIX = [f"{m}_mean" for m in KEY_METRICS_RAW]
 
@@ -79,9 +101,15 @@ KEY_METRICS_WITH_SUFFIX = [f"{m}_mean" for m in KEY_METRICS_RAW]
 class PipelineRunner:
     """Complete pipeline for patch generation, measurement, and dataset creation."""
     
-    def __init__(self, repetitions: int = 5):
+    def __init__(self, repetitions: int = 5, strategies: Optional[List[str]] = None):
         self.repetitions = repetitions
         self.start_time = time.time()
+        
+        # Filter configurations if specific strategies requested
+        if strategies:
+            self.configs = [c for c in PATCH_CONFIGS if c['prompt_type'] in strategies]
+        else:
+            self.configs = PATCH_CONFIGS
         
     def log(self, msg: str, level: str = "INFO"):
         elapsed = time.time() - self.start_time
@@ -102,7 +130,7 @@ class PipelineRunner:
         
         results = {}
         
-        for config in PATCH_CONFIGS:
+        for config in self.configs:
             self.log(f"Generating {config['name']} patches...")
             
             cmd = [
@@ -154,7 +182,7 @@ class PipelineRunner:
         
         results = {}
         
-        for config in PATCH_CONFIGS:
+        for config in self.configs:
             self.log(f"Measuring {config['name']} patches...")
             
             cmd = [
@@ -189,9 +217,10 @@ class PipelineRunner:
     
     def _find_measurement_file(self, prompt_type: str, strategy: str) -> Optional[Path]:
         """Find measurement output file."""
-        prompt_clean = "ZeroShot" if prompt_type == "zero_shot" else "CoT"
+        prompt_clean = PROMPT_TYPE_CLEAN.get(prompt_type, prompt_type)
         strategy_clean = strategy.capitalize()
         
+        # Pattern: *_SelfCollab_Oracle_k5.json
         pattern = f"*_{prompt_clean}_{strategy_clean}_k*.json"
         matches = list(GREEN_DIR.glob(pattern))
         
@@ -212,9 +241,9 @@ class PipelineRunner:
         base_head_data = self._load_base_head_from_green_k3()
         self.log(f"  Found {len(base_head_data)} instances with base/head data")
         
-        # Load LLM measurements
+        # Load LLM measurements for ALL configurations
         llm_data = {}
-        for config in PATCH_CONFIGS:
+        for config in self.configs:
             self.log(f"Loading {config['name']} measurements...")
             measurement_file = self._find_measurement_file(config['prompt_type'], config['strategy'])
             if measurement_file:
@@ -231,7 +260,7 @@ class PipelineRunner:
         
         self.log(f"Total instances with LLM data: {len(llm_instances)}")
         
-        # Build consolidated dataset - only for instances that have LLM measurements
+        # Build consolidated dataset
         dataset_instances = []
         
         for instance_id in sorted(llm_instances):
@@ -248,8 +277,8 @@ class PipelineRunner:
                 instance_entry['metrics']['Base'] = bh.get('base_metrics', {})
                 instance_entry['metrics']['Head'] = bh.get('head_metrics', {})
             
-            # Add LLM metrics
-            for config in PATCH_CONFIGS:
+            # Add LLM metrics for all configurations
+            for config in self.configs:
                 if instance_id in llm_data.get(config['name'], {}):
                     instance_entry['metrics'][f"Head_{config['name']}"] = \
                         llm_data[config['name']][instance_id]
@@ -258,13 +287,18 @@ class PipelineRunner:
             if instance_entry['metrics']:
                 dataset_instances.append(instance_entry)
         
+        # Build variants list dynamically
+        variants = ['Base', 'Head']
+        for config in self.configs:
+            variants.append(f"Head_{config['name']}")
+        
         # Create final dataset
         dataset = {
             'metadata': {
-                'name': 'Green Code Refactoring - LLM Comparison Dataset',
-                'description': 'Energy measurements comparing Base, Human (Head), and LLM-generated optimizations',
-                'variants': ['Base', 'Head', 'Head_ZS_Oracle', 'Head_ZS_Realistic', 
-                            'Head_CoT_Oracle', 'Head_CoT_Realistic'],
+                'name': 'Green Code Refactoring - All Strategies Comparison Dataset',
+                'description': 'Energy measurements comparing Base, Human (Head), and all LLM strategies',
+                'variants': variants,
+                'strategies': [c['name'] for c in self.configs],
                 'metrics': KEY_METRICS_RAW,
                 'all_metrics': ALL_METRICS,
                 'repetitions': self.repetitions,
@@ -312,18 +346,7 @@ class PipelineRunner:
         return data
     
     def _aggregate_metrics_from_green(self, green_metrics: Dict, variant: str) -> Dict[str, float]:
-        """
-        Aggregate metrics from green_metrics structure for a specific variant (base/head).
-        
-        Structure of green_metrics:
-        {
-            "test_name": {
-                "base": {"total_energy_joules_mean": 123.4, ...},
-                "head": {"total_energy_joules_mean": 100.2, ...}
-            },
-            ...
-        }
-        """
+        """Aggregate metrics from green_metrics structure for a specific variant."""
         if not green_metrics:
             return {}
         
@@ -337,21 +360,18 @@ class PipelineRunner:
             if not isinstance(variant_data, dict):
                 continue
             
-            # Extract metrics (they have _mean suffix in green_k3)
             for metric_raw in KEY_METRICS_RAW:
-                # Try with _mean suffix first (format in swe_perf_green_k3.json)
                 metric_with_suffix = f"{metric_raw}_mean"
                 
                 if metric_with_suffix in variant_data:
                     val = variant_data[metric_with_suffix]
-                    if isinstance(val, (int, float)) and not (isinstance(val, float) and (val != val)):  # exclude NaN
+                    if isinstance(val, (int, float)) and not (isinstance(val, float) and (val != val)):
                         metric_values[metric_raw].append(val)
                 elif metric_raw in variant_data:
                     val = variant_data[metric_raw]
                     if isinstance(val, (int, float)) and not (isinstance(val, float) and (val != val)):
                         metric_values[metric_raw].append(val)
         
-        # Compute means across all tests
         result = {}
         for metric, values in metric_values.items():
             if values:
@@ -372,11 +392,10 @@ class PipelineRunner:
                 if not instance_id:
                     continue
                 
-                # Extract metrics from green_metrics
                 green_metrics = instance.get('green_metrics', {})
                 aggregated = self._aggregate_llm_metrics(green_metrics)
                 
-                if aggregated:  # Only add if we have metrics
+                if aggregated:
                     data[instance_id] = aggregated
                 
         except Exception as e:
@@ -385,17 +404,7 @@ class PipelineRunner:
         return data
     
     def _aggregate_llm_metrics(self, green_metrics: Dict) -> Dict[str, float]:
-        """
-        Aggregate metrics from LLM measurement green_metrics.
-        
-        Structure:
-        {
-            "test_name": {
-                "head": {"total_energy_joules_mean": 123.4, ...}
-            },
-            ...
-        }
-        """
+        """Aggregate metrics from LLM measurement green_metrics."""
         if not green_metrics:
             return {}
         
@@ -405,13 +414,11 @@ class PipelineRunner:
             if not isinstance(test_data, dict):
                 continue
             
-            # LLM measurements only have 'head' (the patched version)
             metrics = test_data.get('head', test_data)
             if not isinstance(metrics, dict):
                 continue
             
             for metric_raw in KEY_METRICS_RAW:
-                # Try with _mean suffix first
                 metric_with_suffix = f"{metric_raw}_mean"
                 
                 if metric_with_suffix in metrics:
@@ -423,7 +430,6 @@ class PipelineRunner:
                     if isinstance(val, (int, float)) and not (isinstance(val, float) and (val != val)):
                         metric_values[metric_raw].append(val)
         
-        # Compute means
         result = {}
         for metric, values in metric_values.items():
             if values:
@@ -460,9 +466,9 @@ class PipelineRunner:
         
         # Add comparison columns
         headers.extend([
-            'human_energy_reduction_%',      # (Base - Head) / Base * 100
-            'best_llm_energy_reduction_%',   # (Base - BestLLM) / Base * 100
-            'llm_vs_human_%',                # BestLLM / Head * 100 (lower is better)
+            'human_energy_reduction_%',
+            'best_llm_energy_reduction_%',
+            'llm_vs_human_%',
             'best_llm_variant'
         ])
         
@@ -503,13 +509,11 @@ class PipelineRunner:
                 best_llm = min(llm_energies, key=llm_energies.get)
                 best_llm_energy = llm_energies[best_llm]
                 
-                # Best LLM energy reduction vs base
                 if base_energy and base_energy > 0:
                     row['best_llm_energy_reduction_%'] = round((base_energy - best_llm_energy) / base_energy * 100, 2)
                 else:
                     row['best_llm_energy_reduction_%'] = ''
                 
-                # LLM vs Human (lower is better - means LLM uses less energy than human optimization)
                 if head_energy and head_energy > 0:
                     row['llm_vs_human_%'] = round(best_llm_energy / head_energy * 100, 2)
                 else:
@@ -537,6 +541,7 @@ class PipelineRunner:
         variants = dataset['metadata']['variants']
         
         print(f"Total instances: {len(instances)}")
+        print(f"Strategies tested: {len(self.configs)}")
         print(f"Variants: {', '.join(variants)}")
         print()
         
@@ -547,85 +552,75 @@ class PipelineRunner:
             pct = count / len(instances) * 100 if instances else 0
             print(f"  {variant}: {count}/{len(instances)} ({pct:.1f}%)")
         
-        # Energy comparison summary
+        # Strategy performance comparison
         print("\n" + "="*50)
-        print("ENERGY COMPARISON SUMMARY")
+        print("STRATEGY PERFORMANCE COMPARISON")
         print("="*50)
         
-        comparisons = []
-        for inst in instances:
-            base = inst.get('metrics', {}).get('Base', {}).get('total_energy_joules')
-            head = inst.get('metrics', {}).get('Head', {}).get('total_energy_joules')
-            
-            if base and head and base > 0:
-                human_reduction = (base - head) / base * 100
-                
-                llm_reductions = {}
-                for variant in variants:
-                    if variant.startswith('Head_'):
-                        llm_energy = inst.get('metrics', {}).get(variant, {}).get('total_energy_joules')
-                        if llm_energy:
-                            llm_reductions[variant] = {
-                                'energy': llm_energy,
-                                'reduction': (base - llm_energy) / base * 100,
-                                'vs_human': llm_energy / head * 100
-                            }
-                
-                if llm_reductions:
-                    comparisons.append({
-                        'instance': inst['instance_id'],
-                        'base_energy': base,
-                        'head_energy': head,
-                        'human_reduction': human_reduction,
-                        'llm_reductions': llm_reductions
-                    })
+        strategy_stats = defaultdict(lambda: {'energy_reductions': [], 'vs_human': []})
         
-        if comparisons:
-            print(f"\nInstances with full comparison data: {len(comparisons)}")
+        for inst in instances:
+            base_energy = inst.get('metrics', {}).get('Base', {}).get('total_energy_joules')
+            head_energy = inst.get('metrics', {}).get('Head', {}).get('total_energy_joules')
             
-            # Average human reduction
-            avg_human = sum(c['human_reduction'] for c in comparisons) / len(comparisons)
-            print(f"\n📊 Human optimization avg energy reduction: {avg_human:.1f}%")
+            if not base_energy or base_energy <= 0:
+                continue
             
-            # Average LLM reductions
-            print(f"\n📊 LLM optimization avg energy reduction:")
-            for variant in variants:
-                if variant.startswith('Head_'):
-                    vals = [c['llm_reductions'][variant]['reduction'] 
-                           for c in comparisons if variant in c['llm_reductions']]
-                    if vals:
-                        avg = sum(vals) / len(vals)
-                        count = len(vals)
-                        print(f"  {variant.replace('Head_', '')}: {avg:.1f}% ({count} instances)")
-            
-            # LLM vs Human comparison
-            print(f"\n📊 LLM vs Human (100% = same, <100% = LLM better):")
-            for variant in variants:
-                if variant.startswith('Head_'):
-                    vals = [c['llm_reductions'][variant]['vs_human'] 
-                           for c in comparisons if variant in c['llm_reductions']]
-                    if vals:
-                        avg = sum(vals) / len(vals)
-                        print(f"  {variant.replace('Head_', '')}: {avg:.1f}%")
-            
-            # Per-instance details
-            print(f"\n" + "-"*50)
-            print("PER-INSTANCE DETAILS:")
-            print("-"*50)
-            for comp in comparisons:
-                print(f"\n{comp['instance']}:")
-                print(f"  Base: {comp['base_energy']:.1f}J → Head: {comp['head_energy']:.1f}J (Human: -{comp['human_reduction']:.1f}%)")
-                for variant, data in comp['llm_reductions'].items():
-                    name = variant.replace('Head_', '')
-                    print(f"  {name}: {data['energy']:.1f}J (vs Base: -{data['reduction']:.1f}%, vs Human: {data['vs_human']:.1f}%)")
+            for config in self.configs:
+                variant_name = f"Head_{config['name']}"
+                llm_energy = inst.get('metrics', {}).get(variant_name, {}).get('total_energy_joules')
+                
+                if llm_energy:
+                    # Energy reduction vs base
+                    reduction = (base_energy - llm_energy) / base_energy * 100
+                    strategy_stats[config['name']]['energy_reductions'].append(reduction)
+                    
+                    # Vs human (if available)
+                    if head_energy and head_energy > 0:
+                        vs_human = llm_energy / head_energy * 100
+                        strategy_stats[config['name']]['vs_human'].append(vs_human)
+        
+        # Print stats per strategy
+        print("\n📊 Average Energy Reduction vs Base (higher = better):")
+        for config in self.configs:
+            stats = strategy_stats[config['name']]
+            if stats['energy_reductions']:
+                avg = sum(stats['energy_reductions']) / len(stats['energy_reductions'])
+                count = len(stats['energy_reductions'])
+                print(f"  {config['name']}: {avg:+.1f}% ({count} instances)")
+            else:
+                print(f"  {config['name']}: No data")
+        
+        print("\n📊 LLM vs Human (100% = same, <100% = LLM better):")
+        for config in self.configs:
+            stats = strategy_stats[config['name']]
+            if stats['vs_human']:
+                avg = sum(stats['vs_human']) / len(stats['vs_human'])
+                print(f"  {config['name']}: {avg:.1f}%")
+        
+        # Find best strategy overall
+        print("\n" + "-"*50)
+        best_strategy = None
+        best_reduction = float('-inf')
+        for config in self.configs:
+            stats = strategy_stats[config['name']]
+            if stats['energy_reductions']:
+                avg = sum(stats['energy_reductions']) / len(stats['energy_reductions'])
+                if avg > best_reduction:
+                    best_reduction = avg
+                    best_strategy = config['name']
+        
+        if best_strategy:
+            print(f"🏆 Best Strategy: {best_strategy} ({best_reduction:+.1f}% avg energy reduction)")
     
     def run(self, skip_patches: bool = False, skip_measurements: bool = False, only_dataset: bool = False):
         """Run the complete pipeline."""
         
         print("\n" + "="*70)
-        print("�� COMPLETE PIPELINE: PATCHES → MEASUREMENTS → DATASET")
+        print("🔬 COMPLETE PIPELINE: ALL STRATEGIES")
         print("="*70)
         print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Strategies: {[c['name'] for c in self.configs]}")
         print(f"Repetitions: {self.repetitions}")
         print()
         
@@ -664,7 +659,7 @@ class PipelineRunner:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Complete pipeline: Create Patches → Run Measurements → Create Dataset"
+        description="Complete pipeline: Create Patches → Run Measurements → Create Dataset (All Strategies)"
     )
     parser.add_argument('--skip-patches', action='store_true',
                        help='Skip patch generation (use existing patches)')
@@ -674,10 +669,16 @@ def main():
                        help='Only create dataset from existing data')
     parser.add_argument('--repetitions', '-k', type=int, default=5,
                        help='Number of measurement repetitions (default: 5)')
+    parser.add_argument('--strategies', nargs='+', 
+                       choices=['zero_shot', 'cot', 'self_collab', 'ldb'],
+                       help='Only run specific strategies (default: all)')
     
     args = parser.parse_args()
     
-    runner = PipelineRunner(repetitions=args.repetitions)
+    runner = PipelineRunner(
+        repetitions=args.repetitions,
+        strategies=args.strategies
+    )
     runner.run(
         skip_patches=args.skip_patches,
         skip_measurements=args.skip_measurements,
