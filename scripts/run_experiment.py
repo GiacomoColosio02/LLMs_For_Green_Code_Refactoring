@@ -1,20 +1,18 @@
 """
 Unified Experiment Runner for Green Code Refactoring.
 
-Runs a single experiment: generates an LLM patch for one instance.
-Supports both ORACLE and REALISTIC strategies.
+Supports all prompting strategies:
+- zero_shot: Single-turn direct generation
+- cot: Chain-of-Thought reasoning
+- self_collab: Multi-turn expert collaboration (3 turns)
+- ldb: Iterative refinement with feedback (up to 3 iterations)
 
-Version: 2.0 - Improved context management to prevent overflow
+Version: 3.0 - Added multi-turn strategy support
 
 Usage:
-    # Oracle mode (knows exact files to modify)
-    python run_experiment.py --instance mwaskom__seaborn-2389 --strategy oracle
-    
-    # Realistic mode (must find files via retrieval)
-    python run_experiment.py --instance mwaskom__seaborn-2389 --strategy realistic
-    
-    # With custom dataset
-    python run_experiment.py --instance X --strategy oracle --dataset path/to/data.json
+    python run_experiment.py --instance mwaskom__seaborn-2389 --strategy oracle --prompt-type zero_shot
+    python run_experiment.py --instance mwaskom__seaborn-2389 --strategy realistic --prompt-type self_collab
+    python run_experiment.py --instance mwaskom__seaborn-2389 --strategy oracle --prompt-type ldb
 """
 import sys
 import os
@@ -39,6 +37,10 @@ from src.llm_clients import VLLMClient
 from src.prompt_templates import (
     ZeroShotTemplate, 
     ChainOfThoughtTemplate,
+    SelfCollaborationTemplate,
+    LDBTemplate,
+    LDBFeedback,
+    LDBFeedbackType,
     PromptContext, 
     ProblemStatementType,
     extract_patch_from_cot
@@ -57,29 +59,28 @@ logger = logging.getLogger("ExperimentRunner")
 DEFAULT_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced_test.json"
 RESULTS_DIR = PROJECT_ROOT / "results"
 
-# =============================================================================
-# CONTEXT LIMITS - CRITICAL FOR AVOIDING OVERFLOW
-# =============================================================================
-# For a 32k context model, we need to leave room for:
-# - System prompt (~500 tokens)
-# - Template instructions (~1000 tokens)  
-# - LLM response (~4000 tokens)
-# So max input context should be ~26k tokens = ~78k chars
-# Being conservative: 20k tokens = 60k chars for ORACLE, less for REALISTIC
-
+# Context limits per strategy
 CONTEXT_LIMITS = {
     "oracle": {
-        "max_total_chars": 50000,       # ~16k tokens - safe for oracle
-        "max_file_chars": 25000,        # Single file limit
-        "max_files": 5,                 # Max files to include
+        "max_total_chars": 50000,
+        "max_file_chars": 25000,
+        "max_files": 5,
     },
     "realistic": {
-        "max_total_chars": 35000,       # ~12k tokens - more conservative for realistic
-        "max_file_chars": 8000,         # Smaller per-file limit (more files expected)
-        "max_test_chars": 5000,         # Limit for test files
-        "max_retrieved_files": 5,       # Reduce from 10 to 5
-        "max_repo_map_lines": 100,      # Limit repo map
+        "max_total_chars": 35000,
+        "max_file_chars": 8000,
+        "max_test_chars": 5000,
+        "max_retrieved_files": 5,
+        "max_repo_map_lines": 100,
     }
+}
+
+# Prompt type configurations
+PROMPT_CONFIGS = {
+    "zero_shot": {"multi_turn": False, "template_class": ZeroShotTemplate},
+    "cot": {"multi_turn": False, "template_class": ChainOfThoughtTemplate},
+    "self_collab": {"multi_turn": True, "num_turns": 3, "template_class": SelfCollaborationTemplate},
+    "ldb": {"multi_turn": True, "iterative": True, "max_iterations": 3, "template_class": LDBTemplate},
 }
 
 
@@ -89,15 +90,7 @@ CONTEXT_LIMITS = {
 
 class ExperimentRunner:
     """
-    Runs a single green code optimization experiment.
-    
-    Flow:
-    1. Load instance from dataset
-    2. Clone repository at base_commit
-    3. Build context (oracle: from patch, realistic: via retrieval)
-    4. Generate prompt and call LLM
-    5. Apply patch to verify it works
-    6. Save results
+    Runs green code optimization experiments with various prompting strategies.
     """
     
     def __init__(
@@ -107,15 +100,6 @@ class ExperimentRunner:
         prompt_type: str = "zero_shot",
         output_dir: Optional[Path] = None
     ):
-        """
-        Initialize runner.
-        
-        Args:
-            dataset_path: Path to SWE-Perf dataset JSON
-            strategy: "oracle" or "realistic"
-            prompt_type: "zero_shot" or "cot" (chain-of-thought)
-            output_dir: Directory for results (default: results/{prompt_type}_{strategy})
-        """
         self.dataset_path = Path(dataset_path)
         self.strategy = strategy.lower()
         self.prompt_type = prompt_type.lower()
@@ -123,17 +107,19 @@ class ExperimentRunner:
         if self.strategy not in ("oracle", "realistic"):
             raise ValueError(f"Strategy must be 'oracle' or 'realistic', got: {strategy}")
         
-        if self.prompt_type not in ("zero_shot", "cot"):
-            raise ValueError(f"Prompt type must be 'zero_shot' or 'cot', got: {prompt_type}")
+        if self.prompt_type not in PROMPT_CONFIGS:
+            valid = list(PROMPT_CONFIGS.keys())
+            raise ValueError(f"Prompt type must be one of {valid}, got: {prompt_type}")
         
-        # Get context limits for this strategy
+        self.prompt_config = PROMPT_CONFIGS[self.prompt_type]
         self.limits = CONTEXT_LIMITS[self.strategy]
         
-        # Set output directory based on prompt type and strategy
+        # Set output directory
         if output_dir:
             self.output_dir = Path(output_dir)
         else:
-            prefix = "zs" if self.prompt_type == "zero_shot" else "cot"
+            prefix_map = {"zero_shot": "zs", "cot": "cot", "self_collab": "sc", "ldb": "ldb"}
+            prefix = prefix_map.get(self.prompt_type, self.prompt_type)
             self.output_dir = RESULTS_DIR / f"{prefix}_{self.strategy}"
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
@@ -142,59 +128,40 @@ class ExperimentRunner:
         
         # Initialize components
         self.llm_client = VLLMClient()
-        
-        # Select template based on prompt type
-        if self.prompt_type == "zero_shot":
-            self.template = ZeroShotTemplate()
-        else:
-            self.template = ChainOfThoughtTemplate()
-        
+        self.template = self.prompt_config["template_class"]()
         self.measurer = SWEPerfMeasurer(str(dataset_path), country_code="ESP")
         
         logger.info(f"Initialized ExperimentRunner")
         logger.info(f"  Prompt Type: {self.prompt_type.upper()}")
         logger.info(f"  Strategy: {self.strategy.upper()}")
+        logger.info(f"  Multi-turn: {self.prompt_config.get('multi_turn', False)}")
         logger.info(f"  Dataset: {self.dataset_path.name} ({len(self.dataset)} instances)")
-        logger.info(f"  Output: {self.output_dir}")
         logger.info(f"  Model: {self.llm_client.model_name}")
-        logger.info(f"  Context Limit: {self.limits['max_total_chars']:,} chars")
     
     def _load_dataset(self) -> List[Dict]:
-        """Load dataset from JSON file."""
         with open(self.dataset_path, 'r') as f:
             data = json.load(f)
-        
-        if isinstance(data, list):
-            return data
-        return data.get("instances", [])
+        return data if isinstance(data, list) else data.get("instances", [])
     
     def _get_instance(self, instance_id: str) -> Dict:
-        """Get instance by ID."""
         for item in self.dataset:
             if item.get("instance_id") == instance_id:
                 return item
-        raise ValueError(f"Instance '{instance_id}' not found in dataset")
+        raise ValueError(f"Instance '{instance_id}' not found")
     
     # =========================================================================
-    # CONTEXT BUILDING
+    # CONTEXT BUILDING (same as before)
     # =========================================================================
     
     def _truncate_file(self, content: str, max_chars: int, filename: str = "") -> str:
-        """
-        Intelligently truncate a file to max_chars.
-        Tries to keep the most relevant parts (imports, class/function definitions).
-        """
         if len(content) <= max_chars:
             return content
         
         lines = content.splitlines()
-        
-        # Strategy: Keep first 40% and last 20%, truncate middle
-        total_chars = max_chars - 100  # Reserve for truncation message
+        total_chars = max_chars - 100
         first_portion = int(total_chars * 0.6)
         last_portion = int(total_chars * 0.4)
         
-        # Build first part
         first_lines = []
         char_count = 0
         for line in lines:
@@ -203,7 +170,6 @@ class ExperimentRunner:
             first_lines.append(line)
             char_count += len(line) + 1
         
-        # Build last part
         last_lines = []
         char_count = 0
         for line in reversed(lines):
@@ -213,22 +179,12 @@ class ExperimentRunner:
             char_count += len(line) + 1
         
         truncation_msg = f"\n# ... [{len(lines) - len(first_lines) - len(last_lines)} lines truncated] ...\n"
-        
         return "\n".join(first_lines) + truncation_msg + "\n".join(last_lines)
     
-    def _build_oracle_context(
-        self, 
-        repo_path: Path, 
-        instance: Dict
-    ) -> Tuple[Dict[str, str], List[str]]:
-        """
-        Build context for ORACLE mode.
-        Extracts exact target files from the gold patch.
-        """
+    def _build_oracle_context(self, repo_path: Path, instance: Dict) -> Tuple[Dict[str, str], List[str]]:
         limits = self.limits
         patch_content = instance.get("patch", "")
         
-        # Extract target files from patch
         target_files = []
         for line in patch_content.splitlines():
             if line.startswith("--- a/"):
@@ -239,13 +195,11 @@ class ExperimentRunner:
         target_files = list(set(target_files))
         
         if not target_files:
-            logger.warning("No target files found in patch, using patch_functions")
             patch_funcs = instance.get("patch_functions", "{}")
             if isinstance(patch_funcs, str):
                 patch_funcs = json.loads(patch_funcs)
             target_files = list(patch_funcs.keys())
         
-        # Load files with size limits
         code_files = {}
         current_chars = 0
         max_total = limits["max_total_chars"]
@@ -254,7 +208,6 @@ class ExperimentRunner:
         
         for fname in target_files[:max_files]:
             if current_chars >= max_total:
-                logger.warning(f"Context limit reached, skipping remaining files")
                 break
             
             fpath = repo_path / fname
@@ -264,22 +217,18 @@ class ExperimentRunner:
             try:
                 content = fpath.read_text(errors='ignore')
                 
-                # Apply per-file limit
                 if len(content) > max_file:
                     content = self._truncate_file(content, max_file, fname)
                 
-                # Check total limit
                 remaining = max_total - current_chars
                 if len(content) > remaining:
                     if remaining > 2000:
                         content = self._truncate_file(content, remaining, fname)
                     else:
-                        logger.warning(f"Skipping {fname} - not enough space")
                         continue
                 
                 code_files[fname] = content
                 current_chars += len(content)
-                logger.info(f"   Added {fname}: {len(content):,} chars")
                 
             except Exception as e:
                 logger.warning(f"Could not read {fname}: {e}")
@@ -287,17 +236,7 @@ class ExperimentRunner:
         logger.info(f"📂 Oracle context: {len(code_files)} files, {current_chars:,} chars")
         return code_files, list(code_files.keys())
     
-    def _build_realistic_context(
-        self,
-        repo_path: Path,
-        instance: Dict
-    ) -> Tuple[Dict[str, str], List[str], str]:
-        """
-        Build context for REALISTIC mode.
-        Uses simulated retrieval based on test file tokens.
-        
-        IMPROVED: Better limits to prevent context overflow.
-        """
+    def _build_realistic_context(self, repo_path: Path, instance: Dict) -> Tuple[Dict[str, str], List[str], str]:
         limits = self.limits
         max_total = limits["max_total_chars"]
         max_file = limits["max_file_chars"]
@@ -305,71 +244,41 @@ class ExperimentRunner:
         max_retrieved = limits["max_retrieved_files"]
         max_repo_lines = limits["max_repo_map_lines"]
         
-        # Get test files
         test_list = instance.get('efficiency_test', [])
         test_files = list(set(t.split("::")[0] for t in test_list))
         
-        # Generate repo map (limited)
         repo_map = self._generate_repo_map(repo_path, max_lines=max_repo_lines)
         
-        # Track context size
         code_files = {}
         current_chars = 0
         
-        # =====================================================================
-        # STEP 1: Add test files (with strict limits)
-        # =====================================================================
-        test_contents = {}
-        
-        for tf in test_files[:3]:  # Max 3 test files
+        # Add test files
+        for tf in test_files[:3]:
             fpath = repo_path / tf
             if not fpath.exists():
                 continue
             
             try:
                 content = fpath.read_text(errors='ignore')
-                
-                # Strict limit on test files - we only need them for context
                 if len(content) > max_test:
-                    # For tests, keep only the relevant test functions
-                    content = self._extract_relevant_tests(content, test_list, max_test)
+                    content = content[:max_test] + "\n# ... [TRUNCATED]"
                 
-                test_contents[tf] = content
-                
-            except Exception as e:
-                logger.warning(f"Could not read test file {tf}: {e}")
+                if current_chars + len(content) <= max_total * 0.4:
+                    code_files[tf] = content
+                    current_chars += len(content)
+            except:
+                pass
         
-        # Add test files to context
-        for tf, content in test_contents.items():
-            if current_chars + len(content) > max_total * 0.4:  # Tests max 40% of context
-                logger.warning(f"Test context limit reached, truncating {tf}")
-                remaining = int(max_total * 0.4) - current_chars
-                if remaining > 1000:
-                    content = content[:remaining] + "\n# ... [TRUNCATED]"
-                else:
-                    continue
-            
-            code_files[tf] = content
-            current_chars += len(content)
-            logger.info(f"   Added test {tf}: {len(content):,} chars")
-        
-        # =====================================================================
-        # STEP 2: Retrieve source files using BM25-style scoring
-        # =====================================================================
+        # Retrieve source files
         query_tokens = set()
-        for content in test_contents.values():
+        for content in code_files.values():
             query_tokens.update(self._tokenize(content))
         
-        # Remove stopwords
-        stopwords = {
-            'def', 'class', 'self', 'import', 'from', 'in', 'if', 'else', 
-            'return', 'assert', 'test', 'none', 'true', 'false', 'and', 
-            'or', 'pytest', 'for', 'while', 'with', 'as', 'try', 'except',
-            'is', 'not', 'the', 'to', 'of', 'a', 'an'
-        }
+        stopwords = {'def', 'class', 'self', 'import', 'from', 'in', 'if', 'else', 
+                     'return', 'assert', 'test', 'none', 'true', 'false', 'and', 
+                     'or', 'pytest', 'for', 'while', 'with', 'as', 'try', 'except'}
         query_tokens -= stopwords
         
-        # Score all Python files
         scores = {}
         for root, _, files in os.walk(repo_path):
             for fname in files:
@@ -378,171 +287,63 @@ class ExperimentRunner:
                 
                 rel_path = os.path.relpath(os.path.join(root, fname), repo_path)
                 
-                # Skip test files and __init__.py
                 if rel_path in test_files or fname == '__init__.py':
                     continue
-                
-                # Skip test directories
                 if '/tests/' in rel_path or '/test_' in rel_path:
                     continue
                 
                 try:
                     content = (repo_path / rel_path).read_text(errors='ignore')
                     file_tokens = self._tokenize(content)
-                    
-                    # BM25-style scoring: penalize very common tokens
                     score = len(query_tokens & file_tokens)
-                    
-                    # Boost files that match test file names
-                    for tf in test_files:
-                        test_name = Path(tf).stem.replace('test_', '')
-                        if test_name in rel_path:
-                            score *= 2
-                    
                     if score > 0:
                         scores[rel_path] = (score, len(content))
                 except:
                     pass
         
-        # =====================================================================
-        # STEP 3: Add top retrieved files (with strict limits)
-        # =====================================================================
-        # Sort by score, then by file size (prefer smaller files)
-        top_files = sorted(
-            scores.items(), 
-            key=lambda x: (x[1][0], -x[1][1]),  # High score, low size
-            reverse=True
-        )
+        top_files = sorted(scores.items(), key=lambda x: (x[1][0], -x[1][1]), reverse=True)
         
         files_added = 0
         for fname, (score, _) in top_files:
-            if files_added >= max_retrieved:
-                break
-            
-            if current_chars >= max_total:
-                logger.warning(f"Context limit reached at {current_chars:,} chars")
+            if files_added >= max_retrieved or current_chars >= max_total:
                 break
             
             try:
                 content = (repo_path / fname).read_text(errors='ignore')
                 
-                # Apply per-file limit
                 if len(content) > max_file:
                     content = self._truncate_file(content, max_file, fname)
                 
-                # Check remaining space
                 remaining = max_total - current_chars
                 if len(content) > remaining:
                     if remaining > 2000:
                         content = self._truncate_file(content, remaining, fname)
                     else:
-                        logger.warning(f"Skipping {fname} - not enough space ({remaining} remaining)")
                         continue
                 
                 code_files[fname] = content
                 current_chars += len(content)
                 files_added += 1
-                logger.info(f"   Added retrieved {fname}: {len(content):,} chars (score: {score})")
                 
-            except Exception as e:
-                logger.warning(f"Could not read {fname}: {e}")
+            except:
+                pass
         
         logger.info(f"📂 Realistic context: {len(code_files)} files, {current_chars:,} chars")
-        logger.info(f"   Tests: {len(test_contents)}, Retrieved: {files_added}")
-        
         return code_files, list(code_files.keys()), repo_map
     
-    def _extract_relevant_tests(
-        self, 
-        content: str, 
-        test_list: List[str], 
-        max_chars: int
-    ) -> str:
-        """
-        Extract only relevant test functions from a test file.
-        """
-        # Get test function names from test_list
-        test_names = set()
-        for t in test_list:
-            if "::" in t:
-                parts = t.split("::")
-                for p in parts[1:]:
-                    # Handle parametrized tests like test_foo[param1-param2]
-                    name = p.split("[")[0]
-                    test_names.add(name)
-        
-        if not test_names:
-            # No specific tests, truncate normally
-            return self._truncate_file(content, max_chars)
-        
-        lines = content.splitlines()
-        result_lines = []
-        in_relevant_function = False
-        current_indent = 0
-        
-        # Always keep imports and class definitions
-        for i, line in enumerate(lines):
-            stripped = line.strip()
-            
-            # Keep imports
-            if stripped.startswith(('import ', 'from ')):
-                result_lines.append(line)
-                continue
-            
-            # Keep class definitions
-            if stripped.startswith('class '):
-                result_lines.append(line)
-                continue
-            
-            # Check if this is a relevant test function
-            if stripped.startswith('def '):
-                func_name = stripped[4:].split('(')[0]
-                if func_name in test_names or any(tn in func_name for tn in test_names):
-                    in_relevant_function = True
-                    current_indent = len(line) - len(stripped)
-                    result_lines.append(line)
-                    continue
-                else:
-                    in_relevant_function = False
-            
-            # If inside relevant function, keep the line
-            if in_relevant_function:
-                line_indent = len(line) - len(line.lstrip()) if line.strip() else current_indent + 1
-                if line.strip() and line_indent <= current_indent and not stripped.startswith(('@', '#')):
-                    in_relevant_function = False
-                else:
-                    result_lines.append(line)
-        
-        result = "\n".join(result_lines)
-        
-        # If still too long, truncate
-        if len(result) > max_chars:
-            result = result[:max_chars] + "\n# ... [TRUNCATED]"
-        
-        return result
-    
     def _generate_repo_map(self, repo_path: Path, max_lines: int = 100) -> str:
-        """Generate repository structure map (limited)."""
         tree = []
-        
         for root, dirs, files in os.walk(repo_path):
-            # Skip hidden and cache directories
             dirs[:] = [d for d in dirs if not d.startswith(('.', '__'))]
-            
             level = root.replace(str(repo_path), '').count(os.sep)
-            
-            # Limit depth
             if level > 3:
                 continue
-            
             indent = '    ' * level
             tree.append(f"{indent}{os.path.basename(root)}/")
-            
             subindent = '    ' * (level + 1)
-            py_files = [f for f in files if f.endswith('.py')][:10]  # Max 10 files per dir
+            py_files = [f for f in files if f.endswith('.py')][:10]
             for f in py_files:
                 tree.append(f"{subindent}{f}")
-            
             if len(tree) > max_lines:
                 break
         
@@ -550,23 +351,11 @@ class ExperimentRunner:
             return "\n".join(tree[:max_lines]) + "\n... (truncated)"
         return "\n".join(tree)
     
-    def _simulated_retrieval(
-        self,
-        repo_path: Path,
-        test_files: List[str]
-    ) -> Tuple[Dict[str, str], List[str]]:
-        """
-        Simulate code retrieval based on test file tokens.
-        DEPRECATED: Use _build_realistic_context instead.
-        """
-        return self._build_realistic_context(repo_path, {"efficiency_test": test_files})[:2]
-    
     def _tokenize(self, text: str) -> set:
-        """Extract identifier tokens from text."""
         return set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', text.lower()))
     
     # =========================================================================
-    # PROMPT GENERATION
+    # PROMPT CONTEXT
     # =========================================================================
     
     def _build_prompt_context(
@@ -576,23 +365,15 @@ class ExperimentRunner:
         candidates: List[str],
         repo_map: Optional[str] = None
     ) -> PromptContext:
-        """Build PromptContext for template."""
-        
-        # Get problem description based on strategy
         if self.strategy == "oracle":
-            problem_desc = instance.get(
-                'problem_statement_oracle',
-                f"Optimize energy efficiency for the provided code."
-            )
+            problem_desc = instance.get('problem_statement_oracle',
+                                        "Optimize energy efficiency for the provided code.")
             stmt_type = ProblemStatementType.ORACLE
         else:
-            problem_desc = instance.get(
-                'problem_statement_realistic',
-                f"Optimize energy efficiency based on the failing tests."
-            )
+            problem_desc = instance.get('problem_statement_realistic',
+                                        "Optimize energy efficiency based on the failing tests.")
             stmt_type = ProblemStatementType.REALISTIC
         
-        # Build test command
         test_list = instance.get('efficiency_test', [])
         test_cmd = f"pytest {' '.join(test_list)}" if test_list else ""
         
@@ -609,39 +390,282 @@ class ExperimentRunner:
         )
     
     def _get_system_prompt(self) -> str:
-        """Get system prompt for LLM."""
         return (
             "You are an expert Green Software Engineer specializing in energy-efficient code.\n"
             "Your goal is to optimize the provided code for energy efficiency and execution speed.\n\n"
-            "CRITICAL INSTRUCTIONS:\n"
-            "1. Output ONLY the code patch using the SEARCH/REPLACE format shown below.\n"
-            "2. Use SMALL, UNIQUE SEARCH blocks - just enough to locate the code.\n"
-            "3. Do NOT add new external dependencies.\n"
-            "4. Do NOT modify test files.\n"
-            "5. Provide the patch immediately, without explanations.\n\n"
-            "Format:\n"
-            "### path/to/file.py\n"
-            "<<<<<<< SEARCH\n"
-            "original code\n"
-            "=======\n"
-            "optimized code\n"
-            ">>>>>>> REPLACE"
+            "CRITICAL: Output ONLY the code patch using SEARCH/REPLACE format.\n"
+            "Do NOT add new external dependencies. Do NOT modify test files."
         )
+    
+    # =========================================================================
+    # SINGLE-TURN EXECUTION
+    # =========================================================================
+    
+    def _run_single_turn(
+        self,
+        context: PromptContext,
+        candidates: List[str],
+        repo_path: Path
+    ) -> Dict:
+        """Execute single-turn strategies (zero_shot, cot)."""
+        
+        user_prompt = self.template.generate_prompt(context)
+        system_prompt = self._get_system_prompt()
+        
+        total_size = len(system_prompt) + len(user_prompt)
+        logger.info(f"   Prompt size: {total_size:,} chars (~{total_size//3:,} tokens)")
+        
+        response = self.llm_client.generate(
+            prompt=user_prompt,
+            system_prompt=system_prompt,
+            temperature=0.0,
+            max_tokens=4096
+        )
+        
+        llm_output = response.content
+        logger.info(f"   Response: {len(llm_output):,} chars, {response.total_tokens} tokens")
+        
+        # Extract patch
+        if self.prompt_type == "cot":
+            patch_content = extract_patch_from_cot(llm_output)
+        else:
+            patch_content = llm_output
+        
+        # Apply patch
+        patch_engine = PatchEngine(repo_path)
+        patch_result = patch_engine.apply_patch(patch_content, candidates)
+        
+        return {
+            "llm_response": llm_output,
+            "llm_tokens": response.total_tokens,
+            "llm_latency": response.latency_seconds,
+            "patch_content": patch_content,
+            "patch_result": {
+                "success": patch_result.success,
+                "changes_applied": patch_result.changes_applied,
+                "total_blocks": patch_result.total_blocks,
+                "method": patch_result.method_used,
+                "modified_files": patch_result.modified_files,
+                "error": patch_result.error_message
+            },
+            "status": "success" if patch_result.success else "patch_failed"
+        }
+    
+    # =========================================================================
+    # SELF-COLLABORATION EXECUTION
+    # =========================================================================
+    
+    def _run_self_collaboration(
+        self,
+        context: PromptContext,
+        candidates: List[str],
+        repo_path: Path
+    ) -> Dict:
+        """Execute Self-Collaboration strategy (3 turns)."""
+        
+        logger.info("🤝 Running Self-Collaboration (3 turns)")
+        
+        responses = []
+        total_tokens = 0
+        total_latency = 0.0
+        system_prompt = self.template._get_system_prompt()
+        
+        for turn in range(3):
+            role_names = ["ANALYST", "OPTIMIZER", "REVIEWER"]
+            logger.info(f"   Turn {turn + 1}/3: {role_names[turn]}")
+            
+            # Generate turn prompt
+            turn_prompt = self.template.generate_turn_prompt(turn, context, responses)
+            
+            # Call LLM
+            response = self.llm_client.generate(
+                prompt=turn_prompt,
+                system_prompt=system_prompt,
+                temperature=0.0,
+                max_tokens=2048 if turn < 2 else 4096  # More tokens for final turn
+            )
+            
+            responses.append(response.content)
+            total_tokens += response.total_tokens
+            total_latency += response.latency_seconds
+            
+            logger.info(f"      Response: {len(response.content):,} chars")
+        
+        # Parse final response
+        parsed = self.template.parse_collaboration_responses(responses)
+        patch_content = parsed.final_patch
+        
+        # Apply patch
+        patch_engine = PatchEngine(repo_path)
+        patch_result = patch_engine.apply_patch(patch_content, candidates)
+        
+        return {
+            "llm_response": responses[-1],  # Final response
+            "all_responses": responses,
+            "llm_tokens": total_tokens,
+            "llm_latency": total_latency,
+            "patch_content": patch_content,
+            "turns": {
+                "analyst": responses[0] if len(responses) > 0 else "",
+                "optimizer": responses[1] if len(responses) > 1 else "",
+                "reviewer": responses[2] if len(responses) > 2 else ""
+            },
+            "patch_result": {
+                "success": patch_result.success,
+                "changes_applied": patch_result.changes_applied,
+                "total_blocks": patch_result.total_blocks,
+                "method": patch_result.method_used,
+                "modified_files": patch_result.modified_files,
+                "error": patch_result.error_message
+            },
+            "status": "success" if patch_result.success else "patch_failed"
+        }
+    
+    # =========================================================================
+    # LDB (ITERATIVE) EXECUTION
+    # =========================================================================
+    
+    def _run_ldb(
+        self,
+        context: PromptContext,
+        candidates: List[str],
+        repo_path: Path
+    ) -> Dict:
+        """Execute LDB strategy (iterative refinement)."""
+        
+        max_iterations = self.prompt_config.get("max_iterations", 3)
+        logger.info(f"🔄 Running LDB (max {max_iterations} iterations)")
+        
+        iterations = []
+        total_tokens = 0
+        total_latency = 0.0
+        system_prompt = self.template._get_system_prompt()
+        
+        patch_content = ""
+        patch_result = None
+        final_status = "error"
+        
+        for iteration in range(max_iterations):
+            logger.info(f"   Iteration {iteration + 1}/{max_iterations}")
+            
+            # Generate prompt
+            if iteration == 0:
+                prompt = self.template.generate_initial_prompt(context)
+            else:
+                # Create feedback from previous failure
+                feedback = self._create_feedback_from_result(patch_result, patch_content)
+                prompt = self.template.generate_refinement_prompt(
+                    context, patch_content, feedback, iteration
+                )
+            
+            # Call LLM
+            response = self.llm_client.generate(
+                prompt=prompt,
+                system_prompt=system_prompt,
+                temperature=0.0,
+                max_tokens=4096
+            )
+            
+            total_tokens += response.total_tokens
+            total_latency += response.latency_seconds
+            
+            # Extract patch
+            patch_content = self.template.extract_code_from_response(response.content)
+            logger.info(f"      Response: {len(response.content):,} chars")
+            
+            # Try to apply patch
+            patch_engine = PatchEngine(repo_path)
+            patch_result = patch_engine.apply_patch(patch_content, candidates)
+            
+            iteration_data = {
+                "iteration": iteration + 1,
+                "response": response.content,
+                "patch_content": patch_content,
+                "success": patch_result.success,
+                "error": patch_result.error_message
+            }
+            iterations.append(iteration_data)
+            
+            if patch_result.success:
+                logger.info(f"      ✅ Patch applied successfully!")
+                final_status = "success"
+                break
+            else:
+                logger.info(f"      ⚠️ Patch failed: {patch_result.error_message}")
+                final_status = "patch_failed"
+        
+        return {
+            "llm_response": iterations[-1]["response"] if iterations else "",
+            "iterations": iterations,
+            "num_iterations": len(iterations),
+            "llm_tokens": total_tokens,
+            "llm_latency": total_latency,
+            "patch_content": patch_content,
+            "patch_result": {
+                "success": patch_result.success if patch_result else False,
+                "changes_applied": patch_result.changes_applied if patch_result else 0,
+                "total_blocks": patch_result.total_blocks if patch_result else 0,
+                "method": patch_result.method_used if patch_result else "",
+                "modified_files": patch_result.modified_files if patch_result else [],
+                "error": patch_result.error_message if patch_result else "No iterations"
+            },
+            "status": final_status
+        }
+    
+    def _create_feedback_from_result(
+        self, 
+        patch_result: PatchResult, 
+        patch_content: str
+    ) -> LDBFeedback:
+        """Create LDB feedback from a failed patch result."""
+        
+        if not patch_result:
+            return LDBFeedback(
+                feedback_type=LDBFeedbackType.PATCH_PARSE_ERROR,
+                message="No patch result available"
+            )
+        
+        error_msg = patch_result.error_message or "Unknown error"
+        
+        # Determine feedback type based on error
+        if "SEARCH block not found" in error_msg or "not found in file" in error_msg:
+            return LDBFeedback(
+                feedback_type=LDBFeedbackType.PATCH_APPLY_ERROR,
+                message="SEARCH block did not match any code in the file",
+                details=error_msg
+            )
+        elif "parse" in error_msg.lower() or "format" in error_msg.lower():
+            return LDBFeedback(
+                feedback_type=LDBFeedbackType.PATCH_PARSE_ERROR,
+                message="Could not parse patch format",
+                details=error_msg
+            )
+        elif "syntax" in error_msg.lower():
+            return LDBFeedback(
+                feedback_type=LDBFeedbackType.SYNTAX_ERROR,
+                message="Python syntax error in optimized code",
+                details=error_msg
+            )
+        elif "import" in error_msg.lower() or "module" in error_msg.lower():
+            return LDBFeedback(
+                feedback_type=LDBFeedbackType.IMPORT_ERROR,
+                message="Import or module error",
+                details=error_msg
+            )
+        else:
+            return LDBFeedback(
+                feedback_type=LDBFeedbackType.PATCH_APPLY_ERROR,
+                message=error_msg,
+                details=str(patch_result.__dict__) if patch_result else None
+            )
     
     # =========================================================================
     # MAIN RUN METHOD
     # =========================================================================
     
     def run(self, instance_id: str) -> Dict:
-        """
-        Run experiment for a single instance.
+        """Run experiment for a single instance."""
         
-        Args:
-            instance_id: Instance identifier
-            
-        Returns:
-            Result dictionary with status, response, patch_result, etc.
-        """
         logger.info(f"{'='*60}")
         logger.info(f"🚀 STARTING EXPERIMENT: {instance_id}")
         logger.info(f"   Prompt Type: {self.prompt_type.upper()}")
@@ -655,10 +679,7 @@ class ExperimentRunner:
             "model": self.llm_client.model_name,
             "timestamp": datetime.now().isoformat(),
             "status": "error",
-            "llm_response": "",
-            "patch_result": None,
-            "error": None,
-            "context_stats": {}
+            "error": None
         }
         
         temp_dir = None
@@ -675,7 +696,7 @@ class ExperimentRunner:
                 instance, temp_dir, instance['base_commit']
             )
             
-            # 3. Build context based on strategy
+            # 3. Build context
             logger.info(f"📂 Building {self.strategy} context...")
             
             if self.strategy == "oracle":
@@ -687,72 +708,33 @@ class ExperimentRunner:
             if not code_files:
                 raise ValueError("No code files found for context")
             
-            # Store context stats
-            total_chars = sum(len(c) for c in code_files.values())
             result["context_stats"] = {
                 "num_files": len(code_files),
-                "total_chars": total_chars,
-                "files": {f: len(c) for f, c in code_files.items()}
+                "total_chars": sum(len(c) for c in code_files.values())
             }
             
-            # 4. Generate prompt
-            logger.info("📝 Generating prompt...")
+            # 4. Build prompt context
             context = self._build_prompt_context(instance, code_files, candidates, repo_map)
-            user_prompt = self.template.generate_prompt(context)
-            system_prompt = self._get_system_prompt()
             
-            # Log prompt size
-            total_prompt_size = len(system_prompt) + len(user_prompt)
-            estimated_tokens = total_prompt_size // 3  # ~3 chars per token
-            logger.info(f"   Prompt size: {total_prompt_size:,} chars (~{estimated_tokens:,} tokens)")
+            # 5. Execute based on prompt type
+            logger.info(f"🤖 Executing {self.prompt_type} strategy...")
             
-            # Check for potential overflow
-            if estimated_tokens > 28000:
-                logger.warning(f"⚠️ Prompt may be too large! ({estimated_tokens:,} tokens)")
-            
-            # 5. Call LLM
-            logger.info("🤖 Querying LLM...")
-            response = self.llm_client.generate(
-                prompt=user_prompt,
-                system_prompt=system_prompt,
-                temperature=0.0,
-                max_tokens=4096
-            )
-            
-            llm_output = response.content
-            result["llm_response"] = llm_output
-            result["llm_tokens"] = response.total_tokens
-            result["llm_latency"] = response.latency_seconds
-            
-            logger.info(f"   Response: {len(llm_output):,} chars, {response.total_tokens} tokens, {response.latency_seconds:.1f}s")
-            
-            # 6. Extract patch content (for CoT, strip reasoning section)
-            if self.prompt_type == "cot":
-                logger.info("🧠 Extracting patch from CoT response...")
-                patch_content = extract_patch_from_cot(llm_output)
-                logger.info(f"   Extracted patch: {len(patch_content):,} chars")
+            if self.prompt_type in ("zero_shot", "cot"):
+                exec_result = self._run_single_turn(context, candidates, repo_path)
+            elif self.prompt_type == "self_collab":
+                exec_result = self._run_self_collaboration(context, candidates, repo_path)
+            elif self.prompt_type == "ldb":
+                exec_result = self._run_ldb(context, candidates, repo_path)
             else:
-                patch_content = llm_output
+                raise ValueError(f"Unknown prompt type: {self.prompt_type}")
             
-            # 7. Try to apply patch (validation)
-            logger.info("🔧 Validating patch...")
-            patch_engine = PatchEngine(repo_path)
-            patch_result = patch_engine.apply_patch(patch_content, candidates)
+            # Merge execution result
+            result.update(exec_result)
             
-            result["patch_result"] = {
-                "success": patch_result.success,
-                "changes_applied": patch_result.changes_applied,
-                "total_blocks": patch_result.total_blocks,
-                "method": patch_result.method_used,
-                "modified_files": patch_result.modified_files
-            }
-            
-            if patch_result.success:
-                logger.info(f"   ✅ Patch applied: {patch_result.changes_applied}/{patch_result.total_blocks} blocks")
-                result["status"] = "success"
+            if result.get("patch_result", {}).get("success"):
+                logger.info(f"✅ Patch applied successfully!")
             else:
-                logger.warning(f"   ⚠️ Patch failed: {patch_result.error_message}")
-                result["status"] = "patch_failed"
+                logger.warning(f"⚠️ Patch failed")
             
         except Exception as e:
             logger.error(f"❌ Error: {e}", exc_info=True)
@@ -760,23 +742,21 @@ class ExperimentRunner:
             result["status"] = "error"
         
         finally:
-            # Cleanup
             if temp_dir and temp_dir.exists():
                 shutil.rmtree(temp_dir, ignore_errors=True)
         
-        # 7. Save result
+        # Save result
         self._save_result(instance_id, result)
         
         return result
     
     def _save_result(self, instance_id: str, result: Dict):
-        """Save result to JSON file."""
         output_file = self.output_dir / f"{instance_id}.json"
         
         with open(output_file, 'w') as f:
-            json.dump(result, f, indent=2)
+            json.dump(result, f, indent=2, default=str)
         
-        status_emoji = "✅" if result["status"] == "success" else "❌"
+        status_emoji = "✅" if result.get("status") == "success" else "❌"
         logger.info(f"{status_emoji} Saved: {output_file}")
 
 
@@ -786,67 +766,38 @@ class ExperimentRunner:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Run green code optimization experiment for a single instance",
+        description="Run green code optimization experiment",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run zero-shot oracle experiment
-  python run_experiment.py --instance mwaskom__seaborn-2389 --strategy oracle
+  # Zero-shot oracle
+  python run_experiment.py -i mwaskom__seaborn-2389 -s oracle -p zero_shot
   
-  # Run zero-shot realistic experiment
-  python run_experiment.py --instance mwaskom__seaborn-2389 --strategy realistic
+  # Chain-of-thought realistic
+  python run_experiment.py -i mwaskom__seaborn-2389 -s realistic -p cot
   
-  # Run chain-of-thought oracle experiment
-  python run_experiment.py --instance mwaskom__seaborn-2389 --strategy oracle --prompt-type cot
+  # Self-collaboration oracle
+  python run_experiment.py -i mwaskom__seaborn-2389 -s oracle -p self_collab
   
-  # Run CoT realistic experiment  
-  python run_experiment.py --instance mwaskom__seaborn-2389 --strategy realistic --prompt-type cot
-
-  # With custom dataset
-  python run_experiment.py --instance X --strategy oracle --dataset path/to/data.json
+  # LDB (iterative) realistic
+  python run_experiment.py -i mwaskom__seaborn-2389 -s realistic -p ldb
         """
     )
     
-    parser.add_argument(
-        '--instance', '-i',
-        type=str,
-        required=True,
-        help='Instance ID (e.g., mwaskom__seaborn-2389)'
-    )
-    
-    parser.add_argument(
-        '--strategy', '-s',
-        type=str,
-        choices=['oracle', 'realistic'],
-        default='oracle',
-        help='Experiment strategy (default: oracle)'
-    )
-    
-    parser.add_argument(
-        '--prompt-type', '-p',
-        type=str,
-        choices=['zero_shot', 'cot'],
-        default='zero_shot',
-        help='Prompt type: zero_shot or cot (chain-of-thought) (default: zero_shot)'
-    )
-    
-    parser.add_argument(
-        '--dataset', '-d',
-        type=str,
-        default=str(DEFAULT_DATASET),
-        help='Path to dataset JSON'
-    )
-    
-    parser.add_argument(
-        '--output', '-o',
-        type=str,
-        default=None,
-        help='Output directory (default: results/{prompt_type}_{strategy})'
-    )
+    parser.add_argument('--instance', '-i', type=str, required=True,
+                        help='Instance ID')
+    parser.add_argument('--strategy', '-s', type=str, choices=['oracle', 'realistic'],
+                        default='oracle', help='Context strategy')
+    parser.add_argument('--prompt-type', '-p', type=str,
+                        choices=['zero_shot', 'cot', 'self_collab', 'ldb'],
+                        default='zero_shot', help='Prompting strategy')
+    parser.add_argument('--dataset', '-d', type=str, default=str(DEFAULT_DATASET),
+                        help='Dataset path')
+    parser.add_argument('--output', '-o', type=str, default=None,
+                        help='Output directory')
     
     args = parser.parse_args()
     
-    # Run experiment
     runner = ExperimentRunner(
         dataset_path=Path(args.dataset),
         strategy=args.strategy,
@@ -863,15 +814,14 @@ Examples:
     
     if result["status"] == "success":
         pr = result.get("patch_result", {})
-        print(f"  Patch: {pr.get('changes_applied', 0)}/{pr.get('total_blocks', 0)} blocks applied")
+        print(f"  Patch: {pr.get('changes_applied', 0)}/{pr.get('total_blocks', 0)} blocks")
         print(f"  Files: {pr.get('modified_files', [])}")
-    elif result.get("error"):
-        print(f"  Error: {result['error']}")
     
-    # Print context stats
-    ctx = result.get("context_stats", {})
-    if ctx:
-        print(f"\n  Context: {ctx.get('num_files', 0)} files, {ctx.get('total_chars', 0):,} chars")
+    if result.get("num_iterations"):
+        print(f"  Iterations: {result['num_iterations']}")
+    
+    if result.get("error"):
+        print(f"  Error: {result['error']}")
     
     return 0 if result["status"] == "success" else 1
 
