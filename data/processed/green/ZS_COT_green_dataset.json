@@ -1,0 +1,492 @@
+{
+  "metadata": {
+    "name": "Green Code Refactoring - LLM Comparison Dataset",
+    "description": "Energy measurements comparing Base, Human (Head), and LLM-generated optimizations",
+    "variants": [
+      "Base",
+      "Head",
+      "Head_ZS_Oracle",
+      "Head_ZS_Realistic",
+      "Head_CoT_Oracle",
+      "Head_CoT_Realistic"
+    ],
+    "metrics": [
+      "total_energy_joules",
+      "duration_seconds",
+      "power_watts",
+      "carbon_grams",
+      "cpu_usage_mean_percent"
+    ],
+    "all_metrics": [
+      "total_energy_joules",
+      "cpu_energy_joules",
+      "gpu_energy_joules",
+      "power_watts",
+      "carbon_grams",
+      "energy_efficiency",
+      "duration_seconds",
+      "cpu_usage_mean_percent",
+      "cpu_usage_peak_percent",
+      "ram_usage_mean_mb",
+      "ram_usage_peak_mb",
+      "gpu_temperature_mean_celsius",
+      "gpu_temperature_peak_celsius"
+    ],
+    "repetitions": 5,
+    "creation_date": "2026-01-09T11:43:36.434336",
+    "instance_count": 12,
+    "base_head_source": "swe_perf_green_k3.json"
+  },
+  "instances": [
+    {
+      "instance_id": "mwaskom__seaborn-2389",
+      "repo": "mwaskom/seaborn",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 92.839689753142,
+          "duration_seconds": 2.489213029543559,
+          "power_watts": 38.04516331215091,
+          "carbon_grams": 0.0064472006773015275,
+          "cpu_usage_mean_percent": 15.926048454469509
+        },
+        "Head": {
+          "total_energy_joules": 91.57312071607512,
+          "duration_seconds": 2.139355937639872,
+          "power_watts": 43.613884269573504,
+          "carbon_grams": 0.006359244494171884,
+          "cpu_usage_mean_percent": 16.823941798941796
+        },
+        "Head_ZS_Oracle": {
+          "total_energy_joules": 102.50376661299673,
+          "duration_seconds": 1.6941164016723633,
+          "power_watts": 60.429545767094936,
+          "carbon_grams": 0.00711831712590255,
+          "cpu_usage_mean_percent": 16.898873015873015
+        },
+        "Head_ZS_Realistic": {
+          "total_energy_joules": 97.8662402163737,
+          "duration_seconds": 1.654972243309021,
+          "power_watts": 58.99336359927162,
+          "carbon_grams": 0.006796266681692618,
+          "cpu_usage_mean_percent": 17.48316677440207
+        },
+        "Head_CoT_Oracle": {
+          "total_energy_joules": 96.0982482545749,
+          "duration_seconds": 1.7148727893829345,
+          "power_watts": 55.851030844624816,
+          "carbon_grams": 0.006673489462123257,
+          "cpu_usage_mean_percent": 16.972366685945634
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-6834",
+      "repo": "pydata/xarray",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 74.27683159703818,
+          "duration_seconds": 2.336838642756144,
+          "power_watts": 31.38678878683768,
+          "carbon_grams": 0.005158113305349874,
+          "cpu_usage_mean_percent": 9.952916666666667
+        },
+        "Head": {
+          "total_energy_joules": 61.09822620864331,
+          "duration_seconds": 1.3361585140228271,
+          "power_watts": 45.36382266537211,
+          "carbon_grams": 0.00424293237560023,
+          "cpu_usage_mean_percent": 9.682613636363635
+        },
+        "Head_ZS_Oracle": {
+          "total_energy_joules": 83.46954704431124,
+          "duration_seconds": 1.5850524425506591,
+          "power_watts": 52.293434015903706,
+          "carbon_grams": 0.005796496322521614,
+          "cpu_usage_mean_percent": 13.883800904977376
+        },
+        "Head_ZS_Realistic": {
+          "total_energy_joules": 81.51948744442429,
+          "duration_seconds": 1.5441297054290772,
+          "power_watts": 52.378372470159384,
+          "carbon_grams": 0.005661075516973909,
+          "cpu_usage_mean_percent": 14.281289592760182
+        },
+        "Head_CoT_Oracle": {
+          "total_energy_joules": 80.76115996081077,
+          "duration_seconds": 1.5649664878845215,
+          "power_watts": 51.23842770271841,
+          "carbon_grams": 0.005608413886167415,
+          "cpu_usage_mean_percent": 14.205882352941178
+        },
+        "Head_CoT_Realistic": {
+          "total_energy_joules": 79.9834899959479,
+          "duration_seconds": 1.5850200176239013,
+          "power_watts": 50.04593161370553,
+          "carbon_grams": 0.0055544090274963825,
+          "cpu_usage_mean_percent": 13.995656108597284
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-7209",
+      "repo": "pydata/xarray",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 51.09215810801493,
+          "duration_seconds": 1.2497594197591146,
+          "power_watts": 40.84587213422638,
+          "carbon_grams": 0.003548066535278815,
+          "cpu_usage_mean_percent": 11.005179292929292
+        },
+        "Head": {
+          "total_energy_joules": 50.201953948895905,
+          "duration_seconds": 1.2655171341366238,
+          "power_watts": 39.63651347955052,
+          "carbon_grams": 0.003486246802006659,
+          "cpu_usage_mean_percent": 10.743858585858586
+        },
+        "Head_ZS_Oracle": {
+          "total_energy_joules": 50.814423108184336,
+          "duration_seconds": 1.3001933013691622,
+          "power_watts": 39.054835866762524,
+          "carbon_grams": 0.003528779382512802,
+          "cpu_usage_mean_percent": 11.366982698961936
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-8412",
+      "repo": "pydata/xarray",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 70.62936657815855,
+          "duration_seconds": 2.1610378424326577,
+          "power_watts": 32.66158810638321,
+          "carbon_grams": 0.004904817123483233,
+          "cpu_usage_mean_percent": 9.967171717171718
+        },
+        "Head": {
+          "total_energy_joules": 60.4424134677781,
+          "duration_seconds": 1.2362943490346272,
+          "power_watts": 48.96005871870897,
+          "carbon_grams": 0.004197389824151257,
+          "cpu_usage_mean_percent": 10.266190476190475
+        },
+        "Head_ZS_Oracle": {
+          "total_energy_joules": 61.6442075246633,
+          "duration_seconds": 1.3629886150360107,
+          "power_watts": 44.664627875193226,
+          "carbon_grams": 0.004280847744768284,
+          "cpu_usage_mean_percent": 11.119333333333334
+        },
+        "Head_ZS_Realistic": {
+          "total_energy_joules": 59.251493185826135,
+          "duration_seconds": 1.3436171531677246,
+          "power_watts": 43.62791205018552,
+          "carbon_grams": 0.004114687026793482,
+          "cpu_usage_mean_percent": 11.257818181818182
+        },
+        "Head_CoT_Oracle": {
+          "total_energy_joules": 58.566769154385725,
+          "duration_seconds": 1.3836812496185302,
+          "power_watts": 41.770842406782364,
+          "carbon_grams": 0.004067136746832342,
+          "cpu_usage_mean_percent": 10.986181818181818
+        },
+        "Head_CoT_Realistic": {
+          "total_energy_joules": 58.67226177040339,
+          "duration_seconds": 1.364137554168701,
+          "power_watts": 42.53163138495254,
+          "carbon_grams": 0.004074462622944679,
+          "cpu_usage_mean_percent": 11.104025974025975
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-9243",
+      "repo": "pydata/xarray",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 68.79352311496602,
+          "duration_seconds": 1.2543023692237005,
+          "power_watts": 54.80030345100585,
+          "carbon_grams": 0.004777327994094863,
+          "cpu_usage_mean_percent": 13.610623885918002
+        },
+        "Head": {
+          "total_energy_joules": 68.22056221409956,
+          "duration_seconds": 1.265380170610216,
+          "power_watts": 53.901750959714946,
+          "carbon_grams": 0.004737539042645803,
+          "cpu_usage_mean_percent": 17.290610269360272
+        },
+        "Head_ZS_Oracle": {
+          "total_energy_joules": 54.56819934993929,
+          "duration_seconds": 1.3072389411926268,
+          "power_watts": 41.6321900598666,
+          "carbon_grams": 0.0037894582881902276,
+          "cpu_usage_mean_percent": 11.572905882352941
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-9407",
+      "repo": "pydata/xarray",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 70.25717556024135,
+          "duration_seconds": 1.273121972878774,
+          "power_watts": 55.01879180575666,
+          "carbon_grams": 0.004878970525016761,
+          "cpu_usage_mean_percent": 15.483744019138754
+        },
+        "Head": {
+          "total_energy_joules": 72.14672388444804,
+          "duration_seconds": 1.2901239494482677,
+          "power_watts": 55.10577388746492,
+          "carbon_grams": 0.0050101891586422235,
+          "cpu_usage_mean_percent": 14.222436868686867
+        },
+        "Head_ZS_Oracle": {
+          "total_energy_joules": 54.90094848876871,
+          "duration_seconds": 1.3190150313907198,
+          "power_watts": 41.42206088180867,
+          "carbon_grams": 0.0038125658672756046,
+          "cpu_usage_mean_percent": 11.808856990962255
+        },
+        "Head_ZS_Realistic": {
+          "total_energy_joules": 52.92857069337839,
+          "duration_seconds": 1.3077842394510906,
+          "power_watts": 40.317508920395916,
+          "carbon_grams": 0.0036755951870401657,
+          "cpu_usage_mean_percent": 11.649547049441786
+        },
+        "Head_CoT_Oracle": {
+          "total_energy_joules": 53.54674126255195,
+          "duration_seconds": 1.3182568232218423,
+          "power_watts": 40.40987156889405,
+          "carbon_grams": 0.0037185236987883293,
+          "cpu_usage_mean_percent": 11.693150451887293
+        },
+        "Head_CoT_Realistic": {
+          "total_energy_joules": 59.84682713248007,
+          "duration_seconds": 1.3735193014144897,
+          "power_watts": 42.827574280384866,
+          "carbon_grams": 0.004156029661977783,
+          "cpu_usage_mean_percent": 11.275263157894736
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-9451",
+      "repo": "pydata/xarray",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 68.27513998494129,
+          "duration_seconds": 1.3088064829508463,
+          "power_watts": 51.650151617178985,
+          "carbon_grams": 0.004741329165620923,
+          "cpu_usage_mean_percent": 14.024337218337218
+        },
+        "Head": {
+          "total_energy_joules": 71.95009930682428,
+          "duration_seconds": 1.3221651236216228,
+          "power_watts": 54.27777386669275,
+          "carbon_grams": 0.00499653467408502,
+          "cpu_usage_mean_percent": 13.25248484848485
+        },
+        "Head_ZS_Oracle": {
+          "total_energy_joules": 54.23610607431135,
+          "duration_seconds": 1.2986897998385958,
+          "power_watts": 41.696776287454554,
+          "carbon_grams": 0.0037663962551605108,
+          "cpu_usage_mean_percent": 11.514037074037072
+        },
+        "Head_ZS_Realistic": {
+          "total_energy_joules": 53.00042208455246,
+          "duration_seconds": 1.315359525680542,
+          "power_watts": 40.144837424031344,
+          "carbon_grams": 0.00368058486698281,
+          "cpu_usage_mean_percent": 11.44837668997669
+        },
+        "Head_CoT_Oracle": {
+          "total_energy_joules": 52.36846350451165,
+          "duration_seconds": 1.318229373296102,
+          "power_watts": 39.64205660276701,
+          "carbon_grams": 0.0036366988544799758,
+          "cpu_usage_mean_percent": 11.560761460761462
+        },
+        "Head_CoT_Realistic": {
+          "total_energy_joules": 52.31507461095433,
+          "duration_seconds": 1.3122203509012857,
+          "power_watts": 39.78274949332128,
+          "carbon_grams": 0.003632991292427384,
+          "cpu_usage_mean_percent": 11.522775446775448
+        }
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-12543",
+      "repo": "scikit-learn/scikit-learn",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 74.91900620804282,
+          "duration_seconds": 1.4787902832031248,
+          "power_watts": 50.4251776690253,
+          "carbon_grams": 0.005202708764447416,
+          "cpu_usage_mean_percent": 16.65197420634921
+        },
+        "Head": {
+          "total_energy_joules": 67.87439964297764,
+          "duration_seconds": 1.416125973065694,
+          "power_watts": 47.99223718129738,
+          "carbon_grams": 0.004713499975206781,
+          "cpu_usage_mean_percent": 15.906575854700856
+        },
+        "Head_ZS_Oracle": {
+          "total_energy_joules": 83.62046508972456,
+          "duration_seconds": 1.5211741209030152,
+          "power_watts": 54.70162802957882,
+          "carbon_grams": 0.005806976742341983,
+          "cpu_usage_mean_percent": 17.184798076923077
+        },
+        "Head_ZS_Realistic": {
+          "total_energy_joules": 80.48880016177797,
+          "duration_seconds": 1.5278968870639802,
+          "power_watts": 52.34255726171117,
+          "carbon_grams": 0.005589500011234582,
+          "cpu_usage_mean_percent": 17.05623076923077
+        },
+        "Head_CoT_Oracle": {
+          "total_energy_joules": 83.49066703854858,
+          "duration_seconds": 1.5280632436275483,
+          "power_watts": 54.31836690964763,
+          "carbon_grams": 0.005797962988788095,
+          "cpu_usage_mean_percent": 17.162205128205127
+        }
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13151",
+      "repo": "scikit-learn/scikit-learn",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 89.46957318523464,
+          "duration_seconds": 1.3615493575731914,
+          "power_watts": 65.46890108517893,
+          "carbon_grams": 0.006213164804530183,
+          "cpu_usage_mean_percent": 22.466602564102566
+        },
+        "Head": {
+          "total_energy_joules": 88.89982788846461,
+          "duration_seconds": 1.3775423566500344,
+          "power_watts": 64.50431502817554,
+          "carbon_grams": 0.006173599158921154,
+          "cpu_usage_mean_percent": 22.130101657601656
+        },
+        "Head_ZS_Realistic": {
+          "total_energy_joules": 69.21479672077787,
+          "duration_seconds": 1.4132293343544005,
+          "power_watts": 49.13280270735031,
+          "carbon_grams": 0.004806583105609574,
+          "cpu_usage_mean_percent": 18.40817793317793
+        }
+      }
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-13186",
+      "repo": "scikit-learn/scikit-learn",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 84.48256034542469,
+          "duration_seconds": 1.1540804968939886,
+          "power_watts": 72.60298858957673,
+          "carbon_grams": 0.005866844468432271,
+          "cpu_usage_mean_percent": 30.089981006647673
+        },
+        "Head": {
+          "total_energy_joules": 60.579349222490315,
+          "duration_seconds": 1.1550326788866963,
+          "power_watts": 51.678371863051346,
+          "carbon_grams": 0.004206899251561827,
+          "cpu_usage_mean_percent": 27.08683235488791
+        },
+        "Head_ZS_Realistic": {
+          "total_energy_joules": 64.89100579575641,
+          "duration_seconds": 1.1895534144507514,
+          "power_watts": 53.71406696568967,
+          "carbon_grams": 0.004506319846927529,
+          "cpu_usage_mean_percent": 27.195437278770612
+        },
+        "Head_CoT_Realistic": {
+          "total_energy_joules": 65.5586983857434,
+          "duration_seconds": 1.1884741851261684,
+          "power_watts": 54.167296953488105,
+          "carbon_grams": 0.004552687387898847,
+          "cpu_usage_mean_percent": 27.28832278832279
+        }
+      }
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-12615",
+      "repo": "sphinx-doc/sphinx",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 62.785658348127754,
+          "duration_seconds": 2.0555379231770834,
+          "power_watts": 30.525117067193428,
+          "carbon_grams": 0.004360115163064428,
+          "cpu_usage_mean_percent": 10.75112121212121
+        },
+        "Head": {
+          "total_energy_joules": 65.11326317469334,
+          "duration_seconds": 2.1113852500915526,
+          "power_watts": 30.873259294358625,
+          "carbon_grams": 0.0045217543871314825,
+          "cpu_usage_mean_percent": 10.54883422459893
+        },
+        "Head_ZS_Realistic": {
+          "total_energy_joules": 51.10532704470436,
+          "duration_seconds": 1.3186137390136718,
+          "power_watts": 38.593481327490636,
+          "carbon_grams": 0.0035489810447711357,
+          "cpu_usage_mean_percent": 10.59241212121212
+        },
+        "Head_CoT_Realistic": {
+          "total_energy_joules": 51.260806723244585,
+          "duration_seconds": 1.3189313411712646,
+          "power_watts": 38.70256723823957,
+          "carbon_grams": 0.003559778244669763,
+          "cpu_usage_mean_percent": 10.714521212121213
+        }
+      }
+    },
+    {
+      "instance_id": "sympy__sympy-26848",
+      "repo": "sympy/sympy",
+      "metrics": {
+        "Base": {
+          "total_energy_joules": 152.97525376309162,
+          "duration_seconds": 2.7143815623389345,
+          "power_watts": 53.75684876932525,
+          "carbon_grams": 0.010623281511325808,
+          "cpu_usage_mean_percent": 7.020476474924851
+        },
+        "Head": {
+          "total_energy_joules": 112.03295112666278,
+          "duration_seconds": 2.1204214228524103,
+          "power_watts": 51.26651331272205,
+          "carbon_grams": 0.007780066050462692,
+          "cpu_usage_mean_percent": 7.9445165174331835
+        },
+        "Head_ZS_Oracle": {
+          "total_energy_joules": 149.35349374948802,
+          "duration_seconds": 2.551166780789693,
+          "power_watts": 55.865151539576324,
+          "carbon_grams": 0.010371770399270003,
+          "cpu_usage_mean_percent": 7.9743241630019535
+        }
+      }
+    }
+  ]
+}
