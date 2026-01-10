@@ -36,7 +36,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.llm_clients import VLLMClient
 
 # Import templates from src/templates/ directory
-from src.templates import (
+from src.prompt_templates import (
     ZeroShotTemplate, 
     ChainOfThoughtTemplate,
     SelfCollaborationTemplate,
