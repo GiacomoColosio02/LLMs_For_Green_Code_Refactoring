@@ -34,7 +34,9 @@ if str(PROJECT_ROOT) not in sys.path:
 
 # --- IMPORTS ---
 from src.llm_clients import VLLMClient
-from src.prompt_templates import (
+
+# Import templates from src/templates/ directory
+from src.templates import (
     ZeroShotTemplate, 
     ChainOfThoughtTemplate,
     SelfCollaborationTemplate,
@@ -45,6 +47,7 @@ from src.prompt_templates import (
     ProblemStatementType,
     extract_patch_from_cot
 )
+
 from src.patch_engine import PatchEngine, PatchResult
 from scripts.measure_instance import SWEPerfMeasurer
 
