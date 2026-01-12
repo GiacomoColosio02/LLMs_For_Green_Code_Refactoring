@@ -1,7 +1,7 @@
 """
 Chain-of-Thought (CoT) Prompt Templates for Green Code Optimization.
 
-Version: 2.0 - Enhanced with explicit output format examples and better parsing
+Version: 3.0 - Simplified to match ZS success rate
 """
 
 import re
@@ -11,88 +11,56 @@ from dataclasses import dataclass
 from .base_template import BasePromptTemplate, PromptContext, ProblemStatementType, PromptStrategy
 
 
-@dataclass
-class CoTResponse:
-    """Parsed Chain-of-Thought response."""
-    raw_response: str
-    analysis_section: str
-    patch_section: str
-    has_valid_structure: bool
-
-
-def parse_cot_response(response: str) -> CoTResponse:
-    """Parse a CoT response into its structured components."""
+def extract_patch_from_cot(response: str) -> str:
+    """Extract only the patch section from a CoT response."""
     # Remove <think> tags if present (for reasoning models)
     clean_response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
     
-    analysis_section = ""
-    patch_section = ""
+    # Remove markdown code block wrappers
+    clean_response = re.sub(r'```(?:python|diff|text)?\s*\n?', '', clean_response)
+    clean_response = re.sub(r'\n?```', '', clean_response)
     
-    # Try multiple patterns for section markers
-    section1_match = re.search(
-        r'(?:SECTION\s*1|##\s*SECTION\s*1|###\s*SECTION\s*1)\s*:?\s*(?:ANALYSIS)?(.*?)(?=SECTION\s*2|##\s*SECTION\s*2|###\s*SECTION\s*2|<<<<<<< SEARCH|$)', 
-        clean_response, re.IGNORECASE | re.DOTALL
-    )
+    # Strategy 1: Find SECTION 2 marker and extract everything after
     section2_match = re.search(
-        r'(?:SECTION\s*2|##\s*SECTION\s*2|###\s*SECTION\s*2)\s*:?\s*(?:PATCH)?(.*?)$', 
+        r'(?:SECTION\s*2|##\s*SECTION\s*2|###\s*SECTION\s*2)\s*:?\s*(?:PATCH)?(.*)$',
         clean_response, re.IGNORECASE | re.DOTALL
     )
-    
-    if section1_match:
-        analysis_section = section1_match.group(1).strip()
     if section2_match:
-        patch_section = section2_match.group(1).strip()
+        patch_content = section2_match.group(1).strip()
+        if '<<<<<<< SEARCH' in patch_content:
+            return patch_content
     
-    # Fallback: if no section markers but SEARCH/REPLACE exists
-    if not patch_section and "<<<<<<< SEARCH" in clean_response:
-        search_start = clean_response.find("<<<<<<< SEARCH")
+    # Strategy 2: Find first file path marker (### path/to/file.py) followed by SEARCH
+    file_patch_match = re.search(
+        r'(###\s+[\w/._-]+\.py\s*\n\s*<<<<<<< SEARCH.*)',
+        clean_response, re.DOTALL
+    )
+    if file_patch_match:
+        return file_patch_match.group(1).strip()
+    
+    # Strategy 3: Find first <<<<<<< SEARCH and include file path before it
+    search_match = re.search(r'<<<<<<< SEARCH', clean_response)
+    if search_match:
+        pre_search = clean_response[:search_match.start()]
         
         # Look for file path marker before SEARCH
-        file_path_match = re.search(r'(###\s+[\w/._-]+\.py\s*\n)', clean_response[:search_start])
+        file_path_match = re.search(r'(###\s+[\w/._-]+\.py\s*\n?)\s*$', pre_search)
         if file_path_match:
-            patch_start = file_path_match.start()
+            start_pos = file_path_match.start()
         else:
-            pre_search = clean_response[:search_start]
-            last_newline = pre_search.rfind('\n')
-            patch_start = max(0, last_newline)
+            # Try to find any file path in the line before
+            lines = pre_search.rstrip().split('\n')
+            for i in range(len(lines) - 1, -1, -1):
+                if re.match(r'###\s+[\w/._-]+\.py', lines[i]):
+                    start_pos = pre_search.rfind(lines[i])
+                    break
+            else:
+                start_pos = search_match.start()
         
-        patch_section = clean_response[patch_start:].strip()
-        analysis_section = clean_response[:patch_start].strip()
+        return clean_response[start_pos:].strip()
     
-    has_valid_structure = bool(patch_section and "<<<<<<< SEARCH" in patch_section)
-    
-    return CoTResponse(
-        raw_response=response,
-        analysis_section=analysis_section,
-        patch_section=patch_section,
-        has_valid_structure=has_valid_structure
-    )
-
-
-def extract_patch_from_cot(response: str) -> str:
-    """Extract only the patch section from a CoT response."""
-    parsed = parse_cot_response(response)
-    
-    patch = parsed.patch_section if parsed.patch_section else response
-    
-    # Remove markdown code block wrappers (```python ... ```)
-    patch = re.sub(r'^```(?:python|diff|text)?\s*\n?', '', patch, flags=re.MULTILINE)
-    patch = re.sub(r'\n?```\s*$', '', patch, flags=re.MULTILINE)
-    
-    # Also try to extract from within code blocks if SEARCH is inside
-    if "<<<<<<< SEARCH" not in patch and "<<<<<<< SEARCH" in response:
-        code_block_match = re.search(r'```(?:python|diff|text)?\s*\n(.*?<<<<<<< SEARCH.*?)```', 
-                                      response, re.DOTALL)
-        if code_block_match:
-            patch = code_block_match.group(1).strip()
-    
-    # Final cleanup: ensure we have the file path marker
-    if "<<<<<<< SEARCH" in patch and "### " not in patch:
-        file_match = re.search(r'###\s+([\w/._-]+\.py)', response)
-        if file_match:
-            patch = f"### {file_match.group(1)}\n{patch}"
-    
-    return patch.strip()
+    # Fallback: return everything (let PatchEngine handle it)
+    return clean_response.strip()
 
 
 class ChainOfThoughtTemplate(BasePromptTemplate):
@@ -109,53 +77,40 @@ class ChainOfThoughtTemplate(BasePromptTemplate):
             return self._generate_realistic_prompt(context)
     
     def extract_code_from_response(self, response: str) -> str:
-        """Extract code/patch from LLM response - required by base class."""
+        """Extract code/patch from LLM response."""
         return extract_patch_from_cot(response)
     
     def _get_cot_instructions(self) -> str:
-        """Enhanced CoT instructions with explicit examples."""
-        return '''
-## RESPONSE FORMAT (MUST FOLLOW EXACTLY)
+        """Simplified CoT instructions - analysis is brief, patch format matches ZS exactly."""
+        return '''## RESPONSE FORMAT
 
-Your response MUST have TWO clearly separated sections:
+Your response has TWO parts:
 
----
+**PART 1 - BRIEF ANALYSIS (2-3 lines max):**
+Write "ANALYSIS:" then in 2-3 lines explain: what is slow and why.
 
-### SECTION 1: ANALYSIS
-
-Start with: "Let's think step by step."
-
-Then briefly address (3-5 sentences total):
-1. **IDENTIFICATION**: What function/code has the inefficiency?
-2. **DIAGNOSIS**: Why is it inefficient? (O(N^2), memory spikes, redundant computation, etc.)
-3. **SOLUTION**: What optimization will you apply?
+**PART 2 - PATCH (main output):**
+Write "PATCH:" then provide code changes using EXACT format below.
 
 ---
 
-### SECTION 2: PATCH
-
-After analysis, provide code changes using this EXACT format:
+## PATCH FORMAT (CRITICAL - MUST MATCH EXACTLY)
 
 ### path/to/file.py
 <<<<<<< SEARCH
-original code (minimum unique context)
+[exact original code to find]
 =======
-optimized code
+[your optimized replacement]
 >>>>>>> REPLACE
 
 ---
 
-## COMPLETE CORRECT EXAMPLE
+## COMPLETE EXAMPLE
 
-### SECTION 1: ANALYSIS
+ANALYSIS:
+The `find_duplicates` function uses O(n²) nested loops. Using a set gives O(n).
 
-Let's think step by step.
-
-**IDENTIFICATION**: The `find_duplicates` function in `utils.py` is the bottleneck.
-**DIAGNOSIS**: It uses nested loops giving O(n²) complexity - for each element, it scans the entire list.
-**SOLUTION**: Use a set for O(1) lookups, reducing complexity to O(n).
-
-### SECTION 2: PATCH
+PATCH:
 
 ### myproject/utils.py
 <<<<<<< SEARCH
@@ -179,33 +134,12 @@ def find_duplicates(items):
 
 ---
 
-## WRONG EXAMPLES - DO NOT DO THIS
-
-WRONG (missing SECTION markers):
-The function is slow because... [then patch without structure]
-
-WRONG (patch wrapped in code blocks):
-```python
-### myproject/utils.py
-<<<<<<< SEARCH
-```
-
-WRONG (missing file path):
-<<<<<<< SEARCH
-def foo():
-=======
-
-WRONG (only explanation, no patch):
-To fix this, you should use a dictionary instead of a list...
-
----
-
-## CRITICAL RULES
-- Include BOTH Section 1 (Analysis) AND Section 2 (Patch)
-- Do NOT wrap patch in ```python``` code blocks
-- ALWAYS include file path before <<<<<<< SEARCH
-- Keep SEARCH blocks SMALL - just enough to locate uniquely
-- Do NOT add new external dependencies
+## RULES
+- Keep ANALYSIS to 2-3 lines MAX
+- File path line MUST come immediately before <<<<<<< SEARCH
+- SEARCH block must match original code EXACTLY
+- Do NOT wrap in ```python``` code blocks
+- Do NOT add external dependencies
 - Do NOT modify test files
 '''
 
@@ -216,7 +150,7 @@ To fix this, you should use a dictionary instead of a list...
 
 ## TASK
 Optimize the provided code for energy efficiency and execution speed.
-Use Chain-of-Thought reasoning: first ANALYZE the code, then provide the PATCH.
+First briefly analyze, then provide the patch.
 
 ## CONTEXT
 **Repository:** `{context.repo_name}`
@@ -226,10 +160,6 @@ Use Chain-of-Thought reasoning: first ANALYZE the code, then provide the PATCH.
 {code_section}
 
 {self._get_cot_instructions()}
-
----
-
-## YOUR RESPONSE (start with SECTION 1)
 '''
         return prompt.strip()
     
@@ -241,7 +171,7 @@ Use Chain-of-Thought reasoning: first ANALYZE the code, then provide the PATCH.
 
 ## TASK
 Find and fix the performance bottleneck in this codebase.
-Use Chain-of-Thought reasoning: first ANALYZE to identify the bottleneck, then provide the PATCH.
+First briefly analyze to identify the bottleneck, then provide the patch.
 
 ## CONTEXT
 **Repository:** `{context.repo_name}`
@@ -249,14 +179,10 @@ Use Chain-of-Thought reasoning: first ANALYZE to identify the bottleneck, then p
 
 {repo_map_section}
 
-## RETRIEVED CODE (WARNING: some files may be noise - identify the real bottleneck!)
+## RETRIEVED CODE (some files may be noise - identify the real bottleneck)
 {code_section}
 
 {self._get_cot_instructions()}
-
----
-
-## YOUR RESPONSE (start with SECTION 1)
 '''
         return prompt.strip()
     
@@ -283,5 +209,5 @@ class CoTRealisticTemplate(ChainOfThoughtTemplate):
 
 __all__ = [
     'ChainOfThoughtTemplate', 'CoTOracleTemplate', 'CoTRealisticTemplate',
-    'CoTResponse', 'parse_cot_response', 'extract_patch_from_cot'
+    'extract_patch_from_cot'
 ]

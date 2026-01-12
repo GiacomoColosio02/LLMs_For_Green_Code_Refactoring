@@ -5,16 +5,15 @@ Based on: "Unleashing the Emergent Cognitive Synergy in Large Language Models"
 https://arxiv.org/abs/2310.01234
 
 This strategy simulates multiple expert roles collaborating:
-1. ANALYST: Identifies performance bottlenecks and inefficiencies
-2. OPTIMIZER: Proposes concrete code optimizations
-3. REVIEWER: Validates and refines the final patch
+1. ANALYST: Identifies performance bottlenecks (brief, 3-5 lines)
+2. OPTIMIZER: Proposes concrete optimization approach (brief, 3-5 lines)
+3. IMPLEMENTER: Produces the final SEARCH/REPLACE patch
 
-Each role builds on the previous role's output, creating a collaborative
-refinement process within a single LLM.
+Version: 3.0 - Simplified roles, strict patch format matching ZS success
 """
 
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 
 from .base_template import (
@@ -28,20 +27,52 @@ from .base_template import (
 @dataclass
 class SelfCollabResponse:
     """Parsed Self-Collaboration response."""
-    raw_responses: List[str]          # All role responses
-    analyst_output: str               # Bottleneck analysis
-    optimizer_output: str             # Proposed optimizations
-    reviewer_output: str              # Final validated patch
-    final_patch: str                  # Extracted patch
+    raw_responses: List[str]
+    analyst_output: str
+    optimizer_output: str
+    implementer_output: str
+    final_patch: str
     has_valid_structure: bool
+
+
+def extract_patch_from_sc(response: str) -> str:
+    """Extract SEARCH/REPLACE patch from Self-Collaboration response."""
+    # Remove markdown code blocks
+    clean = re.sub(r'```(?:python|diff|text)?\s*\n?', '', response)
+    clean = re.sub(r'\n?```', '', clean)
+    
+    # Strategy 1: Find file path + SEARCH pattern together
+    match = re.search(
+        r'(###\s+[\w/._-]+\.py\s*\n\s*<<<<<<< SEARCH.*?>>>>>>> REPLACE)',
+        clean, re.DOTALL
+    )
+    if match:
+        return match.group(1).strip()
+    
+    # Strategy 2: Find SEARCH and look backwards for file path
+    search_idx = clean.find('<<<<<<< SEARCH')
+    if search_idx != -1:
+        pre_search = clean[:search_idx]
+        
+        # Find last file path marker before SEARCH
+        file_matches = list(re.finditer(r'###\s+[\w/._-]+\.py', pre_search))
+        if file_matches:
+            start_pos = file_matches[-1].start()
+            return clean[start_pos:].strip()
+        
+        # No file path found, return from SEARCH
+        return clean[search_idx:].strip()
+    
+    return clean.strip()
 
 
 class SelfCollaborationTemplate(BasePromptTemplate):
     """
-    Self-Collaboration template implementing multi-expert collaboration.
+    Self-Collaboration template with 3 streamlined turns.
     
-    Returns a list of message sequences for multi-turn conversation.
-    The runner should call the LLM 3 times, passing previous responses.
+    Turn 1 (Analyst): Brief bottleneck identification (3-5 lines)
+    Turn 2 (Optimizer): Brief optimization strategy (3-5 lines)
+    Turn 3 (Implementer): Generate SEARCH/REPLACE patch
     """
     
     def __init__(self):
@@ -50,47 +81,24 @@ class SelfCollaborationTemplate(BasePromptTemplate):
     
     @property
     def is_multi_turn(self) -> bool:
-        """Indicates this strategy requires multiple LLM calls."""
         return True
     
     @property
     def num_turns(self) -> int:
-        """Number of turns/roles in the collaboration."""
         return 3
     
     def generate_prompt(self, context: PromptContext) -> Dict[str, any]:
-        """
-        Generate the initial prompt and role definitions.
-        
-        Returns a dict with:
-        - 'system_prompt': Base system prompt
-        - 'turns': List of turn configs with role prompts
-        - 'code_context': Formatted code for reference
-        """
+        """Generate configuration for multi-turn collaboration."""
         code_section = self._format_code_files(context.code_files)
-        
-        # Determine if oracle or realistic
         is_oracle = context.problem_statement_type == ProblemStatementType.ORACLE
         
         return {
             "system_prompt": self._get_system_prompt(),
             "initial_context": self._get_initial_context(context, code_section, is_oracle),
             "turns": [
-                {
-                    "role": "ANALYST",
-                    "prompt": self._get_analyst_prompt(is_oracle),
-                    "description": "Identify performance bottlenecks"
-                },
-                {
-                    "role": "OPTIMIZER",
-                    "prompt": self._get_optimizer_prompt(),
-                    "description": "Propose optimizations"
-                },
-                {
-                    "role": "REVIEWER",
-                    "prompt": self._get_reviewer_prompt(),
-                    "description": "Validate and produce final patch"
-                }
+                {"role": "ANALYST", "description": "Identify bottleneck"},
+                {"role": "OPTIMIZER", "description": "Propose fix"},
+                {"role": "IMPLEMENTER", "description": "Generate patch"}
             ],
             "code_context": code_section,
             "problem_description": context.problem_description
@@ -102,340 +110,158 @@ class SelfCollaborationTemplate(BasePromptTemplate):
         context: PromptContext,
         previous_responses: List[str]
     ) -> str:
-        """
-        Generate prompt for a specific turn, incorporating previous responses.
-        
-        Args:
-            turn_index: 0=Analyst, 1=Optimizer, 2=Reviewer
-            context: Original context
-            previous_responses: List of responses from previous turns
-            
-        Returns:
-            Complete prompt for this turn
-        """
+        """Generate prompt for a specific turn."""
         code_section = self._format_code_files(context.code_files)
         is_oracle = context.problem_statement_type == ProblemStatementType.ORACLE
         
         if turn_index == 0:
-            # ANALYST - First turn, no previous responses
             return self._build_analyst_turn(context, code_section, is_oracle)
-        
         elif turn_index == 1:
-            # OPTIMIZER - Has analyst response
             analyst_output = previous_responses[0] if previous_responses else ""
             return self._build_optimizer_turn(context, code_section, analyst_output)
-        
         elif turn_index == 2:
-            # REVIEWER - Has analyst and optimizer responses
             analyst_output = previous_responses[0] if len(previous_responses) > 0 else ""
             optimizer_output = previous_responses[1] if len(previous_responses) > 1 else ""
-            return self._build_reviewer_turn(context, code_section, analyst_output, optimizer_output)
-        
+            return self._build_implementer_turn(context, code_section, analyst_output, optimizer_output)
         else:
             raise ValueError(f"Invalid turn index: {turn_index}")
+    
+    def extract_code_from_response(self, response: str) -> str:
+        """Extract patch from final response."""
+        return extract_patch_from_sc(response)
+    
+    def parse_collaboration_responses(self, responses: List[str]) -> SelfCollabResponse:
+        """Parse all responses from collaboration session."""
+        analyst = responses[0] if len(responses) > 0 else ""
+        optimizer = responses[1] if len(responses) > 1 else ""
+        implementer = responses[2] if len(responses) > 2 else ""
+        
+        final_patch = extract_patch_from_sc(implementer)
+        has_valid = bool(final_patch and "<<<<<<< SEARCH" in final_patch and "### " in final_patch)
+        
+        return SelfCollabResponse(
+            raw_responses=responses,
+            analyst_output=analyst,
+            optimizer_output=optimizer,
+            implementer_output=implementer,
+            final_patch=final_patch,
+            has_valid_structure=has_valid
+        )
     
     # =========================================================================
     # SYSTEM PROMPT
     # =========================================================================
     
     def _get_system_prompt(self) -> str:
-        return """You are participating in a collaborative code optimization session.
-Multiple expert roles will work together to optimize code for energy efficiency.
-
-You will be assigned a specific role (Analyst, Optimizer, or Reviewer).
-Focus ONLY on your assigned role's responsibilities.
-Build upon the work of previous roles when applicable.
-
-Goal: Produce an energy-efficient code patch that maintains correctness."""
+        return "You are an expert software engineer participating in a code optimization session."
     
     # =========================================================================
     # INITIAL CONTEXT
     # =========================================================================
     
-    def _get_initial_context(
-        self, 
-        context: PromptContext, 
-        code_section: str,
-        is_oracle: bool
-    ) -> str:
-        """Build the shared context all roles will see."""
+    def _get_initial_context(self, context: PromptContext, code_section: str, is_oracle: bool) -> str:
+        repo_info = f"**Repository:** `{context.repo_name}`\n" if context.repo_name else ""
         
-        repo_info = f"**Repository:** `{context.repo_name}`" if context.repo_name else ""
-        
-        if is_oracle:
-            task_desc = "Optimize the following code for energy efficiency and execution speed."
-        else:
-            task_desc = "Find and fix performance bottlenecks in the retrieved code."
-            if context.repo_map:
-                repo_info += f"\n\n**Repository Structure:**\n```\n{context.repo_map}\n```"
-        
-        return f"""## OPTIMIZATION TASK
+        return f"""{repo_info}**Problem:** {context.problem_description}
 
-{repo_info}
-
-**Problem:** {context.problem_description}
-
-**Objective:** {task_desc}
-
-## CODE CONTEXT
-
+## CODE
 {code_section}
 """
     
     # =========================================================================
-    # TURN 1: ANALYST
+    # TURN 1: ANALYST (Brief)
     # =========================================================================
     
-    def _get_analyst_prompt(self, is_oracle: bool) -> str:
-        if is_oracle:
-            return """## YOUR ROLE: ANALYST
-
-You are a Performance Analyst. Your job is to identify inefficiencies in the code.
-
-**Your Tasks:**
-1. Identify the specific functions/code blocks with performance issues
-2. Explain WHY each is inefficient (complexity, memory, I/O, etc.)
-3. Quantify the impact if possible (O(n²) → O(n), memory spikes, etc.)
-4. Prioritize: which issues have the highest impact?
-
-**Output Format:**
-```
-## BOTTLENECK ANALYSIS
-
-### Issue 1: [Function/Location]
-- **Problem:** [Description]
-- **Cause:** [Why it's slow]
-- **Impact:** [Severity: High/Medium/Low]
-- **Suggested Fix:** [Brief direction]
-
-### Issue 2: ...
-```
-
-Do NOT provide code patches yet - that's the Optimizer's job.
-Focus on thorough analysis."""
-        else:
-            return """## YOUR ROLE: ANALYST
-
-You are a Performance Analyst working with retrieved code (some may be noise).
-
-**Your Tasks:**
-1. FILTER: Identify which files are relevant to the performance issue
-2. LOCATE: Find the specific functions causing the bottleneck
-3. DIAGNOSE: Explain WHY each is inefficient
-4. PRIORITIZE: Rank issues by impact
-
-**Output Format:**
-```
-## BOTTLENECK ANALYSIS
-
-### Relevant Files (filtered from noise):
-- file1.py - [why relevant]
-- file2.py - [why relevant]
-
-### Issue 1: [Function in File]
-- **Problem:** [Description]
-- **Cause:** [Why it's slow]
-- **Impact:** [High/Medium/Low]
-- **Suggested Fix:** [Direction]
-```
-
-Do NOT provide code patches yet."""
-    
-    def _build_analyst_turn(
-        self, 
-        context: PromptContext, 
-        code_section: str,
-        is_oracle: bool
-    ) -> str:
-        initial = self._get_initial_context(context, code_section, is_oracle)
-        role_prompt = self._get_analyst_prompt(is_oracle)
+    def _build_analyst_turn(self, context: PromptContext, code_section: str, is_oracle: bool) -> str:
+        repo_info = f"**Repository:** `{context.repo_name}`\n" if context.repo_name else ""
         
-        return f"""{initial}
+        noise_warning = "" if is_oracle else "\n**Note:** Some retrieved files may be noise - identify the real bottleneck.\n"
+        
+        return f"""You are the **ANALYST** on a green software optimization team.
 
-{role_prompt}
-
-Now perform your analysis:"""
-    
-    # =========================================================================
-    # TURN 2: OPTIMIZER
-    # =========================================================================
-    
-    def _get_optimizer_prompt(self) -> str:
-        return """## YOUR ROLE: OPTIMIZER
-
-You are a Code Optimizer. The Analyst has identified bottlenecks - now you propose fixes.
-
-**Your Tasks:**
-1. Review the Analyst's findings
-2. Propose CONCRETE code optimizations for each issue
-3. Explain the expected improvement for each fix
-4. Provide code snippets showing the changes
-
-**Output Format:**
-```
-## PROPOSED OPTIMIZATIONS
-
-### Fix 1: [For Issue 1]
-- **Target:** [Function/Location]
-- **Optimization:** [What you'll change]
-- **Expected Improvement:** [e.g., O(n²) → O(n)]
-- **Code Change:**
-  - Before: [snippet]
-  - After: [snippet]
-
-### Fix 2: ...
-```
-
-Provide specific code changes but NOT the final SEARCH/REPLACE patch format yet.
-The Reviewer will validate and format the final patch."""
-    
-    def _build_optimizer_turn(
-        self, 
-        context: PromptContext, 
-        code_section: str,
-        analyst_output: str
-    ) -> str:
-        return f"""## ANALYST'S FINDINGS
-
-{analyst_output}
-
----
-
-## CODE CONTEXT (for reference)
-
+## CONTEXT
+{repo_info}**Problem:** {context.problem_description}
+{noise_warning}
+## CODE
 {code_section}
 
----
+## YOUR TASK
+In **3-5 lines**, identify:
+1. Which function/file is the bottleneck?
+2. Why is it slow? (O(n²), redundant ops, memory, etc.)
 
-{self._get_optimizer_prompt()}
+Be specific - name the exact function and file path.
+Do NOT provide code - just analysis.
 
-Now propose your optimizations:"""
-    
+Your analysis:"""
+
     # =========================================================================
-    # TURN 3: REVIEWER
+    # TURN 2: OPTIMIZER (Brief)
     # =========================================================================
     
-    def _get_reviewer_prompt(self) -> str:
-        return """## YOUR ROLE: REVIEWER - PRODUCE THE FINAL PATCH
+    def _build_optimizer_turn(self, context: PromptContext, code_section: str, analyst_output: str) -> str:
+        return f"""You are the **OPTIMIZER** on a green software optimization team.
 
-⚠️ **CRITICAL: You MUST copy code EXACTLY from the ORIGINAL CODE section above.**
-⚠️ **DO NOT type code from memory. DO NOT reconstruct code. COPY-PASTE EXACTLY.**
+## ANALYST'S FINDINGS
+{analyst_output}
 
-**OUTPUT FORMAT (no other text allowed):**
+## YOUR TASK
+In **3-5 lines**, propose:
+1. What specific change to make?
+2. Why will it improve performance?
 
-### path/to/file.py
-<<<<<<< SEARCH
-[COPY exact lines from ORIGINAL CODE above - same whitespace, same everything]
-=======
-[your optimized version]
->>>>>>> REPLACE
+Be concrete - describe the transformation (e.g., "replace nested loop with set lookup").
+Do NOT write code yet - the Implementer will do that.
 
-**RULES:**
-1. SEARCH block = EXACT copy from ORIGINAL CODE section (even whitespace matters!)
-2. Find the specific lines in ORIGINAL CODE, copy them character-for-character
-3. Keep SEARCH blocks SMALL (5-15 lines) - just enough to be unique
-4. Do NOT invent or reconstruct code - if you can't find it above, don't patch it
-5. No ```python``` blocks, no explanations, no comments - ONLY the patch
+Your optimization strategy:"""
 
-**HOW TO DO IT:**
-1. Look at Optimizer's suggestion (which function to change)
-2. Find that EXACT function in ORIGINAL CODE section above
-3. COPY those lines exactly into your SEARCH block
-4. Write your improved version in REPLACE block
-
-**START YOUR PATCH NOW** (first line must be ### path/to/file.py):"""
+    # =========================================================================
+    # TURN 3: IMPLEMENTER (Produces Patch)
+    # =========================================================================
     
-    def _build_reviewer_turn(
+    def _build_implementer_turn(
         self, 
         context: PromptContext, 
         code_section: str,
         analyst_output: str,
         optimizer_output: str
     ) -> str:
-        return f"""## TASK: PRODUCE THE FINAL PATCH
+        return f"""You are the **IMPLEMENTER** on a green software optimization team.
 
----
+## ANALYSIS
+{analyst_output}
 
-## OPTIMIZER'S SUGGESTION (what to optimize):
-
+## OPTIMIZATION STRATEGY
 {optimizer_output}
 
----
-
-## ⚠️ ORIGINAL CODE - COPY EXACTLY FROM HERE ⚠️
-## (Your SEARCH block MUST be an exact copy from this section)
-
+## ORIGINAL CODE (copy EXACTLY from here for SEARCH blocks)
 {code_section}
 
----
+## YOUR TASK
+Generate the optimization patch using this EXACT format:
 
-{self._get_reviewer_prompt()}"""
-    
-    # =========================================================================
-    # RESPONSE PARSING
-    # =========================================================================
-    
-    def extract_code_from_response(self, response: str) -> str:
-        """Extract patch from the final (reviewer) response."""
-        return self._extract_patch(response)
-    
-    def parse_collaboration_responses(
-        self, 
-        responses: List[str]
-    ) -> SelfCollabResponse:
-        """
-        Parse all responses from the collaboration session.
-        
-        Args:
-            responses: List of 3 responses [analyst, optimizer, reviewer]
-            
-        Returns:
-            SelfCollabResponse with parsed components
-        """
-        analyst = responses[0] if len(responses) > 0 else ""
-        optimizer = responses[1] if len(responses) > 1 else ""
-        reviewer = responses[2] if len(responses) > 2 else ""
-        
-        final_patch = self._extract_patch(reviewer)
-        has_valid = bool(final_patch and "<<<<<<< SEARCH" in final_patch)
-        
-        return SelfCollabResponse(
-            raw_responses=responses,
-            analyst_output=analyst,
-            optimizer_output=optimizer,
-            reviewer_output=reviewer,
-            final_patch=final_patch,
-            has_valid_structure=has_valid
-        )
-    
-    def _extract_patch(self, response: str) -> str:
-        """Extract SEARCH/REPLACE blocks from response."""
-        # Find all SEARCH/REPLACE blocks
-        pattern = r'(###\s+[\w/._-]+\.py\s*\n)?<<<<<<< SEARCH\n.*?>>>>>>> REPLACE'
-        matches = re.findall(pattern, response, re.DOTALL)
-        
-        if not matches:
-            # Try to find file path separately
-            if "<<<<<<< SEARCH" in response:
-                # Extract everything from first file path or SEARCH marker
-                file_match = re.search(r'(###\s+[\w/._-]+\.py)', response)
-                search_start = response.find("<<<<<<< SEARCH")
-                
-                if file_match and file_match.start() < search_start:
-                    start = file_match.start()
-                else:
-                    start = search_start
-                
-                return response[start:].strip()
-        
-        return response.strip()
-    
+### path/to/file.py
+<<<<<<< SEARCH
+[exact code from ORIGINAL CODE above - must match perfectly]
+=======
+[your optimized version]
+>>>>>>> REPLACE
+
+## CRITICAL RULES
+1. First line must be: ### path/to/file.py
+2. SEARCH block must EXACTLY match original code (copy-paste from above)
+3. Keep SEARCH blocks SMALL (5-15 lines)
+4. Do NOT wrap in ```python``` blocks
+5. Do NOT add explanations - ONLY the patch
+6. Do NOT add external dependencies
+
+Generate your patch now (start with ### path/to/file.py):"""
+
     # =========================================================================
     # UTILITIES
     # =========================================================================
     
     def _format_code_files(self, code_files: Dict[str, str]) -> str:
-        """Format code files for prompt."""
         if not code_files:
             return "*No code files provided*"
         
@@ -479,5 +305,6 @@ __all__ = [
     'SelfCollaborationTemplate',
     'SelfCollabOracleTemplate', 
     'SelfCollabRealisticTemplate',
-    'SelfCollabResponse'
+    'SelfCollabResponse',
+    'extract_patch_from_sc'
 ]
