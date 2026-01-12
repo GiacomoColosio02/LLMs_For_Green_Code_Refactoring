@@ -1,7 +1,7 @@
 """
 Chain-of-Thought (CoT) Prompt Templates for Green Code Optimization.
 
-Version: 3.0 - Simplified to match ZS success rate
+Version: 2.1 - Fixed prompt to emphasize patch format
 """
 
 import re
@@ -11,56 +11,88 @@ from dataclasses import dataclass
 from .base_template import BasePromptTemplate, PromptContext, ProblemStatementType, PromptStrategy
 
 
-def extract_patch_from_cot(response: str) -> str:
-    """Extract only the patch section from a CoT response."""
+@dataclass
+class CoTResponse:
+    """Parsed Chain-of-Thought response."""
+    raw_response: str
+    analysis_section: str
+    patch_section: str
+    has_valid_structure: bool
+
+
+def parse_cot_response(response: str) -> CoTResponse:
+    """Parse a CoT response into its structured components."""
     # Remove <think> tags if present (for reasoning models)
     clean_response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
     
-    # Remove markdown code block wrappers
-    clean_response = re.sub(r'```(?:python|diff|text)?\s*\n?', '', clean_response)
-    clean_response = re.sub(r'\n?```', '', clean_response)
+    analysis_section = ""
+    patch_section = ""
     
-    # Strategy 1: Find SECTION 2 marker and extract everything after
-    section2_match = re.search(
-        r'(?:SECTION\s*2|##\s*SECTION\s*2|###\s*SECTION\s*2)\s*:?\s*(?:PATCH)?(.*)$',
+    # Try multiple patterns for section markers
+    section1_match = re.search(
+        r'(?:SECTION\s*1|##\s*SECTION\s*1|###\s*SECTION\s*1)\s*:?\s*(?:ANALYSIS)?(.*?)(?=SECTION\s*2|##\s*SECTION\s*2|###\s*SECTION\s*2|<<<<<<< SEARCH|$)', 
         clean_response, re.IGNORECASE | re.DOTALL
     )
-    if section2_match:
-        patch_content = section2_match.group(1).strip()
-        if '<<<<<<< SEARCH' in patch_content:
-            return patch_content
-    
-    # Strategy 2: Find first file path marker (### path/to/file.py) followed by SEARCH
-    file_patch_match = re.search(
-        r'(###\s+[\w/._-]+\.py\s*\n\s*<<<<<<< SEARCH.*)',
-        clean_response, re.DOTALL
+    section2_match = re.search(
+        r'(?:SECTION\s*2|##\s*SECTION\s*2|###\s*SECTION\s*2)\s*:?\s*(?:PATCH)?(.*?)$', 
+        clean_response, re.IGNORECASE | re.DOTALL
     )
-    if file_patch_match:
-        return file_patch_match.group(1).strip()
     
-    # Strategy 3: Find first <<<<<<< SEARCH and include file path before it
-    search_match = re.search(r'<<<<<<< SEARCH', clean_response)
-    if search_match:
-        pre_search = clean_response[:search_match.start()]
+    if section1_match:
+        analysis_section = section1_match.group(1).strip()
+    if section2_match:
+        patch_section = section2_match.group(1).strip()
+    
+    # Fallback: if no section markers but SEARCH/REPLACE exists
+    if not patch_section and "<<<<<<< SEARCH" in clean_response:
+        search_start = clean_response.find("<<<<<<< SEARCH")
         
         # Look for file path marker before SEARCH
-        file_path_match = re.search(r'(###\s+[\w/._-]+\.py\s*\n?)\s*$', pre_search)
+        file_path_match = re.search(r'(###\s+[\w/._-]+\.py\s*\n)', clean_response[:search_start])
         if file_path_match:
-            start_pos = file_path_match.start()
+            patch_start = file_path_match.start()
         else:
-            # Try to find any file path in the line before
-            lines = pre_search.rstrip().split('\n')
-            for i in range(len(lines) - 1, -1, -1):
-                if re.match(r'###\s+[\w/._-]+\.py', lines[i]):
-                    start_pos = pre_search.rfind(lines[i])
-                    break
-            else:
-                start_pos = search_match.start()
+            pre_search = clean_response[:search_start]
+            last_newline = pre_search.rfind('\n')
+            patch_start = max(0, last_newline)
         
-        return clean_response[start_pos:].strip()
+        patch_section = clean_response[patch_start:].strip()
+        analysis_section = clean_response[:patch_start].strip()
     
-    # Fallback: return everything (let PatchEngine handle it)
-    return clean_response.strip()
+    has_valid_structure = bool(patch_section and "<<<<<<< SEARCH" in patch_section)
+    
+    return CoTResponse(
+        raw_response=response,
+        analysis_section=analysis_section,
+        patch_section=patch_section,
+        has_valid_structure=has_valid_structure
+    )
+
+
+def extract_patch_from_cot(response: str) -> str:
+    """Extract only the patch section from a CoT response."""
+    parsed = parse_cot_response(response)
+    
+    patch = parsed.patch_section if parsed.patch_section else response
+    
+    # Remove markdown code block wrappers (```python ... ```)
+    patch = re.sub(r'^```(?:python|diff|text)?\s*\n?', '', patch, flags=re.MULTILINE)
+    patch = re.sub(r'\n?```\s*$', '', patch, flags=re.MULTILINE)
+    
+    # Also try to extract from within code blocks if SEARCH is inside
+    if "<<<<<<< SEARCH" not in patch and "<<<<<<< SEARCH" in response:
+        code_block_match = re.search(r'```(?:python|diff|text)?\s*\n(.*?<<<<<<< SEARCH.*?)```', 
+                                      response, re.DOTALL)
+        if code_block_match:
+            patch = code_block_match.group(1).strip()
+    
+    # Final cleanup: ensure we have the file path marker
+    if "<<<<<<< SEARCH" in patch and "### " not in patch:
+        file_match = re.search(r'###\s+([\w/._-]+\.py)', response)
+        if file_match:
+            patch = f"### {file_match.group(1)}\n{patch}"
+    
+    return patch.strip()
 
 
 class ChainOfThoughtTemplate(BasePromptTemplate):
@@ -77,40 +109,36 @@ class ChainOfThoughtTemplate(BasePromptTemplate):
             return self._generate_realistic_prompt(context)
     
     def extract_code_from_response(self, response: str) -> str:
-        """Extract code/patch from LLM response."""
+        """Extract code/patch from LLM response - required by base class."""
         return extract_patch_from_cot(response)
     
     def _get_cot_instructions(self) -> str:
-        """Simplified CoT instructions - analysis is brief, patch format matches ZS exactly."""
+        """CoT instructions - simplified analysis, strict patch format."""
         return '''## RESPONSE FORMAT
 
-Your response has TWO parts:
+**PART 1 - ANALYSIS (3-5 lines only):**
+Start with "Let's think step by step." then briefly explain:
+- What function/code is inefficient?
+- Why is it slow?
+- What optimization will you apply?
 
-**PART 1 - BRIEF ANALYSIS (2-3 lines max):**
-Write "ANALYSIS:" then in 2-3 lines explain: what is slow and why.
-
-**PART 2 - PATCH (main output):**
-Write "PATCH:" then provide code changes using EXACT format below.
-
----
-
-## PATCH FORMAT (CRITICAL - MUST MATCH EXACTLY)
+**PART 2 - PATCH:**
+Provide code changes using this EXACT format (no ```python``` blocks!):
 
 ### path/to/file.py
 <<<<<<< SEARCH
-[exact original code to find]
+exact original code to find
 =======
-[your optimized replacement]
+your optimized replacement
 >>>>>>> REPLACE
 
 ---
 
-## COMPLETE EXAMPLE
+## EXAMPLE
 
-ANALYSIS:
-The `find_duplicates` function uses O(n²) nested loops. Using a set gives O(n).
+Let's think step by step.
 
-PATCH:
+The `find_duplicates` function in `utils.py` uses O(n²) nested loops. Using a set gives O(1) lookups, reducing to O(n).
 
 ### myproject/utils.py
 <<<<<<< SEARCH
@@ -134,13 +162,13 @@ def find_duplicates(items):
 
 ---
 
-## RULES
-- Keep ANALYSIS to 2-3 lines MAX
-- File path line MUST come immediately before <<<<<<< SEARCH
-- SEARCH block must match original code EXACTLY
-- Do NOT wrap in ```python``` code blocks
-- Do NOT add external dependencies
-- Do NOT modify test files
+## CRITICAL RULES
+1. Keep analysis SHORT (3-5 lines max)
+2. File path line (### path/to/file.py) MUST come immediately before <<<<<<< SEARCH
+3. SEARCH block must match original code EXACTLY (copy-paste from TARGET CODE)
+4. Do NOT wrap patch in ```python``` code blocks
+5. Do NOT add external dependencies
+6. Do NOT modify test files
 '''
 
     def _generate_oracle_prompt(self, context: PromptContext) -> str:
@@ -150,7 +178,7 @@ def find_duplicates(items):
 
 ## TASK
 Optimize the provided code for energy efficiency and execution speed.
-First briefly analyze, then provide the patch.
+First analyze briefly, then provide the patch.
 
 ## CONTEXT
 **Repository:** `{context.repo_name}`
@@ -171,7 +199,7 @@ First briefly analyze, then provide the patch.
 
 ## TASK
 Find and fix the performance bottleneck in this codebase.
-First briefly analyze to identify the bottleneck, then provide the patch.
+First analyze briefly to identify the bottleneck, then provide the patch.
 
 ## CONTEXT
 **Repository:** `{context.repo_name}`
@@ -209,5 +237,5 @@ class CoTRealisticTemplate(ChainOfThoughtTemplate):
 
 __all__ = [
     'ChainOfThoughtTemplate', 'CoTOracleTemplate', 'CoTRealisticTemplate',
-    'extract_patch_from_cot'
+    'CoTResponse', 'parse_cot_response', 'extract_patch_from_cot'
 ]
