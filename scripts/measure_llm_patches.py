@@ -10,6 +10,9 @@ Supports all prompt types:
 - self_collab: Self-Collaboration (multi-turn)
 - ldb: LDB iterative refinement
 
+MULTI-MODEL SUPPORT:
+Results directory and model name can be specified via arguments.
+
 Output format:
     data/processed/green/[MODEL]_[PROMPT_TYPE]_[STRATEGY]_k[REPS].json
 
@@ -17,6 +20,10 @@ Usage:
     python measure_llm_patches.py --strategy oracle --prompt-type cot --repetitions 5
     python measure_llm_patches.py --strategy oracle --prompt-type self_collab -k 3
     python measure_llm_patches.py --dataset data/processed/swe_perf_reduced.json -k 3
+    
+    # Multi-model support
+    python measure_llm_patches.py --strategy oracle --prompt-type zero_shot -k 3 \
+        --results-dir results/DeepSeek-Coder-V2/zs_oracle --model-name DeepSeek-Coder-V2
 """
 import sys
 import os
@@ -58,7 +65,10 @@ logger = logging.getLogger("MeasureLLMPatches")
 DEFAULT_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced.json"
 ORIGINAL_DATASET = PROJECT_ROOT / "data" / "original" / "swe_perf_original_20251124.json"
 GREEN_OUTPUT_DIR = PROJECT_ROOT / "data" / "processed" / "green"
-RESULTS_DIR = PROJECT_ROOT / "results"
+BASE_RESULTS_DIR = PROJECT_ROOT / "results"
+
+# Default model name
+DEFAULT_MODEL_NAME = "Qwen2.5-Coder-7B"
 
 # Prompt type mappings
 PROMPT_TYPE_TO_DIR_PREFIX = {
@@ -89,10 +99,10 @@ ALL_METRICS = GREEN_METRICS + EFFICIENCY_METRICS
 AGGREGATIONS = ['mean', 'std', 'min', 'max']
 
 
-def get_results_dir(prompt_type: str, strategy: str) -> Path:
-    """Get results directory for prompt type and strategy."""
+def get_default_results_dir(prompt_type: str, strategy: str) -> Path:
+    """Get default results directory for prompt type and strategy."""
     prefix = PROMPT_TYPE_TO_DIR_PREFIX.get(prompt_type, prompt_type)
-    return RESULTS_DIR / f"{prefix}_{strategy}"
+    return BASE_RESULTS_DIR / f"{prefix}_{strategy}"
 
 
 def sanitize_model_name(model_name: str) -> str:
@@ -299,38 +309,58 @@ class LLMPatchMeasurer:
         prompt_type: str,
         repetitions: int = 5,
         skip_completed: bool = True,
-        limit: Optional[int] = None
+        limit: Optional[int] = None,
+        results_dir: Optional[Path] = None,
+        model_name: Optional[str] = None
     ) -> Dict:
-        """Measure all instances for a strategy."""
+        """
+        Measure all instances for a strategy.
+        
+        Args:
+            strategy: "oracle" or "realistic"
+            prompt_type: "zero_shot", "cot", "self_collab", or "ldb"
+            repetitions: Number of measurement repetitions
+            skip_completed: Skip already measured instances
+            limit: Maximum instances to measure
+            results_dir: Custom results directory (for multi-model support)
+            model_name: Model name override (for multi-model support)
+        """
         
         logger.info(f"\n{'='*70}")
         logger.info(f"📏 MEASURING: {prompt_type.upper()} - {strategy.upper()}")
         logger.info(f"{'='*70}")
         
-        # Find experiment results
-        results_dir = get_results_dir(prompt_type, strategy)
-        if not results_dir.exists():
-            logger.error(f"Results directory not found: {results_dir}")
-            return {"error": f"no_results_directory: {results_dir}"}
+        # Determine results directory
+        if results_dir:
+            exp_results_dir = Path(results_dir)
+        else:
+            exp_results_dir = get_default_results_dir(prompt_type, strategy)
         
-        result_files = list(results_dir.glob("*.json"))
-        logger.info(f"Found {len(result_files)} experiment results in {results_dir}")
+        if not exp_results_dir.exists():
+            logger.error(f"Results directory not found: {exp_results_dir}")
+            return {"error": f"no_results_directory: {exp_results_dir}"}
         
-        # Detect model
-        model_name = "Unknown"
-        for rf in result_files:
-            try:
-                data = load_json(rf)
-                if data.get("model"):
-                    model_name = data["model"]
-                    break
-            except:
-                pass
+        result_files = list(exp_results_dir.glob("*.json"))
+        logger.info(f"Found {len(result_files)} experiment results in {exp_results_dir}")
         
-        logger.info(f"Model: {model_name}")
+        # Detect model from results or use provided model_name
+        if model_name:
+            detected_model = model_name
+        else:
+            detected_model = DEFAULT_MODEL_NAME
+            for rf in result_files:
+                try:
+                    data = load_json(rf)
+                    if data.get("model"):
+                        detected_model = data["model"]
+                        break
+                except:
+                    pass
+        
+        logger.info(f"Model: {detected_model}")
         
         # Output path
-        output_filename = get_output_filename(model_name, prompt_type, strategy, repetitions)
+        output_filename = get_output_filename(detected_model, prompt_type, strategy, repetitions)
         output_path = GREEN_OUTPUT_DIR / output_filename
         logger.info(f"Output: {output_path}")
         
@@ -339,7 +369,7 @@ class LLMPatchMeasurer:
             output_dataset = load_json(output_path)
             logger.info(f"Loaded existing: {len(output_dataset.get('instances', []))} instances")
         else:
-            output_dataset = self._create_empty_dataset(model_name, prompt_type, strategy, repetitions)
+            output_dataset = self._create_empty_dataset(detected_model, prompt_type, strategy, repetitions)
             logger.info(f"Created new dataset")
         
         # Filter successful patches
@@ -349,7 +379,14 @@ class LLMPatchMeasurer:
                 exp_result = load_json(result_file)
                 instance_id = exp_result.get("instance_id")
                 
-                if exp_result.get("status") != "success":
+                # Check for success - handle both old and new formats
+                patch_result = exp_result.get("patch_result", {})
+                if isinstance(patch_result, dict):
+                    is_success = patch_result.get("success", False)
+                else:
+                    is_success = exp_result.get("status") == "success"
+                
+                if not is_success:
                     continue
                 
                 if skip_completed and self._is_instance_in_dataset(output_dataset, instance_id):
@@ -433,21 +470,41 @@ class LLMPatchMeasurer:
         return stats
     
     def run(self, strategies: List[str], prompt_type: str = "zero_shot",
-            repetitions: int = 5, skip_completed: bool = True, limit: Optional[int] = None) -> Dict:
-        """Run measurements for strategies."""
+            repetitions: int = 5, skip_completed: bool = True, limit: Optional[int] = None,
+            results_dir: Optional[Path] = None, model_name: Optional[str] = None) -> Dict:
+        """
+        Run measurements for strategies.
+        
+        Args:
+            strategies: List of strategies to measure
+            prompt_type: Prompt type
+            repetitions: Number of repetitions
+            skip_completed: Skip already measured
+            limit: Maximum instances
+            results_dir: Custom results directory
+            model_name: Model name override
+        """
         
         start_time = time.time()
-        summary = {"prompt_type": prompt_type, "results": {}}
+        summary = {"prompt_type": prompt_type, "model": model_name or DEFAULT_MODEL_NAME, "results": {}}
         
         for strategy in strategies:
-            stats = self.measure_strategy(strategy, prompt_type, repetitions, skip_completed, limit)
+            stats = self.measure_strategy(
+                strategy=strategy,
+                prompt_type=prompt_type,
+                repetitions=repetitions,
+                skip_completed=skip_completed,
+                limit=limit,
+                results_dir=results_dir,
+                model_name=model_name
+            )
             summary["results"][strategy] = stats
         
         summary["duration_seconds"] = time.time() - start_time
         
         # Print summary
         logger.info(f"\n{'='*70}")
-        logger.info(f"📊 SUMMARY - {prompt_type.upper()}")
+        logger.info(f"📊 SUMMARY - {prompt_type.upper()} - {summary['model']}")
         logger.info(f"{'='*70}")
         for strategy, stats in summary["results"].items():
             if "error" in stats:
@@ -476,6 +533,10 @@ Examples:
   
   # Measure both strategies
   python measure_llm_patches.py --strategy both --prompt-type cot -k 3
+  
+  # Multi-model support: specify custom results dir and model name
+  python measure_llm_patches.py --strategy oracle --prompt-type zero_shot -k 3 \
+      --results-dir results/DeepSeek-Coder-V2/zs_oracle --model-name DeepSeek-Coder-V2
         """
     )
     parser.add_argument('--strategy', '-s', 
@@ -494,6 +555,10 @@ Examples:
                         help='Re-measure already completed instances')
     parser.add_argument('--dataset', '-d', type=str, default=str(DEFAULT_DATASET),
                         help='Path to reduced dataset (default: swe_perf_reduced.json)')
+    parser.add_argument('--results-dir', '-r', type=str, default=None,
+                        help='Custom results directory (for multi-model support)')
+    parser.add_argument('--model-name', '-m', type=str, default=None,
+                        help='Model name override (for multi-model support)')
     
     args = parser.parse_args()
     
@@ -514,7 +579,9 @@ Examples:
         prompt_type=args.prompt_type,
         repetitions=args.repetitions,
         skip_completed=not args.no_skip,
-        limit=args.limit
+        limit=args.limit,
+        results_dir=Path(args.results_dir) if args.results_dir else None,
+        model_name=args.model_name
     )
 
 

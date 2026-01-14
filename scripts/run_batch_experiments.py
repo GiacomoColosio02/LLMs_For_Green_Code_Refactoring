@@ -10,6 +10,9 @@ Supports all prompt types:
 - self_collab: Self-Collaboration (multi-turn)
 - ldb: LDB iterative refinement
 
+MULTI-MODEL SUPPORT:
+Results are saved to model-specific directories via --output-dir.
+
 Usage:
     # Run all instances with oracle strategy
     python run_batch_experiments.py --strategy oracle --prompt-type zero_shot
@@ -25,6 +28,9 @@ Usage:
     
     # Use full dataset (131 instances)
     python run_batch_experiments.py --dataset data/processed/swe_perf_reduced.json
+    
+    # Specify output directory (for multi-model support)
+    python run_batch_experiments.py --strategy oracle --output-dir results/DeepSeek-Coder-V2/zs_oracle
     
     # Limit number of instances (for testing)
     python run_batch_experiments.py --strategy oracle --limit 5
@@ -62,7 +68,7 @@ logger = logging.getLogger("BatchExperiments")
 
 # --- CONSTANTS ---
 DEFAULT_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced.json"
-RESULTS_DIR = PROJECT_ROOT / "results"
+BASE_RESULTS_DIR = PROJECT_ROOT / "results"
 
 # Prompt type to directory prefix mapping
 PROMPT_TYPE_TO_DIR_PREFIX = {
@@ -83,6 +89,7 @@ class BatchExperimentRunner:
     
     Features:
     - Supports all prompt types: zero_shot, cot, self_collab, ldb
+    - Supports custom output directories for multi-model setups
     - Skips already completed instances
     - Tracks progress and statistics
     - Handles errors gracefully (continues with next instance)
@@ -95,7 +102,8 @@ class BatchExperimentRunner:
         strategies: List[str],
         prompt_type: str = "zero_shot",
         skip_completed: bool = True,
-        limit: Optional[int] = None
+        limit: Optional[int] = None,
+        output_dir: Optional[Path] = None
     ):
         """
         Initialize batch runner.
@@ -106,12 +114,14 @@ class BatchExperimentRunner:
             prompt_type: "zero_shot", "cot", "self_collab", or "ldb"
             skip_completed: Skip instances that already have results
             limit: Maximum number of instances to process (None = all)
+            output_dir: Custom output directory (overrides default results/{prompt}_{strategy})
         """
         self.dataset_path = Path(dataset_path)
         self.strategies = strategies
         self.prompt_type = prompt_type.lower()
         self.skip_completed = skip_completed
         self.limit = limit
+        self.output_dir = Path(output_dir) if output_dir else None
         
         # Validate prompt type
         if self.prompt_type not in PROMPT_TYPE_TO_DIR_PREFIX:
@@ -128,6 +138,8 @@ class BatchExperimentRunner:
         logger.info(f"  Strategies: {self.strategies}")
         logger.info(f"  Skip completed: {self.skip_completed}")
         logger.info(f"  Limit: {self.limit or 'None'}")
+        if self.output_dir:
+            logger.info(f"  Output dir: {self.output_dir}")
     
     def _load_dataset(self) -> List[Dict]:
         """Load dataset from JSON file."""
@@ -143,8 +155,13 @@ class BatchExperimentRunner:
     
     def _get_results_dir(self, strategy: str) -> Path:
         """Get results directory for current prompt type and strategy."""
+        # If custom output_dir is provided, use it directly
+        if self.output_dir:
+            return self.output_dir
+        
+        # Otherwise use default: results/{prefix}_{strategy}
         prefix = PROMPT_TYPE_TO_DIR_PREFIX.get(self.prompt_type, self.prompt_type)
-        return RESULTS_DIR / f"{prefix}_{strategy}"
+        return BASE_RESULTS_DIR / f"{prefix}_{strategy}"
     
     def _is_completed(self, instance_id: str, strategy: str) -> bool:
         """Check if instance already has successful results."""
@@ -153,10 +170,14 @@ class BatchExperimentRunner:
         if not result_file.exists():
             return False
         
-        # Check if result was successful
+        # Check if result was successful (patch applied correctly)
         try:
             with open(result_file, 'r') as f:
                 result = json.load(f)
+            # Check patch_result.success for pass rate
+            patch_result = result.get("patch_result", {})
+            if isinstance(patch_result, dict) and patch_result.get("success", False):
+                return True
             return result.get("status") == "success"
         except:
             return False
@@ -195,6 +216,7 @@ class BatchExperimentRunner:
             "dataset": str(self.dataset_path),
             "prompt_type": self.prompt_type,
             "strategies": self.strategies,
+            "output_dir": str(self.output_dir) if self.output_dir else "default",
             "results": {}
         }
         
@@ -224,9 +246,13 @@ class BatchExperimentRunner:
         total_in_dataset = len(self.instances)
         already_done = total_in_dataset - len(pending) if self.skip_completed else 0
         
+        results_dir = self._get_results_dir(strategy)
+        results_dir.mkdir(parents=True, exist_ok=True)
+        
         logger.info(f"  Total instances: {total_in_dataset}")
         logger.info(f"  Already completed: {already_done}")
         logger.info(f"  To process: {len(pending)}")
+        logger.info(f"  Results dir: {results_dir}")
         
         if not pending:
             logger.info(f"  ✅ All instances already completed!")
@@ -236,14 +262,17 @@ class BatchExperimentRunner:
                 "processed": 0,
                 "success": 0,
                 "failed": 0,
-                "errors": []
+                "patch_failed": 0,
+                "errors": [],
+                "timing": []
             }
         
-        # Initialize runner for this strategy
+        # Initialize runner for this strategy with custom output dir
         runner = ExperimentRunner(
             dataset_path=self.dataset_path,
             strategy=strategy,
-            prompt_type=self.prompt_type
+            prompt_type=self.prompt_type,
+            output_dir=results_dir
         )
         
         # Process instances
@@ -320,6 +349,7 @@ class BatchExperimentRunner:
         logger.info(f"📊 BATCH EXPERIMENT SUMMARY")
         logger.info(f"{'='*70}")
         logger.info(f"Prompt Type: {summary['prompt_type'].upper()}")
+        logger.info(f"Output dir: {summary['output_dir']}")
         
         for strategy, results in summary["results"].items():
             logger.info(f"\n{strategy.upper()}:")
@@ -383,6 +413,9 @@ Examples:
   # Use full dataset (131 instances)
   python run_batch_experiments.py --dataset data/processed/swe_perf_reduced.json -p zero_shot
   
+  # Specify output directory for multi-model support
+  python run_batch_experiments.py --strategy oracle --prompt-type zero_shot --output-dir results/DeepSeek-Coder-V2/zs_oracle
+  
   # Test with only 3 instances
   python run_batch_experiments.py --strategy oracle --limit 3
   
@@ -415,6 +448,13 @@ Examples:
     )
     
     parser.add_argument(
+        '--output-dir', '-o',
+        type=str,
+        default=None,
+        help='Custom output directory for results (overrides default)'
+    )
+    
+    parser.add_argument(
         '--limit', '-l',
         type=int,
         default=None,
@@ -442,7 +482,8 @@ Examples:
             strategies=strategies,
             prompt_type=args.prompt_type,
             skip_completed=not args.no_skip,
-            limit=args.limit
+            limit=args.limit,
+            output_dir=Path(args.output_dir) if args.output_dir else None
         )
         
         summary = runner.run()

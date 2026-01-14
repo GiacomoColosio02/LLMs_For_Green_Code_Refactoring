@@ -7,14 +7,23 @@ This script runs the entire pipeline for ALL prompt strategies:
 - Self-Collaboration (Oracle & Realistic)
 - LDB (Oracle & Realistic)
 
-Output: data/processed/green/ALL_STRATEGIES_green_dataset.json
+MULTI-MODEL SUPPORT:
+Results are organized by model name in separate directories:
+  results/{model_name}/zs_oracle/
+  results/{model_name}/cot_oracle/
+  ...
+
+Output: data/processed/green/{model_name}_ALL_STRATEGIES_green_dataset.json
 
 Usage:
-    # Run everything with full dataset (131 instances)
+    # Run everything with full dataset (131 instances) for default model
     python scripts/createpatches_runmeasurements_createdataset.py -k 3
     
+    # Run for a specific model (e.g., DeepSeek)
+    python scripts/createpatches_runmeasurements_createdataset.py -k 3 --model-name DeepSeek-Coder-V2
+    
     # Skip patch generation (use existing patches)
-    python scripts/createpatches_runmeasurements_createdataset.py --skip-patches
+    python scripts/createpatches_runmeasurements_createdataset.py --skip-patches --model-name Qwen2.5-Coder-7B
     
     # Skip measurements (use existing measurements)
     python scripts/createpatches_runmeasurements_createdataset.py --skip-measurements
@@ -45,8 +54,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# Directories
-RESULTS_DIR = PROJECT_ROOT / "results"
+# Base Directories
+BASE_RESULTS_DIR = PROJECT_ROOT / "results"
 GREEN_DIR = PROJECT_ROOT / "data" / "processed" / "green"
 RAW_MEASUREMENTS_DIR = PROJECT_ROOT / "data" / "raw" / "measurements"
 
@@ -57,9 +66,8 @@ TEST_DATASET = PROJECT_ROOT / "data" / "processed" / "swe_perf_reduced_test.json
 # GREEN DATASET WITH BASE/HEAD - This is the source of truth for Base/Head measurements
 GREEN_K3_DATASET = GREEN_DIR / "swe_perf_green_k3.json"
 
-# Output files
-OUTPUT_JSON = GREEN_DIR / "ALL_STRATEGIES_green_dataset.json"
-OUTPUT_CSV = GREEN_DIR / "ALL_STRATEGIES_green_dataset.csv"
+# Default model name
+DEFAULT_MODEL_NAME = "Qwen2.5-Coder-7B"
 
 # =============================================================================
 # ALL 8 CONFIGURATIONS (4 prompt types × 2 strategies)
@@ -107,10 +115,20 @@ KEY_METRICS_WITH_SUFFIX = [f"{m}_mean" for m in KEY_METRICS_RAW]
 class PipelineRunner:
     """Complete pipeline for patch generation, measurement, and dataset creation."""
     
-    def __init__(self, repetitions: int = 3, strategies: Optional[List[str]] = None, test_mode: bool = False):
+    def __init__(self, repetitions: int = 3, strategies: Optional[List[str]] = None, 
+                 test_mode: bool = False, model_name: str = DEFAULT_MODEL_NAME):
         self.repetitions = repetitions
         self.start_time = time.time()
         self.test_mode = test_mode
+        self.model_name = model_name
+        
+        # Set up model-specific directories
+        self.results_dir = BASE_RESULTS_DIR / model_name
+        self.output_json = GREEN_DIR / f"{model_name}_ALL_STRATEGIES_green_dataset.json"
+        self.output_csv = GREEN_DIR / f"{model_name}_ALL_STRATEGIES_green_dataset.csv"
+        
+        # Ensure results directory exists
+        self.results_dir.mkdir(parents=True, exist_ok=True)
         
         # Select dataset based on mode
         if test_mode:
@@ -143,6 +161,10 @@ class PipelineRunner:
         print(f"🚀 {title}")
         print(f"{'='*70}\n")
     
+    def get_config_results_dir(self, config: Dict) -> Path:
+        """Get the results directory for a specific config, scoped by model."""
+        return self.results_dir / config['results_dir']
+    
     # =========================================================================
     # PHASE 1: PATCH GENERATION
     # =========================================================================
@@ -150,6 +172,8 @@ class PipelineRunner:
     def generate_patches(self) -> Dict[str, int]:
         """Generate patches for all configurations."""
         self.log_header("PHASE 1: GENERATING PATCHES")
+        self.log(f"Model: {self.model_name}")
+        self.log(f"Results dir: {self.results_dir}")
         self.log(f"Dataset: {self.dataset_path.name} ({self.total_instances} instances)")
         self.log(f"Strategies: {[c['name'] for c in self.configs]}")
         
@@ -158,21 +182,25 @@ class PipelineRunner:
         for i, config in enumerate(self.configs):
             self.log(f"[{i+1}/{len(self.configs)}] Generating {config['name']} patches...")
             
-            # Build command with explicit dataset path
+            # Ensure config results dir exists
+            config_results_dir = self.get_config_results_dir(config)
+            config_results_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Build command with explicit dataset path and model-specific output dir
             cmd = [
                 sys.executable,
                 str(PROJECT_ROOT / "scripts" / "run_batch_experiments.py"),
                 "--strategy", config['strategy'],
                 "--prompt-type", config['prompt_type'],
-                "--dataset", str(self.dataset_path)
+                "--dataset", str(self.dataset_path),
+                "--output-dir", str(config_results_dir)
             ]
             
             try:
                 subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, capture_output=False)
                 
                 # Count successful patches
-                results_dir = RESULTS_DIR / config['results_dir']
-                success_count = self._count_successful_patches(results_dir)
+                success_count = self._count_successful_patches(config_results_dir)
                 results[config['name']] = success_count
                 self.log(f"  ✅ {config['name']}: {success_count}/{self.total_instances} patches generated")
                 
@@ -194,6 +222,8 @@ class PipelineRunner:
         instances = data if isinstance(data, list) else data.get('instances', [])
         success_count = 0
         
+        config_results_dir = self.get_config_results_dir(config)
+        
         for inst in instances:
             instance_id = inst.get('instance_id', inst.get('id', ''))
             if not instance_id:
@@ -205,7 +235,8 @@ class PipelineRunner:
                 "--instance", instance_id,
                 "--strategy", config['strategy'],
                 "--prompt-type", config['prompt_type'],
-                "--dataset", str(self.dataset_path)
+                "--dataset", str(self.dataset_path),
+                "--output-dir", str(config_results_dir)
             ]
             
             try:
@@ -213,7 +244,7 @@ class PipelineRunner:
                              capture_output=True, timeout=300)
                 
                 # Check if successful
-                result_file = RESULTS_DIR / config['results_dir'] / f"{instance_id}.json"
+                result_file = config_results_dir / f"{instance_id}.json"
                 if result_file.exists():
                     with open(result_file) as f:
                         result = json.load(f)
@@ -235,7 +266,11 @@ class PipelineRunner:
             try:
                 with open(f) as fp:
                     data = json.load(fp)
-                if data.get('status') == 'success':
+                # Check patch_result.success for pass rate
+                patch_result = data.get('patch_result', {})
+                if isinstance(patch_result, dict) and patch_result.get('success', False):
+                    count += 1
+                elif data.get('status') == 'success':
                     count += 1
             except:
                 pass
@@ -248,6 +283,7 @@ class PipelineRunner:
     def run_measurements(self) -> Dict[str, int]:
         """Run measurements for all configurations."""
         self.log_header("PHASE 2: RUNNING MEASUREMENTS")
+        self.log(f"Model: {self.model_name}")
         self.log(f"Repetitions: k={self.repetitions}")
         
         results = {}
@@ -256,8 +292,8 @@ class PipelineRunner:
             self.log(f"[{i+1}/{len(self.configs)}] Measuring {config['name']} patches...")
             
             # Count how many successful patches we have
-            results_dir = RESULTS_DIR / config['results_dir']
-            patch_count = self._count_successful_patches(results_dir)
+            config_results_dir = self.get_config_results_dir(config)
+            patch_count = self._count_successful_patches(config_results_dir)
             
             if patch_count == 0:
                 self.log(f"  ⚠️ No successful patches to measure for {config['name']}")
@@ -272,7 +308,9 @@ class PipelineRunner:
                 "--strategy", config['strategy'],
                 "--prompt-type", config['prompt_type'],
                 "--repetitions", str(self.repetitions),
-                "--dataset", str(self.dataset_path)
+                "--dataset", str(self.dataset_path),
+                "--results-dir", str(config_results_dir),
+                "--model-name", self.model_name
             ]
             
             try:
@@ -301,8 +339,9 @@ class PipelineRunner:
         prompt_clean = PROMPT_TYPE_CLEAN.get(prompt_type, prompt_type)
         strategy_clean = strategy.capitalize()
         
-        # Try multiple patterns
+        # Try multiple patterns - include model name
         patterns = [
+            f"{self.model_name}_{prompt_clean}_{strategy_clean}_k*.json",
             f"*_{prompt_clean}_{strategy_clean}_k*.json",
             f"*{prompt_clean}*{strategy_clean}*.json",
         ]
@@ -321,6 +360,7 @@ class PipelineRunner:
     def create_dataset(self) -> Dict:
         """Create consolidated dataset from all measurements."""
         self.log_header("PHASE 3: CREATING CONSOLIDATED DATASET")
+        self.log(f"Model: {self.model_name}")
         
         # Load base/head measurements from swe_perf_green_k3.json
         self.log("Loading base/head measurements from swe_perf_green_k3.json...")
@@ -382,8 +422,9 @@ class PipelineRunner:
         # Create final dataset
         dataset = {
             'metadata': {
-                'name': 'Green Code Refactoring - All Strategies Comparison Dataset',
-                'description': 'Energy measurements comparing Base, Human (Head), and all LLM strategies',
+                'name': f'Green Code Refactoring - {self.model_name} - All Strategies Comparison Dataset',
+                'description': f'Energy measurements comparing Base, Human (Head), and all LLM strategies for {self.model_name}',
+                'model': self.model_name,
                 'source_dataset': str(self.dataset_path.name),
                 'variants': variants,
                 'strategies': [c['name'] for c in self.configs],
@@ -532,13 +573,13 @@ class PipelineRunner:
         GREEN_DIR.mkdir(parents=True, exist_ok=True)
         
         # Save JSON
-        with open(OUTPUT_JSON, 'w') as f:
+        with open(self.output_json, 'w') as f:
             json.dump(dataset, f, indent=2)
-        self.log(f"✅ JSON saved: {OUTPUT_JSON}")
+        self.log(f"✅ JSON saved: {self.output_json}")
         
         # Save CSV
         self._save_csv(dataset)
-        self.log(f"✅ CSV saved: {OUTPUT_CSV}")
+        self.log(f"✅ CSV saved: {self.output_csv}")
     
     def _save_csv(self, dataset: Dict):
         """Save dataset as CSV."""
@@ -616,7 +657,7 @@ class PipelineRunner:
             rows.append(row)
         
         # Write CSV
-        with open(OUTPUT_CSV, 'w', newline='') as f:
+        with open(self.output_csv, 'w', newline='') as f:
             writer = csv.DictWriter(f, fieldnames=headers)
             writer.writeheader()
             writer.writerows(rows)
@@ -628,6 +669,7 @@ class PipelineRunner:
         instances = dataset.get('instances', [])
         variants = dataset['metadata']['variants']
         
+        print(f"Model: {self.model_name}")
         print(f"Dataset source: {self.dataset_path.name}")
         print(f"Total instances: {len(instances)}")
         print(f"Strategies tested: {len(self.configs)}")
@@ -709,6 +751,8 @@ class PipelineRunner:
         print("🔬 COMPLETE PIPELINE: ALL STRATEGIES")
         print("="*70)
         print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Model: {self.model_name}")
+        print(f"Results dir: {self.results_dir}")
         print(f"Dataset: {self.dataset_path.name} ({self.total_instances} instances)")
         print(f"Strategies: {[c['name'] for c in self.configs]}")
         print(f"Repetitions: k={self.repetitions}")
@@ -750,9 +794,10 @@ class PipelineRunner:
         elapsed = time.time() - self.start_time
         print(f"\n{'='*70}")
         print(f"✅ PIPELINE COMPLETE!")
+        print(f"   Model: {self.model_name}")
         print(f"   Total time: {elapsed/60:.1f} minutes ({elapsed/3600:.1f} hours)")
-        print(f"   Output JSON: {OUTPUT_JSON}")
-        print(f"   Output CSV: {OUTPUT_CSV}")
+        print(f"   Output JSON: {self.output_json}")
+        print(f"   Output CSV: {self.output_csv}")
         print(f"{'='*70}\n")
 
 
@@ -762,17 +807,27 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run full pipeline with 131 instances, k=3
+  # Run full pipeline with 131 instances, k=3 (default model: Qwen2.5-Coder-7B)
   python scripts/createpatches_runmeasurements_createdataset.py -k 3
+  
+  # Run for DeepSeek model
+  python scripts/createpatches_runmeasurements_createdataset.py -k 3 --model-name DeepSeek-Coder-V2
   
   # Quick test with 12 instances
   python scripts/createpatches_runmeasurements_createdataset.py --test-mode -k 1
   
-  # Only run new strategies (SC and LDB)
-  python scripts/createpatches_runmeasurements_createdataset.py --strategies self_collab ldb -k 3
+  # Only run new strategies (SC and LDB) for specific model
+  python scripts/createpatches_runmeasurements_createdataset.py --strategies self_collab ldb -k 3 --model-name Qwen2.5-Coder-7B
+  
+  # Skip patches, only run measurements (use existing patches)
+  python scripts/createpatches_runmeasurements_createdataset.py --skip-patches --model-name Qwen2.5-Coder-7B
   
   # Create dataset from existing measurements
-  python scripts/createpatches_runmeasurements_createdataset.py --only-dataset
+  python scripts/createpatches_runmeasurements_createdataset.py --only-dataset --model-name Qwen2.5-Coder-7B
+  
+  # Run patches for DeepSeek while measuring Qwen (in parallel):
+  # Terminal 1: python scripts/createpatches_runmeasurements_createdataset.py --skip-patches -k 3 --model-name Qwen2.5-Coder-7B
+  # Terminal 2: python scripts/createpatches_runmeasurements_createdataset.py --skip-measurements -k 3 --model-name DeepSeek-Coder-V2
         """
     )
     parser.add_argument('--skip-patches', action='store_true',
@@ -788,6 +843,8 @@ Examples:
                        help='Only run specific strategies (default: all)')
     parser.add_argument('--test-mode', action='store_true',
                        help='Use test dataset (12 instances) instead of full dataset (131 instances)')
+    parser.add_argument('--model-name', type=str, default=DEFAULT_MODEL_NAME,
+                       help=f'Model name for organizing results (default: {DEFAULT_MODEL_NAME})')
     
     args = parser.parse_args()
     
@@ -795,7 +852,8 @@ Examples:
         runner = PipelineRunner(
             repetitions=args.repetitions,
             strategies=args.strategies,
-            test_mode=args.test_mode
+            test_mode=args.test_mode,
+            model_name=args.model_name
         )
         runner.run(
             skip_patches=args.skip_patches,
