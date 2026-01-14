@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-8527",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:05:28.386839",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49768
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_calc_idxminmax` function in `computation.py` uses `array.isnull().all(dim)` which can be inefficient due to multiple passes over the data. Using `array.notnull().any(dim)` followed by `array.argmax(dim)` can reduce the number of operations.\n\n### xarray/core/computation.py\n<<<<<<< SEARCH\nif skipna or (skipna is None and array.dtype.kind in na_dtypes):\n    # Need to skip NaN values since argmin and argmax can't handle them\n    allna = array.isnull().all(dim)\n    array = array.where(~allna, 0)\n=======\nif skipna or (skipna is None and array.dtype.kind in na_dtypes):\n    # Skip NaN values by finding non-NaN indices\n    non_null_indices = array.notnull().argmax(dim=dim, axis=None, keep_attrs=keep_attrs, skipna=skipna)\n    array = array[non_null_indices]\n>>>>>>> REPLACE",
+  "llm_tokens": 13635,
+  "llm_latency": 12.952774047851562,
+  "patch_content": "### xarray/core/computation.py\n<<<<<<< SEARCH\nif skipna or (skipna is None and array.dtype.kind in na_dtypes):\n    # Need to skip NaN values since argmin and argmax can't handle them\n    allna = array.isnull().all(dim)\n    array = array.where(~allna, 0)\n=======\nif skipna or (skipna is None and array.dtype.kind in na_dtypes):\n    # Skip NaN values by finding non-NaN indices\n    non_null_indices = array.notnull().argmax(dim=dim, axis=None, keep_attrs=keep_attrs, skipna=skipna)\n    array = array[non_null_indices]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/computation.py"
+    ],
+    "error": null
+  }
+}

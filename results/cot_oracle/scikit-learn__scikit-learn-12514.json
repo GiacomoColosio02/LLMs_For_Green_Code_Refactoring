@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12514",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:47:52.150390",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 36053
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `KBinsDiscretizer.transform` method is the bottleneck.\n**DIAGNOSIS**: It uses `np.digitize` inside a loop, leading to O(n * m) complexity where n is the number of samples and m is the number of features. Additionally, it creates temporary arrays which can lead to high memory usage.\n**SOLUTION**: Vectorize the operation to reduce the number of loops and minimize memory usage.\n\n### SECTION 2: PATCH\n\n### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\nfor jj in range(Xt.shape[1]):\n    # Values which are close to a bin edge are susceptible to numeric\n    # instability. Add eps to X so these values are binned correctly\n    # with respect to their decimal truncation. See documentation of\n    # numpy.isclose for an explanation of ``rtol`` and ``atol``.\n    rtol = 1.e-5\n    atol = 1.e-8\n    eps = atol + rtol * np.abs(Xt[:, jj])\n    Xt[:, jj] = np.digitize(Xt[:, jj] + eps, bin_edges[jj][1:])\nnp.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n=======\nXt += np.finfo(float).eps * np.abs(Xt)\nXt = np.searchsorted(bin_edges, Xt, side='right') - 1\nnp.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n>>>>>>> REPLACE",
+  "llm_tokens": 11059,
+  "llm_latency": 19.618911266326904,
+  "patch_content": "### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\nfor jj in range(Xt.shape[1]):\n    # Values which are close to a bin edge are susceptible to numeric\n    # instability. Add eps to X so these values are binned correctly\n    # with respect to their decimal truncation. See documentation of\n    # numpy.isclose for an explanation of ``rtol`` and ``atol``.\n    rtol = 1.e-5\n    atol = 1.e-8\n    eps = atol + rtol * np.abs(Xt[:, jj])\n    Xt[:, jj] = np.digitize(Xt[:, jj] + eps, bin_edges[jj][1:])\nnp.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n=======\nXt += np.finfo(float).eps * np.abs(Xt)\nXt = np.searchsorted(bin_edges, Xt, side='right') - 1\nnp.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/preprocessing/_discretization.py"
+    ],
+    "error": null
+  }
+}

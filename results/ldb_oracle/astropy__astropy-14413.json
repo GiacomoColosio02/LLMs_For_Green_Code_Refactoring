@@ -1,0 +1,38 @@
+{
+  "instance_id": "astropy__astropy-14413",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T21:11:04.977775",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 22090
+  },
+  "llm_response": "### path/to/file.py\n<<<<<<< SEARCH\n@classmethod\ndef format_exponential_notation(cls, val):\n    m, ex = utils.split_mantissa_exponent(val)\n\n    parts = []\n    if m:\n        parts.append(m)\n\n    if ex:\n        parts.append(f\"10{cls._format_superscript(ex)}\")\n\n    return cls._times.join(parts)\n=======\n@classmethod\ndef format_exponential_notation(cls, val):\n    m, ex = utils.split_mantissa_exponent(val)\n\n    parts = [m] if m else []\n    parts.append(f\"10^{ex}\" if ex else \"\")\n\n    return cls._times.join(parts)\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### path/to/file.py\n<<<<<<< SEARCH\n@classmethod\ndef format_exponential_notation(cls, val):\n    m, ex = utils.split_mantissa_exponent(val)\n\n    parts = []\n    if m:\n        parts.append(m)\n\n    if ex:\n        parts.append(f\"10{cls._format_superscript(ex)}\")\n\n    return cls._times.join(parts)\n=======\n@classmethod\ndef format_exponential_notation(cls, val):\n    m, ex = utils.split_mantissa_exponent(val)\n\n    parts = [m] if m else []\n    parts.append(f\"10^{ex}\" if ex else \"\")\n\n    return cls._times.join(parts)\n>>>>>>> REPLACE",
+      "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n@classmethod\ndef format_exponential_notation(cls, val):\n    m, ex = utils.split_mantissa_exponent(val)\n\n    parts = []\n    if m:\n        parts.append(m)\n\n    if ex:\n        parts.append(f\"10{cls._format_superscript(ex)}\")\n\n    return cls._times.join(parts)\n=======\n@classmethod\ndef format_exponential_notation(cls, val):\n    m, ex = utils.split_mantissa_exponent(val)\n\n    parts = [m] if m else []\n    parts.append(f\"10^{ex}\" if ex else \"\")\n\n    return cls._times.join(parts)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 6352,
+  "llm_latency": 8.2362802028656,
+  "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n@classmethod\ndef format_exponential_notation(cls, val):\n    m, ex = utils.split_mantissa_exponent(val)\n\n    parts = []\n    if m:\n        parts.append(m)\n\n    if ex:\n        parts.append(f\"10{cls._format_superscript(ex)}\")\n\n    return cls._times.join(parts)\n=======\n@classmethod\ndef format_exponential_notation(cls, val):\n    m, ex = utils.split_mantissa_exponent(val)\n\n    parts = [m] if m else []\n    parts.append(f\"10^{ex}\" if ex else \"\")\n\n    return cls._times.join(parts)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/units/format/console.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-9881",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T20:04:31.875684",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49709
+  },
+  "llm_response": "### xarray/core/dataset.py\n<<<<<<< SEARCH\ndef _validate_interp_indexers(self, indexers, method, **kwargs):\n    for dim, indexer in indexers.items():\n        if dim not in self.dims:\n            raise ValueError(f\"Dimension '{dim}' not found in dataset dimensions.\")\n        if not isinstance(indexer, (slice, np.ndarray, Index)):\n            raise TypeError(f\"Invalid indexer for dimension '{dim}'. Expected slice, ndarray, or Index, got {type(indexer)}.\")\n\n    return indexers\n=======\ndef _validate_interp_indexers(self, indexers, method, **kwargs):\n    invalid_dims = [dim for dim in indexers if dim not in self.dims]\n    if invalid_dims:\n        raise ValueError(f\"Dimensions {invalid_dims} not found in dataset dimensions.\")\n\n    invalid_types = [(dim, type(indexer)) for dim, indexer in indexers.items() if not isinstance(indexer, (slice, np.ndarray, Index))]\n    if invalid_types:\n        raise TypeError(f\"Invalid indexers for dimensions {dict(invalid_types)}. Expected slice, ndarray, or Index, got {dict(invalid_types)}.\")\n\n    return indexers\n>>>>>>> REPLACE\n\n### xarray/core/missing.py\n<<<<<<< SEARCH\ndef _get_nan_block_lengths(obj, dim, index):\n    arange = ones_like(obj) * index\n    valid = obj.notnull()\n    valid_arange = arange.where(valid)\n    cumulative_nans = valid_arange.ffill(dim=dim).fillna(index[0])\n\n    nan_block_lengths = (\n        cumulative_nans.diff(dim=dim, label=\"upper\")\n        .reindex({dim: obj[dim]})\n        .where(valid)\n        .bfill(dim=dim)\n        .where(~valid, 0)\n        .fillna(index[-1] - valid_arange.max(dim=[dim]))\n    )\n\n    return nan_block_lengths\n=======\ndef _get_nan_block_lengths(obj, dim, index):\n    arange = ones_like(obj) * index\n    valid = obj.notnull()\n    valid_arange = arange.where(valid)\n    cumulative_nans = valid_arange.ffill(dim=dim).fillna(index[0])\n\n    nan_block_lengths = (\n        cumulative_nans.diff(dim=dim, label=\"upper\")\n        .reindex({dim: obj[dim]})\n        .where(valid)\n        .bfill(dim=dim)\n        .where(~valid, 0)\n        .fillna(index[-1] - valid_arange.max(dim=[dim]))\n    )\n\n    return nan_block_lengths\n>>>>>>> REPLACE",
+  "llm_tokens": 13012,
+  "llm_latency": 29.959316730499268,
+  "patch_content": "### xarray/core/dataset.py\n<<<<<<< SEARCH\ndef _validate_interp_indexers(self, indexers, method, **kwargs):\n    for dim, indexer in indexers.items():\n        if dim not in self.dims:\n            raise ValueError(f\"Dimension '{dim}' not found in dataset dimensions.\")\n        if not isinstance(indexer, (slice, np.ndarray, Index)):\n            raise TypeError(f\"Invalid indexer for dimension '{dim}'. Expected slice, ndarray, or Index, got {type(indexer)}.\")\n\n    return indexers\n=======\ndef _validate_interp_indexers(self, indexers, method, **kwargs):\n    invalid_dims = [dim for dim in indexers if dim not in self.dims]\n    if invalid_dims:\n        raise ValueError(f\"Dimensions {invalid_dims} not found in dataset dimensions.\")\n\n    invalid_types = [(dim, type(indexer)) for dim, indexer in indexers.items() if not isinstance(indexer, (slice, np.ndarray, Index))]\n    if invalid_types:\n        raise TypeError(f\"Invalid indexers for dimensions {dict(invalid_types)}. Expected slice, ndarray, or Index, got {dict(invalid_types)}.\")\n\n    return indexers\n>>>>>>> REPLACE\n\n### xarray/core/missing.py\n<<<<<<< SEARCH\ndef _get_nan_block_lengths(obj, dim, index):\n    arange = ones_like(obj) * index\n    valid = obj.notnull()\n    valid_arange = arange.where(valid)\n    cumulative_nans = valid_arange.ffill(dim=dim).fillna(index[0])\n\n    nan_block_lengths = (\n        cumulative_nans.diff(dim=dim, label=\"upper\")\n        .reindex({dim: obj[dim]})\n        .where(valid)\n        .bfill(dim=dim)\n        .where(~valid, 0)\n        .fillna(index[-1] - valid_arange.max(dim=[dim]))\n    )\n\n    return nan_block_lengths\n=======\ndef _get_nan_block_lengths(obj, dim, index):\n    arange = ones_like(obj) * index\n    valid = obj.notnull()\n    valid_arange = arange.where(valid)\n    cumulative_nans = valid_arange.ffill(dim=dim).fillna(index[0])\n\n    nan_block_lengths = (\n        cumulative_nans.diff(dim=dim, label=\"upper\")\n        .reindex({dim: obj[dim]})\n        .where(valid)\n        .bfill(dim=dim)\n        .where(~valid, 0)\n        .fillna(index[-1] - valid_arange.max(dim=[dim]))\n    )\n\n    return nan_block_lengths\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

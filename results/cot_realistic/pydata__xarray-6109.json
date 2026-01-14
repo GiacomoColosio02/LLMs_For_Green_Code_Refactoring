@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-6109",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:03:36.258290",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34949
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_infer_interval_breaks` function in `plot/utils.py` uses `numpy.linspace` inside a loop, leading to repeated calculations. Pre-computing the breaks outside the loop would reduce redundant computations.\n\n### xarray/plot/utils.py\n<<<<<<< SEARCH\ndef _infer_interval_breaks(data, check_monotonic=True, scale=None):\n    if scale is None:\n        scale = 1\n    if check_monotonic and not np.allclose(np.diff(data), np.diff(data) / scale):\n        raise ValueError(\"Data is not monotonic.\")\n    return np.linspace(data.min(), data.max(), len(data) + 1)\n=======\ndef _infer_interval_breaks(data, check_monotonic=True, scale=None):\n    if scale is None:\n        scale = 1\n    if check_monotonic and not np.allclose(np.diff(data), np.diff(data) / scale):\n        raise ValueError(\"Data is not monotonic.\")\n    return np.linspace(data.min(), data.max(), len(data) + 1)\n>>>>>>> REPLACE",
+  "llm_tokens": 10079,
+  "llm_latency": 13.066004991531372,
+  "patch_content": "### xarray/plot/utils.py\n<<<<<<< SEARCH\ndef _infer_interval_breaks(data, check_monotonic=True, scale=None):\n    if scale is None:\n        scale = 1\n    if check_monotonic and not np.allclose(np.diff(data), np.diff(data) / scale):\n        raise ValueError(\"Data is not monotonic.\")\n    return np.linspace(data.min(), data.max(), len(data) + 1)\n=======\ndef _infer_interval_breaks(data, check_monotonic=True, scale=None):\n    if scale is None:\n        scale = 1\n    if check_monotonic and not np.allclose(np.diff(data), np.diff(data) / scale):\n        raise ValueError(\"Data is not monotonic.\")\n    return np.linspace(data.min(), data.max(), len(data) + 1)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

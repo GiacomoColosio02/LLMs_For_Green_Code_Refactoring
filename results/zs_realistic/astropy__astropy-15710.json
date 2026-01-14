@@ -1,0 +1,29 @@
+{
+  "instance_id": "astropy__astropy-15710",
+  "prompt_type": "zero_shot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T15:14:09.015172",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34945
+  },
+  "llm_response": "### astropy/io/fits/hdu/hdulist.py\n<<<<<<< SEARCH\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None:\n                        # https://github.com/numpy/numpy/issues/8628\n                        with warnings.catch_warnings():\n                            warnings.simplefilter(\"ignore\", category=DeprecationWarning)\n                            arr.data = self[idx].data.data\n                del mmaps  # Just to be sure\n=======\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None:\n                        arr.data = self[idx].data.data\n                del mmaps\n>>>>>>> REPLACE\n\n### astropy/utils/data.py\n<<<<<<< SEARCH\n        if not os.path.exists(fn):\n            yield url_to(fn)\n=======\n        if not os.path.isfile(fn):\n            yield url_to(fn)\n>>>>>>> REPLACE\n\n### astropy/utils/tests/test_data.py\n<<<<<<< SEARCH\n            if not os.path.exists(fn):\n                yield url_to(fn)\n=======\n            if not os.path.isfile(fn):\n                yield url_to(fn)\n>>>>>>> REPLACE",
+  "llm_tokens": 9913,
+  "llm_latency": 12.791383743286133,
+  "patch_content": "### astropy/io/fits/hdu/hdulist.py\n<<<<<<< SEARCH\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None:\n                        # https://github.com/numpy/numpy/issues/8628\n                        with warnings.catch_warnings():\n                            warnings.simplefilter(\"ignore\", category=DeprecationWarning)\n                            arr.data = self[idx].data.data\n                del mmaps  # Just to be sure\n=======\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None:\n                        arr.data = self[idx].data.data\n                del mmaps\n>>>>>>> REPLACE\n\n### astropy/utils/data.py\n<<<<<<< SEARCH\n        if not os.path.exists(fn):\n            yield url_to(fn)\n=======\n        if not os.path.isfile(fn):\n            yield url_to(fn)\n>>>>>>> REPLACE\n\n### astropy/utils/tests/test_data.py\n<<<<<<< SEARCH\n            if not os.path.exists(fn):\n                yield url_to(fn)\n=======\n            if not os.path.isfile(fn):\n                yield url_to(fn)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 2,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/io/fits/hdu/hdulist.py",
+      "astropy/utils/tests/test_data.py"
+    ],
+    "error": null
+  }
+}

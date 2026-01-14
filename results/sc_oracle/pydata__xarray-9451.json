@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-9451",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T13:29:54.387497",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49755
+  },
+  "llm_response": "### xarray/core/coordinates.py\n<<<<<<< SEARCH\n        code_list = []\n        level_list = []\n        names = []\n\n        for i, index in enumerate(indexes):\n            if isinstance(index, pd.MultiIndex):\n                codes, levels = index.codes, index.levels\n            else:\n                code, level = pd.factorize(index)\n                codes = [code]\n                levels = [level]\n\n            # compute the cartesian product\n            code_list += [\n                np.tile(np.repeat(code, repeat_counts[i]), tile_counts[i])\n                for code in codes\n            ]\n            level_list += levels\n            names += index.names\n        return pd.MultiIndex(level_list, code_list, names=names)\n=======\n        return pd.MultiIndex.from_arrays(\n            [np.concatenate(codes) for codes in zip(*codes_list)],\n            names=[*names]\n        )\n>>>>>>> REPLACE\n\n### xarray/core/datatree.py\nNo changes required.",
+  "all_responses": [
+    "1. **Function**: `to_index` in `xarray/core/coordinates.py`\n2. **Why Slow**: Redundant computation and large intermediate arrays during the Cartesian product calculation.\n3. **Optimization Type**: Vectorization and efficient memory management.",
+    "Replace the nested loop with a set lookup for the Cartesian product calculation. This reduces the time complexity from \\(O(n^2)\\) to \\(O(n)\\). Edge cases to consider include handling empty input arrays and ensuring the order of elements in the output matches the original input order.",
+    "### xarray/core/coordinates.py\n<<<<<<< SEARCH\n        code_list = []\n        level_list = []\n        names = []\n\n        for i, index in enumerate(indexes):\n            if isinstance(index, pd.MultiIndex):\n                codes, levels = index.codes, index.levels\n            else:\n                code, level = pd.factorize(index)\n                codes = [code]\n                levels = [level]\n\n            # compute the cartesian product\n            code_list += [\n                np.tile(np.repeat(code, repeat_counts[i]), tile_counts[i])\n                for code in codes\n            ]\n            level_list += levels\n            names += index.names\n        return pd.MultiIndex(level_list, code_list, names=names)\n=======\n        return pd.MultiIndex.from_arrays(\n            [np.concatenate(codes) for codes in zip(*codes_list)],\n            names=[*names]\n        )\n>>>>>>> REPLACE\n\n### xarray/core/datatree.py\nNo changes required."
+  ],
+  "llm_tokens": 23862,
+  "llm_latency": 19.13691258430481,
+  "patch_content": "### xarray/core/coordinates.py\n<<<<<<< SEARCH\n        code_list = []\n        level_list = []\n        names = []\n\n        for i, index in enumerate(indexes):\n            if isinstance(index, pd.MultiIndex):\n                codes, levels = index.codes, index.levels\n            else:\n                code, level = pd.factorize(index)\n                codes = [code]\n                levels = [level]\n\n            # compute the cartesian product\n            code_list += [\n                np.tile(np.repeat(code, repeat_counts[i]), tile_counts[i])\n                for code in codes\n            ]\n            level_list += levels\n            names += index.names\n        return pd.MultiIndex(level_list, code_list, names=names)\n=======\n        return pd.MultiIndex.from_arrays(\n            [np.concatenate(codes) for codes in zip(*codes_list)],\n            names=[*names]\n        )\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. **Function**: `to_index` in `xarray/core/coordinates.py`\n2. **Why Slow**: Redundant computation and large intermediate arrays during the Cartesian product calculation.\n3. **Optimization Type**: Vectorization and efficient memory management.",
+    "optimizer": "Replace the nested loop with a set lookup for the Cartesian product calculation. This reduces the time complexity from \\(O(n^2)\\) to \\(O(n)\\). Edge cases to consider include handling empty input arrays and ensuring the order of elements in the output matches the original input order.",
+    "reviewer": "### xarray/core/coordinates.py\n<<<<<<< SEARCH\n        code_list = []\n        level_list = []\n        names = []\n\n        for i, index in enumerate(indexes):\n            if isinstance(index, pd.MultiIndex):\n                codes, levels = index.codes, index.levels\n            else:\n                code, level = pd.factorize(index)\n                codes = [code]\n                levels = [level]\n\n            # compute the cartesian product\n            code_list += [\n                np.tile(np.repeat(code, repeat_counts[i]), tile_counts[i])\n                for code in codes\n            ]\n            level_list += levels\n            names += index.names\n        return pd.MultiIndex(level_list, code_list, names=names)\n=======\n        return pd.MultiIndex.from_arrays(\n            [np.concatenate(codes) for codes in zip(*codes_list)],\n            names=[*names]\n        )\n>>>>>>> REPLACE\n\n### xarray/core/datatree.py\nNo changes required."
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/coordinates.py"
+    ],
+    "error": null
+  }
+}

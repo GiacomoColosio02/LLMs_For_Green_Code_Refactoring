@@ -1,0 +1,38 @@
+{
+  "instance_id": "astropy__astropy-14590",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:44:15.969451",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24891
+  },
+  "llm_response": "### path/to/file.py\n<<<<<<< SEARCH\n        if mask is None:\n            mask = False if data_mask is None else data_mask\n=======\n        if mask is None:\n            mask = np.zeros_like(data, dtype=bool) if data_mask is None else data_mask\n>>>>>>> REPLACE",
+  "all_responses": [
+    "1. **Function**: `MaskedNDArray._combine_masks`\n   2. **Why Slow**: It involves iterating over each element to combine masks, leading to O(n\u00b2) complexity.\n   3. **Optimization Type**: Vectorized operations using NumPy to avoid explicit loops.",
+    "Replace the nested loop with vectorized operations using NumPy's logical functions. This reduces the time complexity from O(n\u00b2) to O(n). Edge cases to consider include handling empty arrays and ensuring the input masks are boolean arrays.",
+    "### path/to/file.py\n<<<<<<< SEARCH\n        if mask is None:\n            mask = False if data_mask is None else data_mask\n=======\n        if mask is None:\n            mask = np.zeros_like(data, dtype=bool) if data_mask is None else data_mask\n>>>>>>> REPLACE"
+  ],
+  "llm_tokens": 12520,
+  "llm_latency": 10.20320987701416,
+  "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n        if mask is None:\n            mask = False if data_mask is None else data_mask\n=======\n        if mask is None:\n            mask = np.zeros_like(data, dtype=bool) if data_mask is None else data_mask\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. **Function**: `MaskedNDArray._combine_masks`\n   2. **Why Slow**: It involves iterating over each element to combine masks, leading to O(n\u00b2) complexity.\n   3. **Optimization Type**: Vectorized operations using NumPy to avoid explicit loops.",
+    "optimizer": "Replace the nested loop with vectorized operations using NumPy's logical functions. This reduces the time complexity from O(n\u00b2) to O(n). Edge cases to consider include handling empty arrays and ensuring the input masks are boolean arrays.",
+    "reviewer": "### path/to/file.py\n<<<<<<< SEARCH\n        if mask is None:\n            mask = False if data_mask is None else data_mask\n=======\n        if mask is None:\n            mask = np.zeros_like(data, dtype=bool) if data_mask is None else data_mask\n>>>>>>> REPLACE"
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/utils/masked/core.py"
+    ],
+    "error": null
+  }
+}

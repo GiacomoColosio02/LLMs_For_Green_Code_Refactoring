@@ -1,0 +1,28 @@
+{
+  "instance_id": "pylint-dev__pylint-5596",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T02:40:30.202497",
+  "status": "success",
+  "error": null,
+  "repo": "pylint-dev/pylint",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34992
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `visit_compare` function in `pylint/checkers/base.py` is the bottleneck.\n**DIAGNOSIS**: It performs multiple checks within nested loops, leading to high time complexity.\n**SOLUTION**: Refactor the function to reduce redundancy and improve efficiency.\n\n### SECTION 2: PATCH\n\n### pylint/checkers/base.py\n<<<<<<< SEARCH\ndef _check_unidiomatic_typecheck(self, node):\n    operator, right = node.ops[0]\n    if operator in TYPECHECK_COMPARISON_OPERATORS:\n        left = node.left\n        if _is_one_arg_pos_call(left):\n            self._check_type_x_is_y(node, left, operator, right)\n\ndef _check_type_x_is_y(self, node, left, operator, right):\n    \"\"\"Check for expressions like type(x) == Y.\"\"\"\n    left_func = utils.safe_infer(left.func)\n    if not (\n        isinstance(left_func, nodes.ClassDef) and left_func.qname() == TYPE_QNAME\n    ):\n        return\n\n    if operator in {\"is\", \"is not\"} and _is_one_arg_pos_call(right):\n        right_func = utils.safe_infer(right.func)\n        if (\n            isinstance(right_func, nodes.ClassDef)\n            and right_func.qname() == TYPE_QNAME\n        ):\n            # type(x) == type(a)\n            right_arg = utils.safe_infer(right.args[0])\n            if not isinstance(right_arg, LITERAL_NODE_TYPES):\n                # not e.g. type(x) == type([])\n                return\n    self.add_message(\"unidiomatic-typecheck\", node=node)\n=======\ndef _check_unidiomatic_typecheck(self, node):\n    operator, right = node.ops[0]\n    if operator in TYPECHECK_COMPARISON_OPERATORS:\n        left = node.left\n        if _is_one_arg_pos_call(left):\n            self._check_type_x_is_y(node, left, operator, right)\n\ndef _check_type_x_is_y(self, node, left, operator, right):\n    \"\"\"Check for expressions like type(x) == Y.\"\"\"\n    left_func = utils.safe_infer(left.func)\n    if not (\n        isinstance(left_func, nodes.ClassDef) and left_func.qname() == TYPE_QNAME\n    ):\n        return\n\n    if operator in {\"is\", \"is not\"} and _is_one_arg_pos_call(right):\n        right_func = utils.safe_infer(right.func)\n        if (\n            isinstance(right_func, nodes.ClassDef)\n            and right_func.qname() == TYPE_QNAME\n        ):\n            # type(x) == type(a)\n            right_arg = utils.safe_infer(right.args[0])\n            if not isinstance(right_arg, LITERAL_NODE_TYPES):\n                # not e.g. type(x) == type([])\n                return\n    self.add_message(\"unidiomatic-typecheck\", node=node)\n>>>>>>> REPLACE",
+  "llm_tokens": 12966,
+  "llm_latency": 34.33140826225281,
+  "patch_content": "### pylint/checkers/base.py\n<<<<<<< SEARCH\ndef _check_unidiomatic_typecheck(self, node):\n    operator, right = node.ops[0]\n    if operator in TYPECHECK_COMPARISON_OPERATORS:\n        left = node.left\n        if _is_one_arg_pos_call(left):\n            self._check_type_x_is_y(node, left, operator, right)\n\ndef _check_type_x_is_y(self, node, left, operator, right):\n    \"\"\"Check for expressions like type(x) == Y.\"\"\"\n    left_func = utils.safe_infer(left.func)\n    if not (\n        isinstance(left_func, nodes.ClassDef) and left_func.qname() == TYPE_QNAME\n    ):\n        return\n\n    if operator in {\"is\", \"is not\"} and _is_one_arg_pos_call(right):\n        right_func = utils.safe_infer(right.func)\n        if (\n            isinstance(right_func, nodes.ClassDef)\n            and right_func.qname() == TYPE_QNAME\n        ):\n            # type(x) == type(a)\n            right_arg = utils.safe_infer(right.args[0])\n            if not isinstance(right_arg, LITERAL_NODE_TYPES):\n                # not e.g. type(x) == type([])\n                return\n    self.add_message(\"unidiomatic-typecheck\", node=node)\n=======\ndef _check_unidiomatic_typecheck(self, node):\n    operator, right = node.ops[0]\n    if operator in TYPECHECK_COMPARISON_OPERATORS:\n        left = node.left\n        if _is_one_arg_pos_call(left):\n            self._check_type_x_is_y(node, left, operator, right)\n\ndef _check_type_x_is_y(self, node, left, operator, right):\n    \"\"\"Check for expressions like type(x) == Y.\"\"\"\n    left_func = utils.safe_infer(left.func)\n    if not (\n        isinstance(left_func, nodes.ClassDef) and left_func.qname() == TYPE_QNAME\n    ):\n        return\n\n    if operator in {\"is\", \"is not\"} and _is_one_arg_pos_call(right):\n        right_func = utils.safe_infer(right.func)\n        if (\n            isinstance(right_func, nodes.ClassDef)\n            and right_func.qname() == TYPE_QNAME\n        ):\n            # type(x) == type(a)\n            right_arg = utils.safe_infer(right.args[0])\n            if not isinstance(right_arg, LITERAL_NODE_TYPES):\n                # not e.g. type(x) == type([])\n                return\n    self.add_message(\"unidiomatic-typecheck\", node=node)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "pylint/checkers/base.py"
+    ],
+    "error": null
+  }
+}

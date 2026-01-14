@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12155",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:18:01.911077",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34758
+  },
+  "llm_response": "Let's think step by step.\n\nThe `lars_path` function in `linear_model/least_angle.py` uses a loop to compute the LARS path, which is computationally expensive due to the high dimensionality of the problem. Optimizing this function will significantly improve performance.\n\n### sklearn/linear_model/least_angle.py\n<<<<<<< SEARCH\ndef lars_path(X, y, Gram=None, max_iter=500, alpha_min=0, method='lar', mode='defensive', copy=True, verbose=False, callback=None, positive=False, jitter=0.0, normalize=True):\n    # ... (original code)\n    for i in range(max_iter):\n        # ... (loop to compute LARS path)\n        # ... (computational steps)\n    # ... (return the computed path)\n    return path, indices, active\n=======\ndef lars_path(X, y, Gram=None, max_iter=500, alpha_min=0, method='lar', mode='defensive', copy=True, verbose=False, callback=None, positive=False, jitter=0.0, normalize=True):\n    # ... (original code)\n    path = np.zeros((max_iter, X.shape[1]))\n    indices = np.zeros((max_iter,), dtype=int)\n    active = np.zeros((max_iter,), dtype=int)\n    \n    for i in range(max_iter):\n        # ... (loop to compute LARS path)\n        # ... (computational steps)\n        path[i] = current_path\n        indices[i] = current_indices\n        active[i] = current_active\n    \n    # ... (return the computed path)\n    return path, indices, active\n>>>>>>> REPLACE",
+  "llm_tokens": 9643,
+  "llm_latency": 19.68399143218994,
+  "patch_content": "### sklearn/linear_model/least_angle.py\n<<<<<<< SEARCH\ndef lars_path(X, y, Gram=None, max_iter=500, alpha_min=0, method='lar', mode='defensive', copy=True, verbose=False, callback=None, positive=False, jitter=0.0, normalize=True):\n    # ... (original code)\n    for i in range(max_iter):\n        # ... (loop to compute LARS path)\n        # ... (computational steps)\n    # ... (return the computed path)\n    return path, indices, active\n=======\ndef lars_path(X, y, Gram=None, max_iter=500, alpha_min=0, method='lar', mode='defensive', copy=True, verbose=False, callback=None, positive=False, jitter=0.0, normalize=True):\n    # ... (original code)\n    path = np.zeros((max_iter, X.shape[1]))\n    indices = np.zeros((max_iter,), dtype=int)\n    active = np.zeros((max_iter,), dtype=int)\n    \n    for i in range(max_iter):\n        # ... (loop to compute LARS path)\n        # ... (computational steps)\n        path[i] = current_path\n        indices[i] = current_indices\n        active[i] = current_active\n    \n    # ... (return the computed path)\n    return path, indices, active\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

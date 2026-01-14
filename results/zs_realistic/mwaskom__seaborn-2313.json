@@ -1,0 +1,30 @@
+{
+  "instance_id": "mwaskom__seaborn-2313",
+  "prompt_type": "zero_shot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T14:43:03.069739",
+  "status": "success",
+  "error": null,
+  "repo": "mwaskom/seaborn",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34922
+  },
+  "llm_response": "### seaborn/axisgrid.py\n<<<<<<< SEARCH\n        grid.plot_joint(kdeplot, **joint_kws)\n=======\n        grid.plot_joint(kdeplot, **joint_kws, bw_method='scott')\n>>>>>>> REPLACE\n\n### seaborn/distributions.py\n<<<<<<< SEARCH\n        a = np.asarray(a, float)\n        if a.ndim > 1:\n            a = a.squeeze()\n=======\n        a = np.atleast_1d(a).astype(float)\n>>>>>>> REPLACE\n\n### seaborn/matrix.py\n<<<<<<< SEARCH\n        plot_data = np.ma.masked_where(np.asarray(mask), plot_data)\n=======\n        plot_data = np.ma.masked_array(plot_data, mask=mask)\n>>>>>>> REPLACE",
+  "llm_tokens": 9526,
+  "llm_latency": 8.722102403640747,
+  "patch_content": "### seaborn/axisgrid.py\n<<<<<<< SEARCH\n        grid.plot_joint(kdeplot, **joint_kws)\n=======\n        grid.plot_joint(kdeplot, **joint_kws, bw_method='scott')\n>>>>>>> REPLACE\n\n### seaborn/distributions.py\n<<<<<<< SEARCH\n        a = np.asarray(a, float)\n        if a.ndim > 1:\n            a = a.squeeze()\n=======\n        a = np.atleast_1d(a).astype(float)\n>>>>>>> REPLACE\n\n### seaborn/matrix.py\n<<<<<<< SEARCH\n        plot_data = np.ma.masked_where(np.asarray(mask), plot_data)\n=======\n        plot_data = np.ma.masked_array(plot_data, mask=mask)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 3,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "seaborn/axisgrid.py",
+      "seaborn/distributions.py",
+      "seaborn/matrix.py"
+    ],
+    "error": null
+  }
+}

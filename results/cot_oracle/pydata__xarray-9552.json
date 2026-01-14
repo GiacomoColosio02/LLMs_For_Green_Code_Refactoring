@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9552",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:46:07.860731",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49892
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `to_zarr` function in `xarray/backends/api.py` is the bottleneck.\n**DIAGNOSIS**: It involves several operations that can be optimized, such as checking for remote URIs, normalizing paths, and validating dataset names. Additionally, the function calls `dump_to_store` which might be computationally expensive.\n**SOLUTION**: Optimize the function by reducing redundant checks and parallelizing certain operations where possible.\n\n### SECTION 2: PATCH\n\n### xarray/backends/api.py\n<<<<<<< SEARCH\ndef _get_default_engine(path: str, allow_remote: bool = False) -> T_NetcdfEngine:\n    if allow_remote and is_remote_uri(path):\n        return _get_default_engine_remote_uri()  # type: ignore[return-value]\n    elif path.endswith(\".gz\"):\n        return _get_default_engine_gz()\n    else:\n        return _get_default_engine_netcdf()\n=======\ndef _get_default_engine(path: str, allow_remote: bool = False) -> T_NetcdfEngine:\n    if allow_remote and is_remote_uri(path):\n        return _get_default_engine_remote_uri()\n    elif path.endswith(\".gz\"):\n        return _get_default_engine_gz()\n    else:\n        return _get_default_engine_netcdf()\n    \n    # Parallelize certain operations\n    import concurrent.futures\n    \n    def _process_path(path):\n        if allow_remote and is_remote_uri(path):\n            return _get_default_engine_remote_uri()\n        elif path.endswith(\".gz\"):\n            return _get_default_engine_gz()\n        else:\n            return _get_default_engine_netcdf()\n    \n    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:\n        results = list(executor.map(_process_path, [path]))\n        return results[0]\n>>>>>>> REPLACE",
+  "llm_tokens": 13406,
+  "llm_latency": 22.677595138549805,
+  "patch_content": "### xarray/backends/api.py\n<<<<<<< SEARCH\ndef _get_default_engine(path: str, allow_remote: bool = False) -> T_NetcdfEngine:\n    if allow_remote and is_remote_uri(path):\n        return _get_default_engine_remote_uri()  # type: ignore[return-value]\n    elif path.endswith(\".gz\"):\n        return _get_default_engine_gz()\n    else:\n        return _get_default_engine_netcdf()\n=======\ndef _get_default_engine(path: str, allow_remote: bool = False) -> T_NetcdfEngine:\n    if allow_remote and is_remote_uri(path):\n        return _get_default_engine_remote_uri()\n    elif path.endswith(\".gz\"):\n        return _get_default_engine_gz()\n    else:\n        return _get_default_engine_netcdf()\n    \n    # Parallelize certain operations\n    import concurrent.futures\n    \n    def _process_path(path):\n        if allow_remote and is_remote_uri(path):\n            return _get_default_engine_remote_uri()\n        elif path.endswith(\".gz\"):\n            return _get_default_engine_gz()\n        else:\n            return _get_default_engine_netcdf()\n    \n    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:\n        results = list(executor.map(_process_path, [path]))\n        return results[0]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/backends/api.py"
+    ],
+    "error": null
+  }
+}

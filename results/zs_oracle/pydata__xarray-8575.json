@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-8575",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T13:32:50.388157",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49521
+  },
+  "llm_response": "### xarray/core/parallelcompat.py\n<<<<<<< SEARCH\ndef rechunk(\n    self,\n    data: T_ChunkedArray,\n    chunks: T_NormalizedChunks | tuple[int, ...] | T_Chunks,\n    **kwargs,\n) -> T_ChunkedArray:\n    \"\"\"\n    Changes the chunking pattern of the given array.\n\n    Called when the .chunk method is called on an xarray object that is already chunked.\n\n    Parameters\n    ----------\n    data : dask array\n        Array to be rechunked.\n    chunks :  int, tuple, dict or str, optional\n        The new block dimensions to create. -1 indicates the full size of the\n        corresponding dimension. Default is \"auto\" which automatically\n        determines chunk sizes.\n\n    Returns\n    -------\n    chunked array\n\n    See Also\n    --------\n    dask.array.Array.rechunk\n    cubed.Array.rechunk\n    \"\"\"\n    return data.rechunk(chunks, **kwargs)  # type: ignore[attr-defined]\n=======\ndef rechunk(\n    self,\n    data: T_ChunkedArray,\n    chunks: T_NormalizedChunks | tuple[int, ...] | T_Chunks,\n    **kwargs,\n) -> T_ChunkedArray:\n    \"\"\"\n    Changes the chunking pattern of the given array.\n\n    Called when the .chunk method is called on an xarray object that is already chunked.\n\n    Parameters\n    ----------\n    data : dask array\n        Array to be rechunked.\n    chunks :  int, tuple, dict or str, optional\n        The new block dimensions to create. -1 indicates the full size of the\n        corresponding dimension. Default is \"auto\" which automatically\n        determines chunk sizes.\n\n    Returns\n    -------\n    chunked array\n\n    See Also\n    --------\n    dask.array.Array.rechunk\n    cubed.Array.rechunk\n    \"\"\"\n    if isinstance(chunks, str) and chunks.lower() == \"auto\":\n        chunks = self.auto_chunks(data.shape)\n    return data.rechunk(chunks, **kwargs)  # type: ignore[attr-defined]\n\ndef auto_chunks(self, shape: tuple[int, ...]) -> T_NormalizedChunks:\n    \"\"\"\n    Automatically determine optimal chunk sizes based on array shape.\n\n    Parameters\n    ----------\n    shape : tuple[int, ...]\n        Shape of the array.\n\n    Returns\n    -------\n    chunks : tuple[tuple[int, ...], ...]\n    \"\"\"\n    # Simple heuristic: divide each dimension by 2\n    return tuple((dim // 2, dim % 2) for dim in shape)\n>>>>>>> REPLACE",
+  "llm_tokens": 13597,
+  "llm_latency": 30.883267164230347,
+  "patch_content": "### xarray/core/parallelcompat.py\n<<<<<<< SEARCH\ndef rechunk(\n    self,\n    data: T_ChunkedArray,\n    chunks: T_NormalizedChunks | tuple[int, ...] | T_Chunks,\n    **kwargs,\n) -> T_ChunkedArray:\n    \"\"\"\n    Changes the chunking pattern of the given array.\n\n    Called when the .chunk method is called on an xarray object that is already chunked.\n\n    Parameters\n    ----------\n    data : dask array\n        Array to be rechunked.\n    chunks :  int, tuple, dict or str, optional\n        The new block dimensions to create. -1 indicates the full size of the\n        corresponding dimension. Default is \"auto\" which automatically\n        determines chunk sizes.\n\n    Returns\n    -------\n    chunked array\n\n    See Also\n    --------\n    dask.array.Array.rechunk\n    cubed.Array.rechunk\n    \"\"\"\n    return data.rechunk(chunks, **kwargs)  # type: ignore[attr-defined]\n=======\ndef rechunk(\n    self,\n    data: T_ChunkedArray,\n    chunks: T_NormalizedChunks | tuple[int, ...] | T_Chunks,\n    **kwargs,\n) -> T_ChunkedArray:\n    \"\"\"\n    Changes the chunking pattern of the given array.\n\n    Called when the .chunk method is called on an xarray object that is already chunked.\n\n    Parameters\n    ----------\n    data : dask array\n        Array to be rechunked.\n    chunks :  int, tuple, dict or str, optional\n        The new block dimensions to create. -1 indicates the full size of the\n        corresponding dimension. Default is \"auto\" which automatically\n        determines chunk sizes.\n\n    Returns\n    -------\n    chunked array\n\n    See Also\n    --------\n    dask.array.Array.rechunk\n    cubed.Array.rechunk\n    \"\"\"\n    if isinstance(chunks, str) and chunks.lower() == \"auto\":\n        chunks = self.auto_chunks(data.shape)\n    return data.rechunk(chunks, **kwargs)  # type: ignore[attr-defined]\n\ndef auto_chunks(self, shape: tuple[int, ...]) -> T_NormalizedChunks:\n    \"\"\"\n    Automatically determine optimal chunk sizes based on array shape.\n\n    Parameters\n    ----------\n    shape : tuple[int, ...]\n        Shape of the array.\n\n    Returns\n    -------\n    chunks : tuple[tuple[int, ...], ...]\n    \"\"\"\n    # Simple heuristic: divide each dimension by 2\n    return tuple((dim // 2, dim % 2) for dim in shape)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/parallelcompat.py"
+    ],
+    "error": null
+  }
+}

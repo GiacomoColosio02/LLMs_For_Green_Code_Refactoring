@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13124",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T13:49:45.493036",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 37856
+  },
+  "llm_response": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef _iter_test_indices(self, X, y=None, groups=None):\n    for combination in combinations(range(_num_samples(X)), self.p):\n        yield np.array(combination)\n=======\ndef _iter_test_indices(self, X, y=None, groups=None):\n    n_samples = _num_samples(X)\n    indices = np.arange(n_samples)\n    np.random.shuffle(indices)\n    for i in range(0, n_samples, self.p):\n        yield indices[i:i+self.p]\n>>>>>>> REPLACE\n\n### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef split(self, X, y=None, groups=None):\n    X, y, groups = indexable(X, y, groups)\n    indices = np.arange(_num_samples(X))\n    for test_index in self._iter_test_masks(X, y, groups):\n        train_index = indices[np.logical_not(test_index)]\n        test_index = indices[test_index]\n        yield train_index, test_index\n=======\ndef split(self, X, y=None, groups=None):\n    X, y, groups = indexable(X, y, groups)\n    indices = np.arange(_num_samples(X))\n    np.random.shuffle(indices)\n    for i in range(0, len(indices), self.n_splits):\n        test_index = indices[i:i+self.n_splits]\n        train_index = np.delete(indices, test_index)\n        yield train_index, test_index\n>>>>>>> REPLACE\n\n### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef get_n_splits(self, X=None, y=None, groups=None):\n    if X is None:\n        raise ValueError(\"The 'X' parameter should not be None.\")\n    return int(comb(_num_samples(X), self.p, exact=True))\n=======\ndef get_n_splits(self, X=None, y=None, groups=None):\n    if X is None:\n        raise ValueError(\"The 'X' parameter should not be None.\")\n    return ceil(len(X) / self.n_splits)\n>>>>>>> REPLACE",
+  "llm_tokens": 10666,
+  "llm_latency": 23.13887357711792,
+  "patch_content": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef _iter_test_indices(self, X, y=None, groups=None):\n    for combination in combinations(range(_num_samples(X)), self.p):\n        yield np.array(combination)\n=======\ndef _iter_test_indices(self, X, y=None, groups=None):\n    n_samples = _num_samples(X)\n    indices = np.arange(n_samples)\n    np.random.shuffle(indices)\n    for i in range(0, n_samples, self.p):\n        yield indices[i:i+self.p]\n>>>>>>> REPLACE\n\n### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef split(self, X, y=None, groups=None):\n    X, y, groups = indexable(X, y, groups)\n    indices = np.arange(_num_samples(X))\n    for test_index in self._iter_test_masks(X, y, groups):\n        train_index = indices[np.logical_not(test_index)]\n        test_index = indices[test_index]\n        yield train_index, test_index\n=======\ndef split(self, X, y=None, groups=None):\n    X, y, groups = indexable(X, y, groups)\n    indices = np.arange(_num_samples(X))\n    np.random.shuffle(indices)\n    for i in range(0, len(indices), self.n_splits):\n        test_index = indices[i:i+self.n_splits]\n        train_index = np.delete(indices, test_index)\n        yield train_index, test_index\n>>>>>>> REPLACE\n\n### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef get_n_splits(self, X=None, y=None, groups=None):\n    if X is None:\n        raise ValueError(\"The 'X' parameter should not be None.\")\n    return int(comb(_num_samples(X), self.p, exact=True))\n=======\ndef get_n_splits(self, X=None, y=None, groups=None):\n    if X is None:\n        raise ValueError(\"The 'X' parameter should not be None.\")\n    return ceil(len(X) / self.n_splits)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/model_selection/_split.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "instance_id": "astropy__astropy-12842",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T12:13:46.293159",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49744
+  },
+  "llm_response": "### astropy/time/core.py\n<<<<<<< SEARCH\n        if delta_ut1_utc is not None:\n            out._delta_ut1_utc = delta_ut1_utc\n        if delta_tdb_tt is not None:\n            out._delta_tdb_tt = delta_tdb_tt\n=======\n        out._delta_ut1_utc = delta_ut1_utc if delta_ut1_utc is not None else out._delta_ut1_utc\n        out._delta_tdb_tt = delta_tdb_tt if delta_tdb_tt is not None else out._delta_tdb_tt\n>>>>>>> REPLACE\n\n### astropy/time/formats.py\n<<<<<<< SEARCH\n        if isinstance(val1, np.ndarray)\n              and jd.dtype.kind == 'f'\n              and jd.dtype.itemsize == 8):\n            return jd\n        else:\n            raise TypeError(\n                f\"JD values must be arrays (possibly zero-dimensional) \"\n                f\"of floats but we got {jd!r} of type {type(jd)}\")\n=======\n        if isinstance(jd, np.ndarray) and jd.dtype.kind == 'f' and jd.dtype.itemsize == 8:\n            return jd\n        else:\n            raise TypeError(f\"JD values must be arrays (possibly zero-dimensional) of floats but we got {jd!r} of type {type(jd)}\")\n>>>>>>> REPLACE",
+  "llm_tokens": 13413,
+  "llm_latency": 16.33238172531128,
+  "patch_content": "### astropy/time/core.py\n<<<<<<< SEARCH\n        if delta_ut1_utc is not None:\n            out._delta_ut1_utc = delta_ut1_utc\n        if delta_tdb_tt is not None:\n            out._delta_tdb_tt = delta_tdb_tt\n=======\n        out._delta_ut1_utc = delta_ut1_utc if delta_ut1_utc is not None else out._delta_ut1_utc\n        out._delta_tdb_tt = delta_tdb_tt if delta_tdb_tt is not None else out._delta_tdb_tt\n>>>>>>> REPLACE\n\n### astropy/time/formats.py\n<<<<<<< SEARCH\n        if isinstance(val1, np.ndarray)\n              and jd.dtype.kind == 'f'\n              and jd.dtype.itemsize == 8):\n            return jd\n        else:\n            raise TypeError(\n                f\"JD values must be arrays (possibly zero-dimensional) \"\n                f\"of floats but we got {jd!r} of type {type(jd)}\")\n=======\n        if isinstance(jd, np.ndarray) and jd.dtype.kind == 'f' and jd.dtype.itemsize == 8:\n            return jd\n        else:\n            raise TypeError(f\"JD values must be arrays (possibly zero-dimensional) of floats but we got {jd!r} of type {type(jd)}\")\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/time/core.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12514",
+  "prompt_type": "self_collab",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T19:52:03.141417",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34750
+  },
+  "llm_response": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(range(len(coefs)))\nfor i in range(len(coefs)):\n    if i in coefs_set:\n        plt.plot(i, coefs[i], 'ro')\nplt.xlabel('Feature Index')\nplt.ylabel('Coefficient Value')\nplt.title('LASSO Coefficients')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/decomposition/tests/test_nmf.py\nNo changes needed.\n\n### sklearn/linear_model/coordinate_descent.py\nNo changes needed.\n\n### sklearn/linear_model/tests/test_coordinate_descent.py\nNo changes needed.\n\n### sklearn/preprocessing/data.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed.",
+  "all_responses": [
+    "1. The files `sklearn/linear_model/coordinate_descent.py` and `sklearn/linear_model/tests/test_coordinate_descent.py` are relevant to the performance issue.\n2. The bottleneck function is `MultiTaskLasso`.\n3. It is slow due to inefficient handling of large datasets and complex computations within the coordinate descent algorithm.\n4. Optimizations could include parallelizing the coordinate updates, using more efficient numerical libraries, and optimizing the data structures used for storage and access.",
+    "Replace the nested loop for iterating over feature indices with a set lookup for faster membership testing. This reduces the time complexity from \\(O(n^2)\\) to approximately \\(O(n)\\), where \\(n\\) is the number of features. Edge cases to consider include ensuring that the set operations handle missing values gracefully and maintaining compatibility with existing data types.",
+    "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(range(len(coefs)))\nfor i in range(len(coefs)):\n    if i in coefs_set:\n        plt.plot(i, coefs[i], 'ro')\nplt.xlabel('Feature Index')\nplt.ylabel('Coefficient Value')\nplt.title('LASSO Coefficients')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/decomposition/tests/test_nmf.py\nNo changes needed.\n\n### sklearn/linear_model/coordinate_descent.py\nNo changes needed.\n\n### sklearn/linear_model/tests/test_coordinate_descent.py\nNo changes needed.\n\n### sklearn/preprocessing/data.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed."
+  ],
+  "llm_tokens": 19748,
+  "llm_latency": 25.492345094680786,
+  "patch_content": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(range(len(coefs)))\nfor i in range(len(coefs)):\n    if i in coefs_set:\n        plt.plot(i, coefs[i], 'ro')\nplt.xlabel('Feature Index')\nplt.ylabel('Coefficient Value')\nplt.title('LASSO Coefficients')\nplt.show()\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. The files `sklearn/linear_model/coordinate_descent.py` and `sklearn/linear_model/tests/test_coordinate_descent.py` are relevant to the performance issue.\n2. The bottleneck function is `MultiTaskLasso`.\n3. It is slow due to inefficient handling of large datasets and complex computations within the coordinate descent algorithm.\n4. Optimizations could include parallelizing the coordinate updates, using more efficient numerical libraries, and optimizing the data structures used for storage and access.",
+    "optimizer": "Replace the nested loop for iterating over feature indices with a set lookup for faster membership testing. This reduces the time complexity from \\(O(n^2)\\) to approximately \\(O(n)\\), where \\(n\\) is the number of features. Edge cases to consider include ensuring that the set operations handle missing values gracefully and maintaining compatibility with existing data types.",
+    "reviewer": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(range(len(coefs)))\nfor i in range(len(coefs)):\n    if i in coefs_set:\n        plt.plot(i, coefs[i], 'ro')\nplt.xlabel('Feature Index')\nplt.ylabel('Coefficient Value')\nplt.title('LASSO Coefficients')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/decomposition/tests/test_nmf.py\nNo changes needed.\n\n### sklearn/linear_model/coordinate_descent.py\nNo changes needed.\n\n### sklearn/linear_model/tests/test_coordinate_descent.py\nNo changes needed.\n\n### sklearn/preprocessing/data.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed."
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "examples/linear_model/plot_lasso_lars.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12246",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:49:37.189776",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 47644
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_open_openml_url` function in `sklearn/datasets/openml.py` is the bottleneck.\n**DIAGNOSIS**: It downloads and caches files, but the caching mechanism involves reading and writing files, which can be slow and resource-intensive, especially for large files.\n**SOLUTION**: Implement a more efficient caching mechanism using a memory-mapped file or a database to reduce disk I/O and improve performance.\n\n### SECTION 2: PATCH\n\n### sklearn/datasets/openml.py\n<<<<<<< SEARCH\nif data_home is None:\n    if is_gzip:\n        if PY2:\n            fsrc = BytesIO(fsrc.read())\n        return gzip.GzipFile(fileobj=fsrc, mode='rb')\n    return fsrc\n\nlocal_path = os.path.join(data_home, 'openml.org', openml_path + \".gz\")\nif not os.path.exists(local_path):\n    try:\n        os.makedirs(os.path.dirname(local_path))\n    except OSError:\n        # potentially, the directory has been created already\n        pass\n\n    try:\n        with open(local_path, 'wb') as fdst:\n            shutil.copyfileobj(fsrc, fdst)\n            fsrc.close()\n    except Exception:\n        os.unlink(local_path)\n        raise\n# XXX: unnecessary decompression on first access\nif is_gzip:\n    return gzip.GzipFile(local_path, 'rb')\nreturn fsrc\n=======\nif data_home is None:\n    if is_gzip:\n        if PY2:\n            fsrc = BytesIO(fsrc.read())\n        return gzip.GzipFile(fileobj=fsrc, mode='rb')\n    return fsrc\n\nlocal_path = os.path.join(data_home, 'openml.org', openml_path + \".gz\")\nif not os.path.exists(local_path):\n    try:\n        os.makedirs(os.path.dirname(local_path))\n    except OSError:\n        # potentially, the directory has been created already\n        pass\n\n    try:\n        with open(local_path, 'wb') as fdst:\n            shutil.copyfileobj(fsrc, fdst)\n            fsrc.close()\n    except Exception:\n        os.unlink(local_path)\n        raise\nelse:\n    return gzip.GzipFile(local_path, 'rb')\n\nreturn fsrc\n>>>>>>> REPLACE",
+  "llm_tokens": 13683,
+  "llm_latency": 27.601388692855835,
+  "patch_content": "### sklearn/datasets/openml.py\n<<<<<<< SEARCH\nif data_home is None:\n    if is_gzip:\n        if PY2:\n            fsrc = BytesIO(fsrc.read())\n        return gzip.GzipFile(fileobj=fsrc, mode='rb')\n    return fsrc\n\nlocal_path = os.path.join(data_home, 'openml.org', openml_path + \".gz\")\nif not os.path.exists(local_path):\n    try:\n        os.makedirs(os.path.dirname(local_path))\n    except OSError:\n        # potentially, the directory has been created already\n        pass\n\n    try:\n        with open(local_path, 'wb') as fdst:\n            shutil.copyfileobj(fsrc, fdst)\n            fsrc.close()\n    except Exception:\n        os.unlink(local_path)\n        raise\n# XXX: unnecessary decompression on first access\nif is_gzip:\n    return gzip.GzipFile(local_path, 'rb')\nreturn fsrc\n=======\nif data_home is None:\n    if is_gzip:\n        if PY2:\n            fsrc = BytesIO(fsrc.read())\n        return gzip.GzipFile(fileobj=fsrc, mode='rb')\n    return fsrc\n\nlocal_path = os.path.join(data_home, 'openml.org', openml_path + \".gz\")\nif not os.path.exists(local_path):\n    try:\n        os.makedirs(os.path.dirname(local_path))\n    except OSError:\n        # potentially, the directory has been created already\n        pass\n\n    try:\n        with open(local_path, 'wb') as fdst:\n            shutil.copyfileobj(fsrc, fdst)\n            fsrc.close()\n    except Exception:\n        os.unlink(local_path)\n        raise\nelse:\n    return gzip.GzipFile(local_path, 'rb')\n\nreturn fsrc\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/datasets/openml.py"
+    ],
+    "error": null
+  }
+}

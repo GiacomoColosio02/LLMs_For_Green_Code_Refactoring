@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-7578",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:07:16.018473",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49607
+  },
+  "llm_response": "Let's think step by step.\n\nThe `construct` method in `xarray/core/rolling.py` uses a loop to iterate over the window labels, which can be inefficient for large datasets. Using vectorized operations can significantly improve performance.\n\n### xarray/core/rolling.py\n<<<<<<< SEARCH\nfor label, start, stop in zip(self.window_labels, starts, stops):\n    window = self.obj.isel({dim0: slice(start, stop)})\n    counts = window.count(dim=[dim0])\n    window = window.where(counts >= self.min_periods)\n    yield (label, window)\n=======\nyield from (\n    (\n        label,\n        self.obj.isel({dim0: slice(start, stop)})\n        .where(self.obj.count(dim=[dim0]) >= self.min_periods)\n    )\n    for label, start, stop in zip(self.window_labels, starts, stops)\n)\n>>>>>>> REPLACE",
+  "llm_tokens": 13361,
+  "llm_latency": 11.507577657699585,
+  "patch_content": "### xarray/core/rolling.py\n<<<<<<< SEARCH\nfor label, start, stop in zip(self.window_labels, starts, stops):\n    window = self.obj.isel({dim0: slice(start, stop)})\n    counts = window.count(dim=[dim0])\n    window = window.where(counts >= self.min_periods)\n    yield (label, window)\n=======\nyield from (\n    (\n        label,\n        self.obj.isel({dim0: slice(start, stop)})\n        .where(self.obj.count(dim=[dim0]) >= self.min_periods)\n    )\n    for label, start, stop in zip(self.window_labels, starts, stops)\n)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/rolling.py"
+    ],
+    "error": null
+  }
+}

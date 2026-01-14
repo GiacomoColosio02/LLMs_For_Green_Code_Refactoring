@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12514",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T14:03:17.229257",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 36053
+  },
+  "llm_response": "### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\nfor jj in range(Xt.shape[1]):\n    # Values which are close to a bin edge are susceptible to numeric\n    # instability. Add eps to X so these values are binned correctly\n    # with respect to their decimal truncation. See documentation of\n    # numpy.isclose for an explanation of ``rtol`` and ``atol``.\n    rtol = 1.e-5\n    atol = 1.e-8\n    eps = atol + rtol * np.abs(Xt[:, jj])\n    Xt[:, jj] = np.digitize(Xt[:, jj] + eps, bin_edges[jj][1:])\n=======\nfor jj in range(Xt.shape[1]):\n    Xt[:, jj] = np.digitize(Xt[:, jj], bin_edges[jj][1:])\n>>>>>>> REPLACE\n\n### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\nif self.encode == 'ordinal':\n    return Xt\nelse:\n    return self._encoder.fit_transform(Xt)\n=======\nreturn self._encoder.fit_transform(Xt) if self.encode != 'ordinal' else Xt\n>>>>>>> REPLACE\n\n### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\nfor jj in range(n_features):\n    bin_edges = self.bin_edges_[jj]\n    bin_centers = (bin_edges[1:] + bin_edges[:-1]) * 0.5\n    Xinv[:, jj] = bin_centers[np.int_(Xinv[:, jj])]\n=======\nXinv = bin_centers[np.int_(Xinv)]\nreturn Xinv\n>>>>>>> REPLACE",
+  "llm_tokens": 11113,
+  "llm_latency": 19.05165672302246,
+  "patch_content": "### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\nfor jj in range(Xt.shape[1]):\n    # Values which are close to a bin edge are susceptible to numeric\n    # instability. Add eps to X so these values are binned correctly\n    # with respect to their decimal truncation. See documentation of\n    # numpy.isclose for an explanation of ``rtol`` and ``atol``.\n    rtol = 1.e-5\n    atol = 1.e-8\n    eps = atol + rtol * np.abs(Xt[:, jj])\n    Xt[:, jj] = np.digitize(Xt[:, jj] + eps, bin_edges[jj][1:])\n=======\nfor jj in range(Xt.shape[1]):\n    Xt[:, jj] = np.digitize(Xt[:, jj], bin_edges[jj][1:])\n>>>>>>> REPLACE\n\n### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\nif self.encode == 'ordinal':\n    return Xt\nelse:\n    return self._encoder.fit_transform(Xt)\n=======\nreturn self._encoder.fit_transform(Xt) if self.encode != 'ordinal' else Xt\n>>>>>>> REPLACE\n\n### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\nfor jj in range(n_features):\n    bin_edges = self.bin_edges_[jj]\n    bin_centers = (bin_edges[1:] + bin_edges[:-1]) * 0.5\n    Xinv[:, jj] = bin_centers[np.int_(Xinv[:, jj])]\n=======\nXinv = bin_centers[np.int_(Xinv)]\nreturn Xinv\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 2,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/preprocessing/_discretization.py"
+    ],
+    "error": null
+  }
+}

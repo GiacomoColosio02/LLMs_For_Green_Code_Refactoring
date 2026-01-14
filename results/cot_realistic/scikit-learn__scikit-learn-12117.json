@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12117",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T03:04:04.128375",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34899
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `bench_plot_ward.py` script in the `benchmarks` directory is the bottleneck.\n**DIAGNOSIS**: It performs multiple calls to `AgglomerativeClustering.fit` and `hierarchy.ward`, which are computationally expensive operations. The nested loops iterating over different sample sizes and feature counts exacerbate the problem.\n**SOLUTION**: Optimize the nested loops by pre-computing intermediate results and avoiding redundant computations.\n\n### SECTION 2: PATCH\n\n### benchmarks/bench_plot_ward.py\n<<<<<<< SEARCH\nfor i, n in enumerate(n_samples):\n    for j, p in enumerate(n_features):\n        X = np.random.normal(size=(n, p))\n        t0 = time.time()\n        ward.fit(X)\n        scikits_time[j, i] = time.time() - t0\n        t0 = time.time()\n        hierarchy.ward(X)\n        scipy_time[j, i] = time.time() - t0\n=======\nfor i, n in enumerate(n_samples):\n    for j, p in enumerate(n_features):\n        X = np.random.normal(size=(n, p))\n        t0 = time.time()\n        ward.fit(X)\n        scikits_time[j, i] = time.time() - t0\n        if i == 0 and j == 0:\n            scipy_times = hierarchy.ward(X)\n        else:\n            scipy_times += hierarchy.ward(X)\nscipy_time = scipy_times / (len(n_samples) * len(n_features))\n>>>>>>> REPLACE",
+  "llm_tokens": 10280,
+  "llm_latency": 19.08716320991516,
+  "patch_content": "### benchmarks/bench_plot_ward.py\n<<<<<<< SEARCH\nfor i, n in enumerate(n_samples):\n    for j, p in enumerate(n_features):\n        X = np.random.normal(size=(n, p))\n        t0 = time.time()\n        ward.fit(X)\n        scikits_time[j, i] = time.time() - t0\n        t0 = time.time()\n        hierarchy.ward(X)\n        scipy_time[j, i] = time.time() - t0\n=======\nfor i, n in enumerate(n_samples):\n    for j, p in enumerate(n_features):\n        X = np.random.normal(size=(n, p))\n        t0 = time.time()\n        ward.fit(X)\n        scikits_time[j, i] = time.time() - t0\n        if i == 0 and j == 0:\n            scipy_times = hierarchy.ward(X)\n        else:\n            scipy_times += hierarchy.ward(X)\nscipy_time = scipy_times / (len(n_samples) * len(n_features))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "benchmarks/bench_plot_ward.py"
+    ],
+    "error": null
+  }
+}

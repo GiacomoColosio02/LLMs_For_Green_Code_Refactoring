@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-8277",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T10:47:28.458809",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 45172
+  },
+  "llm_response": "### xarray/coding/variables.py\n<<<<<<< SEARCH\ndef _is_time_like(units):\n    # test for time-like\n    time_strings = [\n        \"since\",\n        \"days\",\n        \"hours\",\n        \"minutes\",\n        \"seconds\",\n        \"milliseconds\",\n        \"microseconds\",\n        \"nanoseconds\",\n    ]\n    return any(tstr in str(units) for tstr in time_strings)\n=======\ndef _is_time_like(units):\n    # test for time-like\n    return any(tstr in str(units).lower() for tstr in [\"since\", \"days\", \"hours\", \"minutes\", \"seconds\", \"milliseconds\", \"microseconds\", \"nanoseconds\"])\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/coding/variables.py\n<<<<<<< SEARCH\ndef _is_time_like(units):\n    # test for time-like\n    time_strings = [\n        \"since\",\n        \"days\",\n        \"hours\",\n        \"minutes\",\n        \"seconds\",\n        \"milliseconds\",\n        \"microseconds\",\n        \"nanoseconds\",\n    ]\n    return any(tstr in str(units) for tstr in time_strings)\n=======\ndef _is_time_like(units):\n    # test for time-like\n    return any(tstr in str(units).lower() for tstr in [\"since\", \"days\", \"hours\", \"minutes\", \"seconds\", \"milliseconds\", \"microseconds\", \"nanoseconds\"])\n>>>>>>> REPLACE",
+      "patch_content": "### xarray/coding/variables.py\n<<<<<<< SEARCH\ndef _is_time_like(units):\n    # test for time-like\n    time_strings = [\n        \"since\",\n        \"days\",\n        \"hours\",\n        \"minutes\",\n        \"seconds\",\n        \"milliseconds\",\n        \"microseconds\",\n        \"nanoseconds\",\n    ]\n    return any(tstr in str(units) for tstr in time_strings)\n=======\ndef _is_time_like(units):\n    # test for time-like\n    return any(tstr in str(units).lower() for tstr in [\"since\", \"days\", \"hours\", \"minutes\", \"seconds\", \"milliseconds\", \"microseconds\", \"nanoseconds\"])\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 11851,
+  "llm_latency": 9.10363245010376,
+  "patch_content": "### xarray/coding/variables.py\n<<<<<<< SEARCH\ndef _is_time_like(units):\n    # test for time-like\n    time_strings = [\n        \"since\",\n        \"days\",\n        \"hours\",\n        \"minutes\",\n        \"seconds\",\n        \"milliseconds\",\n        \"microseconds\",\n        \"nanoseconds\",\n    ]\n    return any(tstr in str(units) for tstr in time_strings)\n=======\ndef _is_time_like(units):\n    # test for time-like\n    return any(tstr in str(units).lower() for tstr in [\"since\", \"days\", \"hours\", \"minutes\", \"seconds\", \"milliseconds\", \"microseconds\", \"nanoseconds\"])\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/coding/variables.py"
+    ],
+    "error": null
+  }
+}

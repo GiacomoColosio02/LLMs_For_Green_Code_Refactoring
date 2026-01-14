@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "name": "Green Code Refactoring - All Strategies Comparison Dataset",
+    "description": "Energy measurements comparing Base, Human (Head), and all LLM strategies",
+    "source_dataset": "swe_perf_reduced.json",
+    "variants": [
+      "Base",
+      "Head",
+      "Head_LDB_Oracle",
+      "Head_LDB_Realistic"
+    ],
+    "strategies": [
+      "LDB_Oracle",
+      "LDB_Realistic"
+    ],
+    "metrics": [
+      "total_energy_joules",
+      "duration_seconds",
+      "power_watts",
+      "carbon_grams",
+      "cpu_usage_mean_percent"
+    ],
+    "all_metrics": [
+      "total_energy_joules",
+      "cpu_energy_joules",
+      "gpu_energy_joules",
+      "power_watts",
+      "carbon_grams",
+      "energy_efficiency",
+      "duration_seconds",
+      "cpu_usage_mean_percent",
+      "cpu_usage_peak_percent",
+      "ram_usage_mean_mb",
+      "ram_usage_peak_mb",
+      "gpu_temperature_mean_celsius",
+      "gpu_temperature_peak_celsius"
+    ],
+    "repetitions": 3,
+    "creation_date": "2026-01-14T05:30:17.000767",
+    "instance_count": 0,
+    "base_head_source": "swe_perf_green_k3.json"
+  },
+  "instances": []
+}

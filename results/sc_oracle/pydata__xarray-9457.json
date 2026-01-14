@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-9457",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T13:28:42.126588",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49981
+  },
+  "llm_response": "### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data.copy(deep=False)\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n=======\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data.copy(deep=False)\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n>>>>>>> REPLACE",
+  "all_responses": [
+    "1. **Function**: `_single_node_repr` in `xarray/core/formatting.py`\n2. **Why Slow**: Calls `repr(node._to_dataset_view(rebuild_dims=False))`, which constructs a new `Dataset` object, potentially leading to redundant computations and increased memory usage.\n3. **Optimization Type**: Reduce unnecessary object creation and minimize redundant computations.",
+    "Replace the call to `node._to_dataset_view(rebuild_dims=False)` with a direct reference to the existing dataset if possible. This avoids constructing a new `Dataset` object and reduces both computation time and memory usage. Edge cases to consider include ensuring that the dataset is not modified during the process and handling cases where the dataset might not be available directly.",
+    "### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data.copy(deep=False)\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n=======\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data.copy(deep=False)\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n>>>>>>> REPLACE"
+  ],
+  "llm_tokens": 25212,
+  "llm_latency": 19.236140489578247,
+  "patch_content": "### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data.copy(deep=False)\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n=======\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data.copy(deep=False)\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. **Function**: `_single_node_repr` in `xarray/core/formatting.py`\n2. **Why Slow**: Calls `repr(node._to_dataset_view(rebuild_dims=False))`, which constructs a new `Dataset` object, potentially leading to redundant computations and increased memory usage.\n3. **Optimization Type**: Reduce unnecessary object creation and minimize redundant computations.",
+    "optimizer": "Replace the call to `node._to_dataset_view(rebuild_dims=False)` with a direct reference to the existing dataset if possible. This avoids constructing a new `Dataset` object and reduces both computation time and memory usage. Edge cases to consider include ensuring that the dataset is not modified during the process and handling cases where the dataset might not be available directly.",
+    "reviewer": "### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data.copy(deep=False)\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n=======\ndef _to_new_dataset(data: Dataset | None) -> Dataset:\n    if isinstance(data, Dataset):\n        ds = data.copy(deep=False)\n    elif data is None:\n        ds = Dataset()\n    else:\n        raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n    return ds\n>>>>>>> REPLACE"
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/datatree.py"
+    ],
+    "error": null
+  }
+}

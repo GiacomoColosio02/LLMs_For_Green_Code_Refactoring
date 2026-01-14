@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-9482",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T10:58:18.335172",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 48167
+  },
+  "llm_response": "Let's think step by step.\n\nThe `map_over_subtree` function in `datatree.py` uses recursion, which can lead to high memory usage and slower execution for large trees. Using an iterative approach with a stack can reduce memory usage and improve performance.\n\n### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef map_over_subtree(func):\n    def wrapper(node, *args, **kwargs):\n        return func(node.dataset, *args, **kwargs)\n    return wrapper\n=======\ndef map_over_subtree(func):\n    def wrapper(node, *args, **kwargs):\n        stack = [(node, func)]\n        while stack:\n            current_node, current_func = stack.pop()\n            if current_node.has_data:\n                current_node.dataset = current_func(current_node.dataset, *args, **kwargs)\n            for child in current_node.children.values():\n                stack.append((child, current_func))\n        return node\n    return wrapper\n>>>>>>> REPLACE",
+  "llm_tokens": 11548,
+  "llm_latency": 11.876070737838745,
+  "patch_content": "### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef map_over_subtree(func):\n    def wrapper(node, *args, **kwargs):\n        return func(node.dataset, *args, **kwargs)\n    return wrapper\n=======\ndef map_over_subtree(func):\n    def wrapper(node, *args, **kwargs):\n        stack = [(node, func)]\n        while stack:\n            current_node, current_func = stack.pop()\n            if current_node.has_data:\n                current_node.dataset = current_func(current_node.dataset, *args, **kwargs)\n            for child in current_node.children.values():\n                stack.append((child, current_func))\n        return node\n    return wrapper\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9719",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:54:19.111615",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34972
+  },
+  "llm_response": "Let's think step by step.\n\nThe `calculate_dimensions` function in `core/variable.py` uses a loop to check for conflicting dimension sizes, which is inefficient for large datasets. Using a dictionary comprehension would reduce the complexity to O(n).\n\n### xarray/core/variable.py\n<<<<<<< SEARCH\ndef calculate_dimensions(variables: Mapping[Any, Variable]) -> dict[Hashable, int]:\n    \"\"\"Calculate the dimensions corresponding to a set of variables.\n\n    Returns dictionary mapping from dimension names to sizes. Raises ValueError\n    if any of the dimension sizes conflict.\n    \"\"\"\n    dims: dict[Hashable, int] = {}\n    last_used = {}\n    scalar_vars = {k for k, v in variables.items() if not v.dims}\n    for k, var in variables.items():\n        for dim, size in zip(var.dims, var.shape, strict=True):\n            if dim in scalar_vars:\n                raise ValueError(\n                    f\"dimension {dim!r} already exists as a scalar variable\"\n                )\n            if dim not in dims:\n                dims[dim] = size\n                last_used[dim] = k\n            elif dims[dim] != size:\n                raise ValueError(\n                    f\"conflicting sizes for dimension {dim!r}: \"\n                    f\"length {size} on {k!r} and length {dims[dim]} on {last_used!r}\"\n                )\n    return dims\n=======\ndef calculate_dimensions(variables: Mapping[Any, Variable]) -> dict[Hashable, int]:\n    \"\"\"Calculate the dimensions corresponding to a set of variables.\n\n    Returns dictionary mapping from dimension names to sizes. Raises ValueError\n    if any of the dimension sizes conflict.\n    \"\"\"\n    dims = {\n        dim: size\n        for var in variables.values()\n        for dim, size in zip(var.dims, var.shape, strict=True)\n    }\n    if len(dims) != len(set(dims.values())):\n        raise ValueError(\"Conflicting sizes for dimensions\")\n    return dims\n>>>>>>> REPLACE",
+  "llm_tokens": 10308,
+  "llm_latency": 23.307673692703247,
+  "patch_content": "### xarray/core/variable.py\n<<<<<<< SEARCH\ndef calculate_dimensions(variables: Mapping[Any, Variable]) -> dict[Hashable, int]:\n    \"\"\"Calculate the dimensions corresponding to a set of variables.\n\n    Returns dictionary mapping from dimension names to sizes. Raises ValueError\n    if any of the dimension sizes conflict.\n    \"\"\"\n    dims: dict[Hashable, int] = {}\n    last_used = {}\n    scalar_vars = {k for k, v in variables.items() if not v.dims}\n    for k, var in variables.items():\n        for dim, size in zip(var.dims, var.shape, strict=True):\n            if dim in scalar_vars:\n                raise ValueError(\n                    f\"dimension {dim!r} already exists as a scalar variable\"\n                )\n            if dim not in dims:\n                dims[dim] = size\n                last_used[dim] = k\n            elif dims[dim] != size:\n                raise ValueError(\n                    f\"conflicting sizes for dimension {dim!r}: \"\n                    f\"length {size} on {k!r} and length {dims[dim]} on {last_used!r}\"\n                )\n    return dims\n=======\ndef calculate_dimensions(variables: Mapping[Any, Variable]) -> dict[Hashable, int]:\n    \"\"\"Calculate the dimensions corresponding to a set of variables.\n\n    Returns dictionary mapping from dimension names to sizes. Raises ValueError\n    if any of the dimension sizes conflict.\n    \"\"\"\n    dims = {\n        dim: size\n        for var in variables.values()\n        for dim, size in zip(var.dims, var.shape, strict=True)\n    }\n    if len(dims) != len(set(dims.values())):\n        raise ValueError(\"Conflicting sizes for dimensions\")\n    return dims\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/variable.py"
+    ],
+    "error": null
+  }
+}

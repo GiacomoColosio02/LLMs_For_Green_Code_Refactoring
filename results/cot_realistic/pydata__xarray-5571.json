@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-5571",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T02:39:11.344165",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34903
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `calculate_dimensions` function in `core/dataset.py` is the bottleneck.\n**DIAGNOSIS**: It uses nested loops and broadcasting, leading to high memory usage and redundant computations.\n**SOLUTION**: Optimize the function by avoiding unnecessary broadcasts and using efficient slicing techniques.\n\n### SECTION 2: PATCH\n\n### xarray/core/dataset.py\n<<<<<<< SEARCH\nfor coord in coords_:\n    reduce_dims_ += [c for c in self.dims if coord.equals(self[c])]\nreduce_dims_ = list(set(reduce_dims_))\npreserved_dims = list(set(self.dims) - set(reduce_dims_))\nif not reduce_dims_:\n    raise ValueError(\n        \"No arguments to `coords` were identified as a dimension on the calling \"\n        \"object, and no dims were supplied to `reduce_dims`. This would result \"\n        \"in fitting on scalar data.\"\n    )\n=======\nreduce_dims_ = set()\nfor coord in coords_:\n    reduce_dims_ |= {c for c in self.dims if coord.equals(self[c])}\npreserved_dims = set(self.dims) - reduce_dims_\nif not reduce_dims_:\n    raise ValueError(\n        \"No arguments to `coords` were identified as a dimension on the calling \"\n        \"object, and no dims were supplied to `reduce_dims`. This would result \"\n        \"in fitting on scalar data.\"\n    )\n>>>>>>> REPLACE\n\n---",
+  "llm_tokens": 11337,
+  "llm_latency": 18.080350875854492,
+  "patch_content": "### xarray/core/dataset.py\n<<<<<<< SEARCH\nfor coord in coords_:\n    reduce_dims_ += [c for c in self.dims if coord.equals(self[c])]\nreduce_dims_ = list(set(reduce_dims_))\npreserved_dims = list(set(self.dims) - set(reduce_dims_))\nif not reduce_dims_:\n    raise ValueError(\n        \"No arguments to `coords` were identified as a dimension on the calling \"\n        \"object, and no dims were supplied to `reduce_dims`. This would result \"\n        \"in fitting on scalar data.\"\n    )\n=======\nreduce_dims_ = set()\nfor coord in coords_:\n    reduce_dims_ |= {c for c in self.dims if coord.equals(self[c])}\npreserved_dims = set(self.dims) - reduce_dims_\nif not reduce_dims_:\n    raise ValueError(\n        \"No arguments to `coords` were identified as a dimension on the calling \"\n        \"object, and no dims were supplied to `reduce_dims`. This would result \"\n        \"in fitting on scalar data.\"\n    )\n>>>>>>> REPLACE\n\n---",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/dataset.py"
+    ],
+    "error": null
+  }
+}

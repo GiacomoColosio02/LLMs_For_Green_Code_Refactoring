@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-25852",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T01:34:17.079063",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49765
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_peeloff_pi` function in `sympy/functions/elementary/trigonometric.py` is the bottleneck.\n**DIAGNOSIS**: It uses a loop to peel off multiples of \u03c0, leading to O(n) complexity where n is the number of terms in the expression. Additionally, it involves repeated calls to `coeff` and `as_coeff_Mul`, which can be costly.\n**SOLUTION**: Optimize the function by avoiding unnecessary loops and using efficient methods for extracting coefficients.\n\n### SECTION 2: PATCH\n\n### sympy/functions/elementary/trigonometric.py\n<<<<<<< SEARCH\ndef _peeloff_pi(arg):\n    r\"\"\"\n    Split ARG into two parts, a \"rest\" and a multiple of $\\pi$.\n    This assumes ARG to be an Add.\n    The multiple of $\\pi$ returned in the second position is always a Rational.\n\n    Examples\n    ========\n\n    >>> from sympy.functions.elementary.trigonometric import _peeloff_pi\n    >>> from sympy import pi\n    >>> from sympy.abc import x, y\n    >>> _peeloff_pi(x + pi/2)\n    (x, 1/2)\n    >>> _peeloff_pi(x + 2*pi/3 + pi*y)\n    (x + pi*y + pi/6, 1/2)\n\n    \"\"\"\n    pi_coeff = S.Zero\n    rest_terms = []\n    for a in Add.make_args(arg):\n        K = a.coeff(pi)\n        if K and K.is_rational:\n            pi_coeff += K\n        else:\n            rest_terms.append(a)\n\n    if pi_coeff is S.Zero:\n        return arg, S.Zero\n\n    m1 = (pi_coeff % S.Half)\n    m2 = pi_coeff - m1\n    if m2.is_integer or ((2*m2).is_integer and m2.is_even is False):\n        return Add(*(rest_terms + [m1*pi])), m2\n    return arg, S.Zero\n=======\ndef _peeloff_pi(arg):\n    r\"\"\"\n    Split ARG into two parts, a \"rest\" and a multiple of $\\pi$.\n    This assumes ARG to be an Add.\n    The multiple of $\\pi$ returned in the second position is always a Rational.\n\n    Examples\n    ========\n\n    >>> from sympy.functions.elementary.trigonometric import _peeloff_pi\n    >>> from sympy import pi\n    >>> from sympy.abc import x, y\n    >>> _peeloff_pi(x + pi/2)\n    (x, 1/2)\n    >>> _peeloff_pi(x + 2*pi/3 + pi*y)\n    (x + pi*y + pi/6, 1/2)\n\n    \"\"\"\n    pi_coeff = S.Zero\n    rest_terms = []\n    for a in Add.make_args(arg):\n        K = a.coeff(pi)\n        if K and K.is_rational:\n            pi_coeff += K\n        else:\n            rest_terms.append(a)\n\n    if pi_coeff is S.Zero:\n        return arg, S.Zero\n\n    m1 = (pi_coeff % S.Half)\n    m2 = pi_coeff - m1\n    if m2.is_integer or ((2*m2).is_integer and m2.is_even is False):\n        return Add(*(rest_terms + [m1*pi])), m2\n    return arg, S.Zero\n>>>>>>> REPLACE",
+  "llm_tokens": 17183,
+  "llm_latency": 42.027522802352905,
+  "patch_content": "### sympy/functions/elementary/trigonometric.py\n<<<<<<< SEARCH\ndef _peeloff_pi(arg):\n    r\"\"\"\n    Split ARG into two parts, a \"rest\" and a multiple of $\\pi$.\n    This assumes ARG to be an Add.\n    The multiple of $\\pi$ returned in the second position is always a Rational.\n\n    Examples\n    ========\n\n    >>> from sympy.functions.elementary.trigonometric import _peeloff_pi\n    >>> from sympy import pi\n    >>> from sympy.abc import x, y\n    >>> _peeloff_pi(x + pi/2)\n    (x, 1/2)\n    >>> _peeloff_pi(x + 2*pi/3 + pi*y)\n    (x + pi*y + pi/6, 1/2)\n\n    \"\"\"\n    pi_coeff = S.Zero\n    rest_terms = []\n    for a in Add.make_args(arg):\n        K = a.coeff(pi)\n        if K and K.is_rational:\n            pi_coeff += K\n        else:\n            rest_terms.append(a)\n\n    if pi_coeff is S.Zero:\n        return arg, S.Zero\n\n    m1 = (pi_coeff % S.Half)\n    m2 = pi_coeff - m1\n    if m2.is_integer or ((2*m2).is_integer and m2.is_even is False):\n        return Add(*(rest_terms + [m1*pi])), m2\n    return arg, S.Zero\n=======\ndef _peeloff_pi(arg):\n    r\"\"\"\n    Split ARG into two parts, a \"rest\" and a multiple of $\\pi$.\n    This assumes ARG to be an Add.\n    The multiple of $\\pi$ returned in the second position is always a Rational.\n\n    Examples\n    ========\n\n    >>> from sympy.functions.elementary.trigonometric import _peeloff_pi\n    >>> from sympy import pi\n    >>> from sympy.abc import x, y\n    >>> _peeloff_pi(x + pi/2)\n    (x, 1/2)\n    >>> _peeloff_pi(x + 2*pi/3 + pi*y)\n    (x + pi*y + pi/6, 1/2)\n\n    \"\"\"\n    pi_coeff = S.Zero\n    rest_terms = []\n    for a in Add.make_args(arg):\n        K = a.coeff(pi)\n        if K and K.is_rational:\n            pi_coeff += K\n        else:\n            rest_terms.append(a)\n\n    if pi_coeff is S.Zero:\n        return arg, S.Zero\n\n    m1 = (pi_coeff % S.Half)\n    m2 = pi_coeff - m1\n    if m2.is_integer or ((2*m2).is_integer and m2.is_even is False):\n        return Add(*(rest_terms + [m1*pi])), m2\n    return arg, S.Zero\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/functions/elementary/trigonometric.py"
+    ],
+    "error": null
+  }
+}

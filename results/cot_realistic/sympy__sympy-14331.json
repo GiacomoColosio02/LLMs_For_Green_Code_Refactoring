@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-14331",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T03:15:48.358475",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34990
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `sort_key` method in `sympy/core/expr.py` is the bottleneck.\n**DIAGNOSIS**: It performs multiple sorts and recursive calls, leading to high time complexity and potential memory usage.\n**SOLUTION**: Optimize the sorting mechanism by using a more efficient data structure or algorithm, such as a balanced search tree or a specialized sorting library.\n\n### SECTION 2: PATCH\n\n### sympy/core/expr.py\n<<<<<<< SEARCH\n@cacheit\ndef sort_key(self, order=None):\n    coeff, expr = self.as_coeff_Mul()\n\n    if expr.is_Pow:\n        expr, exp = expr.args\n    else:\n        expr, exp = expr, S.One\n\n    if expr.is_Dummy:\n        args = (expr.sort_key(),)\n    elif expr.is_Atom:\n        args = (str(expr),)\n    else:\n        if expr.is_Add:\n            args = expr.as_ordered_terms(order=order)\n        elif expr.is_Mul:\n            args = expr.as_ordered_factors(order=order)\n        else:\n            args = expr.args\n\n        args = tuple(\n            [ default_sort_key(arg, order=order) for arg in args ])\n\n    args = (len(args), tuple(args))\n    exp = exp.sort_key(order=order)\n\n    return expr.class_key(), args, exp, coeff\n=======\nfrom sortedcontainers import SortedList\n\n@cacheit\ndef sort_key(self, order=None):\n    coeff, expr = self.as_coeff_Mul()\n\n    if expr.is_Pow:\n        expr, exp = expr.args\n    else:\n        expr, exp = expr, S.One\n\n    if expr.is_Dummy:\n        args = (expr.sort_key(),)\n    elif expr.is_Atom:\n        args = (str(expr),)\n    else:\n        if expr.is_Add:\n            args = expr.as_ordered_terms(order=order)\n        elif expr.is_Mul:\n            args = expr.as_ordered_factors(order=order)\n        else:\n            args = expr.args\n\n        args = tuple(\n            [ default_sort_key(arg, order=order) for arg in args ])\n\n    args = (len(args), tuple(args))\n    exp = exp.sort_key(order=order)\n\n    return expr.class_key(), SortedList(args), exp, coeff\n>>>>>>> REPLACE",
+  "llm_tokens": 12588,
+  "llm_latency": 28.051976680755615,
+  "patch_content": "### sympy/core/expr.py\n<<<<<<< SEARCH\n@cacheit\ndef sort_key(self, order=None):\n    coeff, expr = self.as_coeff_Mul()\n\n    if expr.is_Pow:\n        expr, exp = expr.args\n    else:\n        expr, exp = expr, S.One\n\n    if expr.is_Dummy:\n        args = (expr.sort_key(),)\n    elif expr.is_Atom:\n        args = (str(expr),)\n    else:\n        if expr.is_Add:\n            args = expr.as_ordered_terms(order=order)\n        elif expr.is_Mul:\n            args = expr.as_ordered_factors(order=order)\n        else:\n            args = expr.args\n\n        args = tuple(\n            [ default_sort_key(arg, order=order) for arg in args ])\n\n    args = (len(args), tuple(args))\n    exp = exp.sort_key(order=order)\n\n    return expr.class_key(), args, exp, coeff\n=======\nfrom sortedcontainers import SortedList\n\n@cacheit\ndef sort_key(self, order=None):\n    coeff, expr = self.as_coeff_Mul()\n\n    if expr.is_Pow:\n        expr, exp = expr.args\n    else:\n        expr, exp = expr, S.One\n\n    if expr.is_Dummy:\n        args = (expr.sort_key(),)\n    elif expr.is_Atom:\n        args = (str(expr),)\n    else:\n        if expr.is_Add:\n            args = expr.as_ordered_terms(order=order)\n        elif expr.is_Mul:\n            args = expr.as_ordered_factors(order=order)\n        else:\n            args = expr.args\n\n        args = tuple(\n            [ default_sort_key(arg, order=order) for arg in args ])\n\n    args = (len(args), tuple(args))\n    exp = exp.sort_key(order=order)\n\n    return expr.class_key(), SortedList(args), exp, coeff\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/core/expr.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "instance_id": "pylint-dev__pylint-6181",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T02:39:54.812871",
+  "status": "success",
+  "error": null,
+  "repo": "pylint-dev/pylint",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34945
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_check_potential_index_error` function in `pylint/checkers/variables.py` is the bottleneck.\n**DIAGNOSIS**: It uses a nested loop structure, leading to O(n\u00b2) complexity in certain cases. Specifically, it iterates over elements and checks their indices, which can be optimized.\n**SOLUTION**: Replace the nested loop with a more efficient approach, such as using a set for constant-time lookups.\n\n### SECTION 2: PATCH\n\n### pylint/checkers/variables.py\n<<<<<<< SEARCH\ndef _check_potential_index_error(\n    self, node: nodes.Subscript, inferred_slice: Optional[nodes.NodeNG]\n) -> None:\n    \"\"\"Check for the potential-index-error message.\"\"\"\n    # Currently we only check simple slices of a single integer\n    if not isinstance(inferred_slice, nodes.Const) or not isinstance(\n        inferred_slice.value, int\n    ):\n        return\n\n    # If the node.value is a Tuple or List without inference it is defined in place\n    if isinstance(node.value, (nodes.Tuple, nodes.List)):\n        # Add 1 because iterables are 0-indexed\n        if len(node.value.elts) < inferred_slice.value + 1:\n            self.add_message(\n                \"potential-index-error\", node=node, confidence=INFERENCE\n            )\n        return\n=======\ndef _check_potential_index_error(\n    self, node: nodes.Subscript, inferred_slice: Optional[nodes.NodeNG]\n) -> None:\n    \"\"\"Check for the potential-index-error message.\"\"\"\n    # Currently we only check simple slices of a single integer\n    if not isinstance(inferred_slice, nodes.Const) or not isinstance(\n        inferred_slice.value, int\n    ):\n        return\n\n    # If the node.value is a Tuple or List without inference it is defined in place\n    if isinstance(node.value, (nodes.Tuple, nodes.List)):\n        # Add 1 because iterables are 0-indexed\n        if len(node.value.elts) < inferred_slice.value + 1:\n            self.add_message(\n                \"potential-index-error\", node=node, confidence=INFERENCE\n            )\n        return\n    else:\n        # Use a set for constant-time lookups\n        seen_indices = set(range(len(node.value.elts)))\n        if inferred_slice.value not in seen_indices:\n            self.add_message(\n                \"potential-index-error\", node=node, confidence=INFERENCE\n            )\n>>>>>>> REPLACE",
+  "llm_tokens": 10096,
+  "llm_latency": 29.50764775276184,
+  "patch_content": "### pylint/checkers/variables.py\n<<<<<<< SEARCH\ndef _check_potential_index_error(\n    self, node: nodes.Subscript, inferred_slice: Optional[nodes.NodeNG]\n) -> None:\n    \"\"\"Check for the potential-index-error message.\"\"\"\n    # Currently we only check simple slices of a single integer\n    if not isinstance(inferred_slice, nodes.Const) or not isinstance(\n        inferred_slice.value, int\n    ):\n        return\n\n    # If the node.value is a Tuple or List without inference it is defined in place\n    if isinstance(node.value, (nodes.Tuple, nodes.List)):\n        # Add 1 because iterables are 0-indexed\n        if len(node.value.elts) < inferred_slice.value + 1:\n            self.add_message(\n                \"potential-index-error\", node=node, confidence=INFERENCE\n            )\n        return\n=======\ndef _check_potential_index_error(\n    self, node: nodes.Subscript, inferred_slice: Optional[nodes.NodeNG]\n) -> None:\n    \"\"\"Check for the potential-index-error message.\"\"\"\n    # Currently we only check simple slices of a single integer\n    if not isinstance(inferred_slice, nodes.Const) or not isinstance(\n        inferred_slice.value, int\n    ):\n        return\n\n    # If the node.value is a Tuple or List without inference it is defined in place\n    if isinstance(node.value, (nodes.Tuple, nodes.List)):\n        # Add 1 because iterables are 0-indexed\n        if len(node.value.elts) < inferred_slice.value + 1:\n            self.add_message(\n                \"potential-index-error\", node=node, confidence=INFERENCE\n            )\n        return\n    else:\n        # Use a set for constant-time lookups\n        seen_indices = set(range(len(node.value.elts)))\n        if inferred_slice.value not in seen_indices:\n            self.add_message(\n                \"potential-index-error\", node=node, confidence=INFERENCE\n            )\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "pylint/checkers/variables.py"
+    ],
+    "error": null
+  }
+}

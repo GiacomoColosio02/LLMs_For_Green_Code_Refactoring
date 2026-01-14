@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12567",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T11:34:17.221987",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 12522
+  },
+  "llm_response": "### sklearn/utils/fixes.py\n<<<<<<< SEARCH\ndef _object_dtype_isnan(X):\n    return np.frompyfunc(lambda x: x != x, 1, 1)(X).astype(bool)\n=======\ndef _object_dtype_isnan(X):\n    return np.isnan(X).view(np.bool_)\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sklearn/utils/fixes.py\n<<<<<<< SEARCH\ndef _object_dtype_isnan(X):\n    return np.frompyfunc(lambda x: x != x, 1, 1)(X).astype(bool)\n=======\ndef _object_dtype_isnan(X):\n    return np.isnan(X).view(np.bool_)\n>>>>>>> REPLACE",
+      "patch_content": "### sklearn/utils/fixes.py\n<<<<<<< SEARCH\ndef _object_dtype_isnan(X):\n    return np.frompyfunc(lambda x: x != x, 1, 1)(X).astype(bool)\n=======\ndef _object_dtype_isnan(X):\n    return np.isnan(X).view(np.bool_)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 3478,
+  "llm_latency": 3.8341410160064697,
+  "patch_content": "### sklearn/utils/fixes.py\n<<<<<<< SEARCH\ndef _object_dtype_isnan(X):\n    return np.frompyfunc(lambda x: x != x, 1, 1)(X).astype(bool)\n=======\ndef _object_dtype_isnan(X):\n    return np.isnan(X).view(np.bool_)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/utils/fixes.py"
+    ],
+    "error": null
+  }
+}

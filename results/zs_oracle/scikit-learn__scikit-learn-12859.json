@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12859",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T13:54:57.949726",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24895
+  },
+  "llm_response": "### sklearn/svm/classes.py\n<<<<<<< SEARCH\nX, y = check_X_y(X, y, accept_sparse='csr',\n                 dtype=np.float64, order=\"C\",\n                 accept_large_sparse=False)\ncheck_classification_targets(y)\nself.classes_ = np.unique(y)\n=======\nX, y = check_X_y(X, y, accept_sparse='csr', dtype=np.float64, order=\"C\")\ncheck_classification_targets(y)\nself.classes_ = np.unique(y)\n>>>>>>> REPLACE\n\n### sklearn/svm/classes.py\n<<<<<<< SEARCH\nself.coef_, self.intercept_, self.n_iter_ = _fit_liblinear(\n    X, y, self.C, self.fit_intercept, self.intercept_scaling,\n    self.class_weight, self.penalty, self.dual, self.verbose,\n    self.max_iter, self.tol, self.random_state, self.multi_class,\n    self.loss, sample_weight=sample_weight)\n=======\nwith np.errstate(divide='ignore', invalid='ignore'):\n    self.coef_, self.intercept_, self.n_iter_ = _fit_liblinear(\n        X, y, self.C, self.fit_intercept, self.intercept_scaling,\n        self.class_weight, self.penalty, self.dual, self.verbose,\n        self.max_iter, self.tol, self.random_state, self.multi_class,\n        self.loss, sample_weight=sample_weight)\n>>>>>>> REPLACE\n\n### sklearn/svm/classes.py\n<<<<<<< SEARCH\nreturn np.asarray(y, dtype=np.intp)\n=======\nreturn np.ascontiguousarray(y, dtype=np.intp)\n>>>>>>> REPLACE",
+  "llm_tokens": 7032,
+  "llm_latency": 18.126348972320557,
+  "patch_content": "### sklearn/svm/classes.py\n<<<<<<< SEARCH\nX, y = check_X_y(X, y, accept_sparse='csr',\n                 dtype=np.float64, order=\"C\",\n                 accept_large_sparse=False)\ncheck_classification_targets(y)\nself.classes_ = np.unique(y)\n=======\nX, y = check_X_y(X, y, accept_sparse='csr', dtype=np.float64, order=\"C\")\ncheck_classification_targets(y)\nself.classes_ = np.unique(y)\n>>>>>>> REPLACE\n\n### sklearn/svm/classes.py\n<<<<<<< SEARCH\nself.coef_, self.intercept_, self.n_iter_ = _fit_liblinear(\n    X, y, self.C, self.fit_intercept, self.intercept_scaling,\n    self.class_weight, self.penalty, self.dual, self.verbose,\n    self.max_iter, self.tol, self.random_state, self.multi_class,\n    self.loss, sample_weight=sample_weight)\n=======\nwith np.errstate(divide='ignore', invalid='ignore'):\n    self.coef_, self.intercept_, self.n_iter_ = _fit_liblinear(\n        X, y, self.C, self.fit_intercept, self.intercept_scaling,\n        self.class_weight, self.penalty, self.dual, self.verbose,\n        self.max_iter, self.tol, self.random_state, self.multi_class,\n        self.loss, sample_weight=sample_weight)\n>>>>>>> REPLACE\n\n### sklearn/svm/classes.py\n<<<<<<< SEARCH\nreturn np.asarray(y, dtype=np.intp)\n=======\nreturn np.ascontiguousarray(y, dtype=np.intp)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 3,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/svm/classes.py"
+    ],
+    "error": null
+  }
+}

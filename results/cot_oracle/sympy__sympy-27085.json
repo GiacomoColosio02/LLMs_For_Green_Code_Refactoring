@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-27085",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T01:11:44.386974",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24914
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `__init__` method in `sympy/polys/matrices/ddm.py` is the bottleneck.\n**DIAGNOSIS**: It checks if each element in the list of lists is a list, which involves iterating over each element twice (once for the outer loop and once for the inner loop).\n**SOLUTION**: Use a generator expression within the `all()` function to avoid the explicit loop, reducing redundancy and potentially speeding up the process.\n\n### SECTION 2: PATCH\n\n### sympy/polys/matrices/ddm.py\n<<<<<<< SEARCH\nif not (isinstance(rowslist, list) and all(type(row) is list for row in rowslist)):\n=======\nif not (isinstance(rowslist, list) and all(isinstance(row, list) for row in rowslist)):\n>>>>>>> REPLACE",
+  "llm_tokens": 8132,
+  "llm_latency": 10.834971904754639,
+  "patch_content": "### sympy/polys/matrices/ddm.py\n<<<<<<< SEARCH\nif not (isinstance(rowslist, list) and all(type(row) is list for row in rowslist)):\n=======\nif not (isinstance(rowslist, list) and all(isinstance(row, list) for row in rowslist)):\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/polys/matrices/ddm.py"
+    ],
+    "error": null
+  }
+}

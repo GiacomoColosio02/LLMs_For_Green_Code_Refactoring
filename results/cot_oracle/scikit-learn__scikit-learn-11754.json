@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-11754",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:58:31.121492",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49729
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `enet_coordinate_descent` function in `cd_fast.pyx` is the bottleneck.\n**DIAGNOSIS**: It uses nested loops and redundant computations, leading to high memory usage and slower execution times.\n**SOLUTION**: Optimize the function by using efficient algorithms and avoiding redundant calculations.\n\n### SECTION 2: PATCH\n\n### sklearn/linear_model/cd_fast.pyx\n<<<<<<< SEARCH\n                if w_ii != 0.0:\n                    # R += w_ii * X[:,ii]\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n\n                # tmp = (X[:,ii]*R).sum()\n                tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n\n                if positive and tmp < 0:\n                    w[ii] = 0.0\n                else:\n                    w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                             / (norm_cols_X[ii] + beta))\n\n                if w[ii] != 0.0:\n                    # R -=  w[ii] * X[:,ii] # Update residual\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n=======\n                if w_ii != 0.0:\n                    # Efficiently update R and tmp\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n                    tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n\n                if positive and tmp < 0:\n                    w[ii] = 0.0\n                else:\n                    w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                             / (norm_cols_X[ii] + beta))\n\n                if w[ii] != 0.0:\n                    # Efficiently update R\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n>>>>>>> REPLACE",
+  "llm_tokens": 14500,
+  "llm_latency": 28.15682601928711,
+  "patch_content": "### sklearn/linear_model/cd_fast.pyx\n<<<<<<< SEARCH\n                if w_ii != 0.0:\n                    # R += w_ii * X[:,ii]\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n\n                # tmp = (X[:,ii]*R).sum()\n                tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n\n                if positive and tmp < 0:\n                    w[ii] = 0.0\n                else:\n                    w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                             / (norm_cols_X[ii] + beta))\n\n                if w[ii] != 0.0:\n                    # R -=  w[ii] * X[:,ii] # Update residual\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n=======\n                if w_ii != 0.0:\n                    # Efficiently update R and tmp\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n                    tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n\n                if positive and tmp < 0:\n                    w[ii] = 0.0\n                else:\n                    w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                             / (norm_cols_X[ii] + beta))\n\n                if w[ii] != 0.0:\n                    # Efficiently update R\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/linear_model/cd_fast.pyx"
+    ],
+    "error": null
+  }
+}

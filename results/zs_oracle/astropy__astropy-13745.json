@@ -1,0 +1,28 @@
+{
+  "instance_id": "astropy__astropy-13745",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T12:04:58.235039",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24855
+  },
+  "llm_response": "### astropy/coordinates/angles.py\n<<<<<<< SEARCH\ndef _validate_angles(self, angles=None):\n    \"\"\"Check that angles are between -90 and 90 degrees.\n    If not given, the check is done on the object itself\"\"\"\n    # Convert the lower and upper bounds to the \"native\" unit of\n    # this angle.  This limits multiplication to two values,\n    # rather than the N values in `self.value`.  Also, the\n    # comparison is performed on raw arrays, rather than Quantity\n    # objects, for speed.\n    if angles is None:\n        angles = self\n\n    if angles.unit is u.deg:\n        limit = 90\n    elif angles.unit is u.rad:\n        limit = 0.5 * np.pi\n    else:\n        limit = u.degree.to(angles.unit, 90.0)\n\n    # This invalid catch block can be removed when the minimum numpy\n    # version is >= 1.19 (NUMPY_LT_1_19)\n    with np.errstate(invalid='ignore'):\n        invalid_angles = (np.any(angles.value < -limit) or\n                          np.any(angles.value > limit))\n    if invalid_angles:\n        raise ValueError('Latitude angle(s) must be within -90 deg <= angle <= 90 deg, '\n                         'got {}'.format(angles.to(u.degree)))\n=======\n    def _validate_angles(self, angles=None):\n        \"\"\"Check that angles are between -90 and 90 degrees.\n        If not given, the check is done on the object itself\"\"\"\n        if angles is None:\n            angles = self\n\n        limit = 90 if angles.unit is u.deg else 0.5 * np.pi\n\n        invalid_angles = np.logical_or(angles.value < -limit, angles.value > limit)\n        if np.any(invalid_angles):\n            raise ValueError('Latitude angle(s) must be within -90 deg <= angle <= 90 deg, '\n                             'got {}'.format(angles.to(u.degree)))\n>>>>>>> REPLACE",
+  "llm_tokens": 7303,
+  "llm_latency": 23.865718364715576,
+  "patch_content": "### astropy/coordinates/angles.py\n<<<<<<< SEARCH\ndef _validate_angles(self, angles=None):\n    \"\"\"Check that angles are between -90 and 90 degrees.\n    If not given, the check is done on the object itself\"\"\"\n    # Convert the lower and upper bounds to the \"native\" unit of\n    # this angle.  This limits multiplication to two values,\n    # rather than the N values in `self.value`.  Also, the\n    # comparison is performed on raw arrays, rather than Quantity\n    # objects, for speed.\n    if angles is None:\n        angles = self\n\n    if angles.unit is u.deg:\n        limit = 90\n    elif angles.unit is u.rad:\n        limit = 0.5 * np.pi\n    else:\n        limit = u.degree.to(angles.unit, 90.0)\n\n    # This invalid catch block can be removed when the minimum numpy\n    # version is >= 1.19 (NUMPY_LT_1_19)\n    with np.errstate(invalid='ignore'):\n        invalid_angles = (np.any(angles.value < -limit) or\n                          np.any(angles.value > limit))\n    if invalid_angles:\n        raise ValueError('Latitude angle(s) must be within -90 deg <= angle <= 90 deg, '\n                         'got {}'.format(angles.to(u.degree)))\n=======\n    def _validate_angles(self, angles=None):\n        \"\"\"Check that angles are between -90 and 90 degrees.\n        If not given, the check is done on the object itself\"\"\"\n        if angles is None:\n            angles = self\n\n        limit = 90 if angles.unit is u.deg else 0.5 * np.pi\n\n        invalid_angles = np.logical_or(angles.value < -limit, angles.value > limit)\n        if np.any(invalid_angles):\n            raise ValueError('Latitude angle(s) must be within -90 deg <= angle <= 90 deg, '\n                             'got {}'.format(angles.to(u.degree)))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/coordinates/angles.py"
+    ],
+    "error": null
+  }
+}

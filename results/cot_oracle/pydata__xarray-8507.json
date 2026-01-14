@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-8507",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:08:18.117158",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49901
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `reduce` method in `xarray/core/_aggregations.py` is the bottleneck.\n**DIAGNOSIS**: It uses a generic `reduce` method that iterates over dimensions, leading to redundant computation and high memory usage.\n**SOLUTION**: Implement optimized versions of specific aggregation functions to avoid unnecessary iterations and reduce memory overhead.\n\n### SECTION 2: PATCH\n\n### xarray/core/_aggregations.py\n<<<<<<< SEARCH\ndef reduce(\n    self,\n    func: Callable[..., Any],\n    dim: Dims = None,\n    *,\n    axis: int | Sequence[int] | None = None,\n    keep_attrs: bool | None = None,\n    keepdims: bool = False,\n    **kwargs: Any,\n) -> Self:\n    raise NotImplementedError()\n=======\ndef reduce(\n    self,\n    func: Callable[..., Any],\n    dim: Dims = None,\n    *,\n    axis: int | Sequence[int] | None = None,\n    keep_attrs: bool | None = None,\n    keepdims: bool = False,\n    **kwargs: Any,\n) -> Self:\n    if func == duck_array_ops.count:\n        return self.count(dim=dim, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.array_all:\n        return self.all(dim=dim, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.array_any:\n        return self.any(dim=dim, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.max:\n        return self.max(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.min:\n        return self.min(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.mean:\n        return self.mean(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.median:\n        return self.median(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.cumsum:\n        return self.cumsum(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.cumprod:\n        return self.cumprod(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    else:\n        raise NotImplementedError()\n>>>>>>> REPLACE",
+  "llm_tokens": 14180,
+  "llm_latency": 29.752150535583496,
+  "patch_content": "### xarray/core/_aggregations.py\n<<<<<<< SEARCH\ndef reduce(\n    self,\n    func: Callable[..., Any],\n    dim: Dims = None,\n    *,\n    axis: int | Sequence[int] | None = None,\n    keep_attrs: bool | None = None,\n    keepdims: bool = False,\n    **kwargs: Any,\n) -> Self:\n    raise NotImplementedError()\n=======\ndef reduce(\n    self,\n    func: Callable[..., Any],\n    dim: Dims = None,\n    *,\n    axis: int | Sequence[int] | None = None,\n    keep_attrs: bool | None = None,\n    keepdims: bool = False,\n    **kwargs: Any,\n) -> Self:\n    if func == duck_array_ops.count:\n        return self.count(dim=dim, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.array_all:\n        return self.all(dim=dim, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.array_any:\n        return self.any(dim=dim, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.max:\n        return self.max(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.min:\n        return self.min(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.mean:\n        return self.mean(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.median:\n        return self.median(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.cumsum:\n        return self.cumsum(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    elif func == duck_array_ops.cumprod:\n        return self.cumprod(dim=dim, skipna=False, keep_attrs=keep_attrs, **kwargs)\n    else:\n        raise NotImplementedError()\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/_aggregations.py"
+    ],
+    "error": null
+  }
+}

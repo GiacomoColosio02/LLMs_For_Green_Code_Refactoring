@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-11754",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T14:29:22.175366",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49729
+  },
+  "llm_response": "### sklearn/linear_model/cd_fast.pyx\n<<<<<<< SEARCH\n                if w_ii != 0.0:\n                    # R += w_ii * X[:,ii]\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n\n                # tmp = (X[:,ii]*R).sum()\n                tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n\n                if positive and tmp < 0:\n                    w[ii] = 0.0\n                else:\n                    w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                             / (norm_cols_X[ii] + beta))\n\n                if w[ii] != 0.0:\n                    # R -=  w[ii] * X[:,ii] # Update residual\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n=======\n                if w_ii != 0.0:\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n                    tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n                    if positive and tmp < 0:\n                        w[ii] = 0.0\n                    else:\n                        w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                                 / (norm_cols_X[ii] + beta))\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n>>>>>>> REPLACE\n\n### sklearn/linear_model/coordinate_descent.py\n<<<<<<< SEARCH\n                if w_ii != 0.0:\n                    # R += w_ii * X[:,ii]\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n\n                # tmp = (X[:,ii]*R).sum()\n                tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n\n                if positive and tmp < 0:\n                    w[ii] = 0.0\n                else:\n                    w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                             / (norm_cols_X[ii] + beta))\n\n                if w[ii] != 0.0:\n                    # R -=  w[ii] * X[:,ii] # Update residual\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n=======\n                if w_ii != 0.0:\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n                    tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n                    if positive and tmp < 0:\n                        w[ii] = 0.0\n                    else:\n                        w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                                 / (norm_cols_X[ii] + beta))\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n>>>>>>> REPLACE",
+  "llm_tokens": 14822,
+  "llm_latency": 42.10445761680603,
+  "patch_content": "### sklearn/linear_model/cd_fast.pyx\n<<<<<<< SEARCH\n                if w_ii != 0.0:\n                    # R += w_ii * X[:,ii]\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n\n                # tmp = (X[:,ii]*R).sum()\n                tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n\n                if positive and tmp < 0:\n                    w[ii] = 0.0\n                else:\n                    w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                             / (norm_cols_X[ii] + beta))\n\n                if w[ii] != 0.0:\n                    # R -=  w[ii] * X[:,ii] # Update residual\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n=======\n                if w_ii != 0.0:\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n                    tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n                    if positive and tmp < 0:\n                        w[ii] = 0.0\n                    else:\n                        w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                                 / (norm_cols_X[ii] + beta))\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n>>>>>>> REPLACE\n\n### sklearn/linear_model/coordinate_descent.py\n<<<<<<< SEARCH\n                if w_ii != 0.0:\n                    # R += w_ii * X[:,ii]\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n\n                # tmp = (X[:,ii]*R).sum()\n                tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n\n                if positive and tmp < 0:\n                    w[ii] = 0.0\n                else:\n                    w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                             / (norm_cols_X[ii] + beta))\n\n                if w[ii] != 0.0:\n                    # R -=  w[ii] * X[:,ii] # Update residual\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n=======\n                if w_ii != 0.0:\n                    _axpy(n_samples, w_ii, &X[0, ii], 1, &R[0], 1)\n                    tmp = _dot(n_samples, &X[0, ii], 1, &R[0], 1)\n                    if positive and tmp < 0:\n                        w[ii] = 0.0\n                    else:\n                        w[ii] = (fsign(tmp) * fmax(fabs(tmp) - alpha, 0)\n                                 / (norm_cols_X[ii] + beta))\n                    _axpy(n_samples, -w[ii], &X[0, ii], 1, &R[0], 1)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/linear_model/cd_fast.pyx"
+    ],
+    "error": null
+  }
+}

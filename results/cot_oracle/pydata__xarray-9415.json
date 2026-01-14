@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9415",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:51:34.718883",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 47095
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_get_date_field` function in `xarray/core/accessor_dt.py` is the bottleneck.\n**DIAGNOSIS**: It involves repeated calls to `_access_through_series` and `_access_through_cftimeindex`, leading to redundant computations and potential memory spikes.\n**SOLUTION**: Cache the results of `_access_through_series` and `_access_through_cftimeindex` to avoid redundant computations.\n\n### SECTION 2: PATCH\n\n### xarray/core/accessor_dt.py\n<<<<<<< SEARCH\ndef _get_date_field(values, name, dtype):\n    \"\"\"Indirectly access pandas' libts.get_date_field by wrapping data\n    as a Series and calling through `.dt` attribute.\n\n    Parameters\n    ----------\n    values : np.ndarray or dask.array-like\n        Array-like container of datetime-like values\n    name : str\n        Name of datetime field to access\n    dtype : dtype-like\n        dtype for output date field values\n\n    Returns\n    -------\n    datetime_fields : same type as values\n        Array-like of datetime fields accessed for each element in values\n\n    \"\"\"\n    if is_np_datetime_like(values.dtype):\n        access_method = _access_through_series\n    else:\n        access_method = _access_through_cftimeindex\n\n    if is_duck_dask_array(values):\n        from dask.array import map_blocks\n\n        new_axis = chunks = None\n        # isocalendar adds an axis\n        if name == \"isocalendar\":\n            chunks = (3,) + values.chunksize\n            new_axis = 0\n\n        return map_blocks(\n            access_method, values, name, dtype=dtype, new_axis=new_axis, chunks=chunks\n        )\n    else:\n        out = access_method(values, name)\n        # cast only for integer types to keep float64 in presence of NaT\n        # see https://github.com/pydata/xarray/issues/7928\n        if np.issubdtype(out.dtype, np.integer):\n            out = out.astype(dtype, copy=False)\n        return out\n=======\n@functools.lru_cache(maxsize=None)\ndef _get_date_field_cached(values, name, dtype):\n    \"\"\"Cached version of _get_date_field\"\"\"\n    return _get_date_field(values, name, dtype)\n\nclass TimeAccessor(Generic[T_DataArray]):\n    # ...\n    def _date_field(self, name: str, dtype: DTypeLike) -> T_DataArray:\n        if dtype is None:\n            dtype = self._obj.dtype\n        result = _get_date_field_cached(_index_or_data(self._obj), name, dtype)\n        newvar = self._obj.variable.copy(data=result, deep=False)\n        return self._obj._replace(newvar, name=name)\n    # ...\n>>>>>>> REPLACE",
+  "llm_tokens": 13210,
+  "llm_latency": 33.383301734924316,
+  "patch_content": "### xarray/core/accessor_dt.py\n<<<<<<< SEARCH\ndef _get_date_field(values, name, dtype):\n    \"\"\"Indirectly access pandas' libts.get_date_field by wrapping data\n    as a Series and calling through `.dt` attribute.\n\n    Parameters\n    ----------\n    values : np.ndarray or dask.array-like\n        Array-like container of datetime-like values\n    name : str\n        Name of datetime field to access\n    dtype : dtype-like\n        dtype for output date field values\n\n    Returns\n    -------\n    datetime_fields : same type as values\n        Array-like of datetime fields accessed for each element in values\n\n    \"\"\"\n    if is_np_datetime_like(values.dtype):\n        access_method = _access_through_series\n    else:\n        access_method = _access_through_cftimeindex\n\n    if is_duck_dask_array(values):\n        from dask.array import map_blocks\n\n        new_axis = chunks = None\n        # isocalendar adds an axis\n        if name == \"isocalendar\":\n            chunks = (3,) + values.chunksize\n            new_axis = 0\n\n        return map_blocks(\n            access_method, values, name, dtype=dtype, new_axis=new_axis, chunks=chunks\n        )\n    else:\n        out = access_method(values, name)\n        # cast only for integer types to keep float64 in presence of NaT\n        # see https://github.com/pydata/xarray/issues/7928\n        if np.issubdtype(out.dtype, np.integer):\n            out = out.astype(dtype, copy=False)\n        return out\n=======\n@functools.lru_cache(maxsize=None)\ndef _get_date_field_cached(values, name, dtype):\n    \"\"\"Cached version of _get_date_field\"\"\"\n    return _get_date_field(values, name, dtype)\n\nclass TimeAccessor(Generic[T_DataArray]):\n    # ...\n    def _date_field(self, name: str, dtype: DTypeLike) -> T_DataArray:\n        if dtype is None:\n            dtype = self._obj.dtype\n        result = _get_date_field_cached(_index_or_data(self._obj), name, dtype)\n        newvar = self._obj.variable.copy(data=result, deep=False)\n        return self._obj._replace(newvar, name=name)\n    # ...\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/accessor_dt.py"
+    ],
+    "error": null
+  }
+}

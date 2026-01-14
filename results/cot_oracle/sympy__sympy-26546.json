@@ -1,0 +1,26 @@
+{
+  "instance_id": "sympy__sympy-26546",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:26:06.105893",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49825
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_eval_power` method in `sympy/core/power.py` contains a complex series expansion logic that is computationally expensive. By simplifying the handling of specific cases and removing unnecessary checks, we can reduce the computational overhead.\n\n### sympy/core/power.py\n<<<<<<< SEARCH\nif (abs(e) < 1) == True or e == 1:\n    s = 1  # floor = 0\nelif b.is_extended_nonnegative:\n    s = 1  # floor = 0\nelif re(b).is_extended_nonnegative and (abs(e) < 2) == True:\n    s = 1  # floor = 0\nelif _half(other):\n    s = exp(2*S.Pi*S.ImaginaryUnit*other*floor(\n        S.Half - e*arg(b)/(2*S.Pi)))\n    if s.is_extended_real and _n2(sign(s) - s) == 0:\n        s = sign(s)\n    else:\n        s = None\nelse:\n    s = None\n=======\nif e.is_integer:\n    s = 1\nelif b.is_polar:\n    s = 1\nelif e.is_extended_real:\n    s = 1\nelse:\n    s = None\n>>>>>>> REPLACE",
+  "llm_tokens": 15697,
+  "llm_latency": 16.661149740219116,
+  "patch_content": "### sympy/core/power.py\n<<<<<<< SEARCH\nif (abs(e) < 1) == True or e == 1:\n    s = 1  # floor = 0\nelif b.is_extended_nonnegative:\n    s = 1  # floor = 0\nelif re(b).is_extended_nonnegative and (abs(e) < 2) == True:\n    s = 1  # floor = 0\nelif _half(other):\n    s = exp(2*S.Pi*S.ImaginaryUnit*other*floor(\n        S.Half - e*arg(b)/(2*S.Pi)))\n    if s.is_extended_real and _n2(sign(s) - s) == 0:\n        s = sign(s)\n    else:\n        s = None\nelse:\n    s = None\n=======\nif e.is_integer:\n    s = 1\nelif b.is_polar:\n    s = 1\nelif e.is_extended_real:\n    s = 1\nelse:\n    s = None\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

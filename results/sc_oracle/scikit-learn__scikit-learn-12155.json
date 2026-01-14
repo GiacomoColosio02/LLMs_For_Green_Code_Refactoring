@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12155",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T15:00:45.228124",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24888
+  },
+  "llm_response": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\n        for combination in combinations(range(_num_samples(X)), self.p):\n            yield np.array(combination)\n=======\n        mask = np.zeros(_num_samples(X), dtype=bool)\n        for i in range(self.p):\n            mask[i::self.p] = True\n        yield mask\n>>>>>>> REPLACE",
+  "all_responses": [
+    "1. **Function**: `KFold._iter_test_indices`\n   2. **Why Slow**: Uses `range` and slicing operations repeatedly, leading to O(n\u00b2) complexity due to repeated indexing.\n   3. **Optimization Type**: Use NumPy's advanced indexing to minimize redundant computations and improve memory usage.",
+    "Replace the use of `range` and slicing with NumPy's advanced indexing to create a boolean mask for test indices. This reduces the time complexity from O(n\u00b2) to O(n).\n\n**Why this improves performance:** By creating a boolean mask, we avoid the need for repeated range and slicing operations, which significantly reduces the computational overhead.\n\n**Edge cases to consider:** Ensure that the input array is large enough to handle the boolean mask without causing memory issues. Also, verify that the mask correctly identifies the test indices for each fold.",
+    "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\n        for combination in combinations(range(_num_samples(X)), self.p):\n            yield np.array(combination)\n=======\n        mask = np.zeros(_num_samples(X), dtype=bool)\n        for i in range(self.p):\n            mask[i::self.p] = True\n        yield mask\n>>>>>>> REPLACE"
+  ],
+  "llm_tokens": 12924,
+  "llm_latency": 14.549964666366577,
+  "patch_content": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\n        for combination in combinations(range(_num_samples(X)), self.p):\n            yield np.array(combination)\n=======\n        mask = np.zeros(_num_samples(X), dtype=bool)\n        for i in range(self.p):\n            mask[i::self.p] = True\n        yield mask\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. **Function**: `KFold._iter_test_indices`\n   2. **Why Slow**: Uses `range` and slicing operations repeatedly, leading to O(n\u00b2) complexity due to repeated indexing.\n   3. **Optimization Type**: Use NumPy's advanced indexing to minimize redundant computations and improve memory usage.",
+    "optimizer": "Replace the use of `range` and slicing with NumPy's advanced indexing to create a boolean mask for test indices. This reduces the time complexity from O(n\u00b2) to O(n).\n\n**Why this improves performance:** By creating a boolean mask, we avoid the need for repeated range and slicing operations, which significantly reduces the computational overhead.\n\n**Edge cases to consider:** Ensure that the input array is large enough to handle the boolean mask without causing memory issues. Also, verify that the mask correctly identifies the test indices for each fold.",
+    "reviewer": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\n        for combination in combinations(range(_num_samples(X)), self.p):\n            yield np.array(combination)\n=======\n        mask = np.zeros(_num_samples(X), dtype=bool)\n        for i in range(self.p):\n            mask[i::self.p] = True\n        yield mask\n>>>>>>> REPLACE"
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/model_selection/_split.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "instance_id": "astropy__astropy-15948",
+  "prompt_type": "zero_shot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T15:13:35.417137",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34908
+  },
+  "llm_response": "### astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py\n<<<<<<< SEARCH\ntan_2omega_tau = (S2 - 2 * S * C) / (C2 - (C * C - S * S))\n=======\ntan_2omega_tau = (S2 - 2 * S * C) / (C2 - C * C + S * S)\n>>>>>>> REPLACE\n\n### astropy/timeseries/periodograms/lombscargle/implementations/utils.py\n<<<<<<< SEARCH\ndef trig_sum(t, h, df, N, f0=0, freq_factor=1, oversampling=5, use_fft=True, Mfft=4):\n    \"\"\"Compute (approximate) trigonometric sums for a number of frequencies.\n...\n    return S, C\n```\n=======\ndef trig_sum(t, h, df, N, f0=0, freq_factor=1, oversampling=5, use_fft=True, Mfft=4):\n    \"\"\"Compute (approximate) trigonometric sums for a number of frequencies.\n...\n    return S, C\n```\n>>>>>>> REPLACE",
+  "llm_tokens": 10908,
+  "llm_latency": 14.195956945419312,
+  "patch_content": "### astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py\n<<<<<<< SEARCH\ntan_2omega_tau = (S2 - 2 * S * C) / (C2 - (C * C - S * S))\n=======\ntan_2omega_tau = (S2 - 2 * S * C) / (C2 - C * C + S * S)\n>>>>>>> REPLACE\n\n### astropy/timeseries/periodograms/lombscargle/implementations/utils.py\n<<<<<<< SEARCH\ndef trig_sum(t, h, df, N, f0=0, freq_factor=1, oversampling=5, use_fft=True, Mfft=4):\n    \"\"\"Compute (approximate) trigonometric sums for a number of frequencies.\n...\n    return S, C\n```\n=======\ndef trig_sum(t, h, df, N, f0=0, freq_factor=1, oversampling=5, use_fft=True, Mfft=4):\n    \"\"\"Compute (approximate) trigonometric sums for a number of frequencies.\n...\n    return S, C\n```\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py"
+    ],
+    "error": null
+  }
+}

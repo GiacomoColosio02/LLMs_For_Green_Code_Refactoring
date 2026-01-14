@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-26940",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T14:48:47.469721",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 27558
+  },
+  "llm_response": "### sympy/integrals/heurisch.py\n<<<<<<< SEARCH\nfor mapping in mappings:\n    mapping = list(mapping)\n    mapping = mapping + unnecessary_permutations\n    diffs = [ _substitute(dcache.get_diff(g)) for g in terms ]\n    denoms = [ g.as_numer_denom()[1] for g in diffs ]\n    if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):\n        denom = reduce(lambda p, q: lcm(p, q, *V), denoms)\n        break\nelse:\n    if not rewrite:\n        result = heurisch(f, x, rewrite=True, hints=hints,\n            unnecessary_permutations=unnecessary_permutations)\n\n        if result is not None:\n            return indep*result\n    return None\n=======\nfor mapping in mappings:\n    mapping = list(mapping)\n    mapping = mapping + unnecessary_permutations\n    diffs = [ _substitute(dcache.get_diff(g)) for g in terms ]\n    denoms = [ g.as_numer_denom()[1] for g in diffs ]\n    if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):\n        denom = reduce(lambda p, q: lcm(p, q, *V), denoms)\n        break\nelse:\n    if not rewrite:\n        result = heurisch(f, x, rewrite=True, hints=hints,\n            unnecessary_permutations=unnecessary_permutations)\n\n        if result is not None:\n            return indep*result\n    return None\n>>>>>>> REPLACE",
+  "llm_tokens": 8220,
+  "llm_latency": 19.11292815208435,
+  "patch_content": "### sympy/integrals/heurisch.py\n<<<<<<< SEARCH\nfor mapping in mappings:\n    mapping = list(mapping)\n    mapping = mapping + unnecessary_permutations\n    diffs = [ _substitute(dcache.get_diff(g)) for g in terms ]\n    denoms = [ g.as_numer_denom()[1] for g in diffs ]\n    if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):\n        denom = reduce(lambda p, q: lcm(p, q, *V), denoms)\n        break\nelse:\n    if not rewrite:\n        result = heurisch(f, x, rewrite=True, hints=hints,\n            unnecessary_permutations=unnecessary_permutations)\n\n        if result is not None:\n            return indep*result\n    return None\n=======\nfor mapping in mappings:\n    mapping = list(mapping)\n    mapping = mapping + unnecessary_permutations\n    diffs = [ _substitute(dcache.get_diff(g)) for g in terms ]\n    denoms = [ g.as_numer_denom()[1] for g in diffs ]\n    if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):\n        denom = reduce(lambda p, q: lcm(p, q, *V), denoms)\n        break\nelse:\n    if not rewrite:\n        result = heurisch(f, x, rewrite=True, hints=hints,\n            unnecessary_permutations=unnecessary_permutations)\n\n        if result is not None:\n            return indep*result\n    return None\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/integrals/heurisch.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "instance_id": "astropy__astropy-14590",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:41:34.919573",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34888
+  },
+  "llm_response": "Let's think step by step.\n\nThe `bitceil` function in `lombscargle/implementations/utils.py` uses a loop to find the smallest power of 2 greater than or equal to `N`. This is inefficient because it iterates until it finds the correct value. Using bitwise operations can achieve the same result much faster.\n\n### astropy/timeseries/periodograms/lombscargle/implementations/utils.py\n<<<<<<< SEARCH\ndef bitceil(N):\n    \"\"\"Return the smallest power of 2 greater than or equal to N.\"\"\"\n    if N <= 1:\n        return 1\n    count = 0\n    while N > 1:\n        N >>= 1\n        count += 1\n    return 1 << count\n=======\ndef bitceil(N):\n    \"\"\"Return the smallest power of 2 greater than or equal to N.\"\"\"\n    return 1 << ((N - 1).bit_length())\n>>>>>>> REPLACE",
+  "llm_tokens": 10817,
+  "llm_latency": 11.95188045501709,
+  "patch_content": "### astropy/timeseries/periodograms/lombscargle/implementations/utils.py\n<<<<<<< SEARCH\ndef bitceil(N):\n    \"\"\"Return the smallest power of 2 greater than or equal to N.\"\"\"\n    if N <= 1:\n        return 1\n    count = 0\n    while N > 1:\n        N >>= 1\n        count += 1\n    return 1 << count\n=======\ndef bitceil(N):\n    \"\"\"Return the smallest power of 2 greater than or equal to N.\"\"\"\n    return 1 << ((N - 1).bit_length())\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

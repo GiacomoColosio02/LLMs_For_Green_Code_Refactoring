@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-26693",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:38:23.345973",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34704
+  },
+  "llm_response": "Let's think step by step.\n\nThe `doit` method in `sympy/core/basic.py` calls itself recursively without memoization, leading to redundant computations. Adding memoization will significantly reduce the number of calls.\n\n### sympy/core/basic.py\n<<<<<<< SEARCH\ndef doit(self, **hints):\n    return self\n=======\nfrom functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef doit(self, **hints):\n    return self\n>>>>>>> REPLACE",
+  "llm_tokens": 11549,
+  "llm_latency": 6.559326410293579,
+  "patch_content": "### sympy/core/basic.py\n<<<<<<< SEARCH\ndef doit(self, **hints):\n    return self\n=======\nfrom functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef doit(self, **hints):\n    return self\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/core/basic.py"
+    ],
+    "error": null
+  }
+}

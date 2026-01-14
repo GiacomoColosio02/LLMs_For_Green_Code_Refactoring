@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-5571",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T14:12:54.851806",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49911
+  },
+  "llm_response": "### xarray/core/duck_array_ops.py\n<<<<<<< SEARCH\ndef isnull(data):\n    data = asarray(data)\n    scalar_type = data.dtype.type\n    if issubclass(scalar_type, (np.datetime64, np.timedelta64)):\n        # datetime types use NaT for null\n        # note: must check timedelta64 before integers, because currently\n        # timedelta64 inherits from np.integer\n        return isnat(data)\n    elif issubclass(scalar_type, np.inexact):\n        # float types use NaN for null\n        return isnan(data)\n    elif issubclass(scalar_type, (np.bool_, np.integer, np.character, np.void)):\n        # these types cannot represent missing values\n        return zeros_like(data, dtype=bool)\n    else:\n        # at this point, array should have dtype=object\n        if isinstance(data, (np.ndarray, dask_array_type)):\n            return pandas_isnull(data)\n        else:\n            # Not reachable yet, but intended for use with other duck array\n            # types. For full consistency with pandas, we should accept None as\n            # a null value as well as NaN, but it isn't clear how to do this\n            # with duck typing.\n            return data != data\n=======\ndef isnull(data):\n    return np.isnan(data) | np.isnat(data)\n>>>>>>> REPLACE",
+  "all_responses": [
+    "1. `_create_nan_agg_method.f` in `xarray/core/duck_array_ops.py`\n2. Redundant computation and potential O(n\u00b2) complexity in handling NaN values.\n3. Vectorized operations and efficient NaN handling algorithms.",
+    "Replace the nested loop with a vectorized operation using NumPy's `isnan` and `where` functions. This reduces the time complexity from O(n\u00b2) to O(n). Edge cases to consider include ensuring the input array is properly handled and that the function correctly propagates NaN values through calculations.",
+    "### xarray/core/duck_array_ops.py\n<<<<<<< SEARCH\ndef isnull(data):\n    data = asarray(data)\n    scalar_type = data.dtype.type\n    if issubclass(scalar_type, (np.datetime64, np.timedelta64)):\n        # datetime types use NaT for null\n        # note: must check timedelta64 before integers, because currently\n        # timedelta64 inherits from np.integer\n        return isnat(data)\n    elif issubclass(scalar_type, np.inexact):\n        # float types use NaN for null\n        return isnan(data)\n    elif issubclass(scalar_type, (np.bool_, np.integer, np.character, np.void)):\n        # these types cannot represent missing values\n        return zeros_like(data, dtype=bool)\n    else:\n        # at this point, array should have dtype=object\n        if isinstance(data, (np.ndarray, dask_array_type)):\n            return pandas_isnull(data)\n        else:\n            # Not reachable yet, but intended for use with other duck array\n            # types. For full consistency with pandas, we should accept None as\n            # a null value as well as NaN, but it isn't clear how to do this\n            # with duck typing.\n            return data != data\n=======\ndef isnull(data):\n    return np.isnan(data) | np.isnat(data)\n>>>>>>> REPLACE"
+  ],
+  "llm_tokens": 28823,
+  "llm_latency": 24.91440176963806,
+  "patch_content": "### xarray/core/duck_array_ops.py\n<<<<<<< SEARCH\ndef isnull(data):\n    data = asarray(data)\n    scalar_type = data.dtype.type\n    if issubclass(scalar_type, (np.datetime64, np.timedelta64)):\n        # datetime types use NaT for null\n        # note: must check timedelta64 before integers, because currently\n        # timedelta64 inherits from np.integer\n        return isnat(data)\n    elif issubclass(scalar_type, np.inexact):\n        # float types use NaN for null\n        return isnan(data)\n    elif issubclass(scalar_type, (np.bool_, np.integer, np.character, np.void)):\n        # these types cannot represent missing values\n        return zeros_like(data, dtype=bool)\n    else:\n        # at this point, array should have dtype=object\n        if isinstance(data, (np.ndarray, dask_array_type)):\n            return pandas_isnull(data)\n        else:\n            # Not reachable yet, but intended for use with other duck array\n            # types. For full consistency with pandas, we should accept None as\n            # a null value as well as NaN, but it isn't clear how to do this\n            # with duck typing.\n            return data != data\n=======\ndef isnull(data):\n    return np.isnan(data) | np.isnat(data)\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. `_create_nan_agg_method.f` in `xarray/core/duck_array_ops.py`\n2. Redundant computation and potential O(n\u00b2) complexity in handling NaN values.\n3. Vectorized operations and efficient NaN handling algorithms.",
+    "optimizer": "Replace the nested loop with a vectorized operation using NumPy's `isnan` and `where` functions. This reduces the time complexity from O(n\u00b2) to O(n). Edge cases to consider include ensuring the input array is properly handled and that the function correctly propagates NaN values through calculations.",
+    "reviewer": "### xarray/core/duck_array_ops.py\n<<<<<<< SEARCH\ndef isnull(data):\n    data = asarray(data)\n    scalar_type = data.dtype.type\n    if issubclass(scalar_type, (np.datetime64, np.timedelta64)):\n        # datetime types use NaT for null\n        # note: must check timedelta64 before integers, because currently\n        # timedelta64 inherits from np.integer\n        return isnat(data)\n    elif issubclass(scalar_type, np.inexact):\n        # float types use NaN for null\n        return isnan(data)\n    elif issubclass(scalar_type, (np.bool_, np.integer, np.character, np.void)):\n        # these types cannot represent missing values\n        return zeros_like(data, dtype=bool)\n    else:\n        # at this point, array should have dtype=object\n        if isinstance(data, (np.ndarray, dask_array_type)):\n            return pandas_isnull(data)\n        else:\n            # Not reachable yet, but intended for use with other duck array\n            # types. For full consistency with pandas, we should accept None as\n            # a null value as well as NaN, but it isn't clear how to do this\n            # with duck typing.\n            return data != data\n=======\ndef isnull(data):\n    return np.isnan(data) | np.isnat(data)\n>>>>>>> REPLACE"
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/duck_array_ops.py"
+    ],
+    "error": null
+  }
+}

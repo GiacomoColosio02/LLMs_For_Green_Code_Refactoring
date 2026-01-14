@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-8512",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:05:48.011925",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49864
+  },
+  "llm_response": "Let's think step by step.\n\nThe `rolling` method in `dataarray.py` and `dataset.py` uses a loop to calculate rolling statistics, which is inefficient for large datasets. We can optimize this by using NumPy's vectorized operations.\n\n### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef rolling(self, windows, min_periods=None, center=False, axis=-1, win_type=None, ddof=1, closed=None):\n    return DataArrayRolling(self, windows, min_periods=min_periods, center=center, axis=axis, win_type=win_type, ddof=ddof, closed=closed)\n=======\ndef rolling(self, windows, min_periods=None, center=False, axis=-1, win_type=None, ddof=1, closed=None):\n    return DataArrayRolling(self, windows, min_periods=min_periods, center=center, axis=axis, win_type=win_type, ddof=ddof, closed=closed).construct()\n>>>>>>> REPLACE\n\n### xarray/core/dataset.py\n<<<<<<< SEARCH\ndef rolling(self, windows, min_periods=None, center=False, axis=-1, win_type=None, ddof=1, closed=None):\n    return DatasetRolling(self, windows, min_periods=min_periods, center=center, axis=axis, win_type=win_type, ddof=ddof, closed=closed)\n=======\ndef rolling(self, windows, min_periods=None, center=False, axis=-1, win_type=None, ddof=1, closed=None):\n    return DatasetRolling(self, windows, min_periods=min_periods, center=center, axis=axis, win_type=win_type, ddof=ddof, closed=closed).construct()\n>>>>>>> REPLACE",
+  "llm_tokens": 14043,
+  "llm_latency": 20.76569437980652,
+  "patch_content": "### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef rolling(self, windows, min_periods=None, center=False, axis=-1, win_type=None, ddof=1, closed=None):\n    return DataArrayRolling(self, windows, min_periods=min_periods, center=center, axis=axis, win_type=win_type, ddof=ddof, closed=closed)\n=======\ndef rolling(self, windows, min_periods=None, center=False, axis=-1, win_type=None, ddof=1, closed=None):\n    return DataArrayRolling(self, windows, min_periods=min_periods, center=center, axis=axis, win_type=win_type, ddof=ddof, closed=closed).construct()\n>>>>>>> REPLACE\n\n### xarray/core/dataset.py\n<<<<<<< SEARCH\ndef rolling(self, windows, min_periods=None, center=False, axis=-1, win_type=None, ddof=1, closed=None):\n    return DatasetRolling(self, windows, min_periods=min_periods, center=center, axis=axis, win_type=win_type, ddof=ddof, closed=closed)\n=======\ndef rolling(self, windows, min_periods=None, center=False, axis=-1, win_type=None, ddof=1, closed=None):\n    return DatasetRolling(self, windows, min_periods=min_periods, center=center, axis=axis, win_type=win_type, ddof=ddof, closed=closed).construct()\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

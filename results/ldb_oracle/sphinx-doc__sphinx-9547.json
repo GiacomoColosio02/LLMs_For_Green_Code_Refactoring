@@ -1,0 +1,38 @@
+{
+  "instance_id": "sphinx-doc__sphinx-9547",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T14:08:08.443725",
+  "status": "success",
+  "error": null,
+  "repo": "sphinx-doc/sphinx",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49748
+  },
+  "llm_response": "### sphinx/domains/c.py\n<<<<<<< SEARCH\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['c']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n=======\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['c']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n>>>>>>> REPLACE\n\n### sphinx/domains/cpp.py\n<<<<<<< SEARCH\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['cpp']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n=======\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['cpp']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sphinx/domains/c.py\n<<<<<<< SEARCH\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['c']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n=======\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['c']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n>>>>>>> REPLACE\n\n### sphinx/domains/cpp.py\n<<<<<<< SEARCH\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['cpp']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n=======\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['cpp']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n>>>>>>> REPLACE",
+      "patch_content": "### sphinx/domains/c.py\n<<<<<<< SEARCH\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['c']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n=======\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['c']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 11696,
+  "llm_latency": 13.41252064704895,
+  "patch_content": "### sphinx/domains/c.py\n<<<<<<< SEARCH\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['c']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n=======\n        if parentSymbol is None:\n            parentSymbol = self.env.domaindata['c']['root_symbol']\n        signode = nodes.inline(classes=classes)\n        ast.describe_signature(signode, 'markType', self.env, parentSymbol)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sphinx/domains/c.py"
+    ],
+    "error": null
+  }
+}

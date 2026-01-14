@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-9881",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:52:15.273618",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34866
+  },
+  "llm_response": "Let's think step by step.\n\nThe `to_dask_dataframe` method in `xarray/core/dataarray.py` involves reshaping and concatenating large arrays, which can be computationally expensive. We can optimize this by pre-allocating memory and avoiding unnecessary copies.\n\n### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef to_dask_dataframe(self, dim_order=None, set_index=False):\n    if self.name is None:\n        raise ValueError(\n            \"Cannot convert an unnamed DataArray to a \"\n            \"dask dataframe : use the ``.rename`` method to assign a name.\"\n        )\n    name = self.name\n    ds = self._to_dataset_whole(name, shallow_copy=False)\n    return ds.to_dask_dataframe(dim_order, set_index)\n=======\ndef to_dask_dataframe(self, dim_order=None, set_index=False):\n    if self.name is None:\n        raise ValueError(\n            \"Cannot convert an unnamed DataArray to a \"\n            \"dask dataframe : use the ``.rename`` method to assign a name.\"\n        )\n    name = self.name\n    ds = self._to_dataset_whole(name, shallow_copy=False)\n    \n    # Pre-allocate memory and avoid unnecessary copies\n    chunks = ds.chunks\n    dtype = ds.dtype\n    shape = ds.shape\n    \n    dask_df = dask.from_array(ds.values, chunks=chunks, dtype=dtype)\n    \n    if dim_order:\n        dask_df = dask_df.reindex(columns=dim_order)\n    \n    if set_index:\n        dask_df.set_index(list(ds.indexes.keys()), inplace=True)\n    \n    return dask_df\n>>>>>>> REPLACE",
+  "llm_tokens": 10227,
+  "llm_latency": 19.51108407974243,
+  "patch_content": "### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef to_dask_dataframe(self, dim_order=None, set_index=False):\n    if self.name is None:\n        raise ValueError(\n            \"Cannot convert an unnamed DataArray to a \"\n            \"dask dataframe : use the ``.rename`` method to assign a name.\"\n        )\n    name = self.name\n    ds = self._to_dataset_whole(name, shallow_copy=False)\n    return ds.to_dask_dataframe(dim_order, set_index)\n=======\ndef to_dask_dataframe(self, dim_order=None, set_index=False):\n    if self.name is None:\n        raise ValueError(\n            \"Cannot convert an unnamed DataArray to a \"\n            \"dask dataframe : use the ``.rename`` method to assign a name.\"\n        )\n    name = self.name\n    ds = self._to_dataset_whole(name, shallow_copy=False)\n    \n    # Pre-allocate memory and avoid unnecessary copies\n    chunks = ds.chunks\n    dtype = ds.dtype\n    shape = ds.shape\n    \n    dask_df = dask.from_array(ds.values, chunks=chunks, dtype=dtype)\n    \n    if dim_order:\n        dask_df = dask_df.reindex(columns=dim_order)\n    \n    if set_index:\n        dask_df.set_index(list(ds.indexes.keys()), inplace=True)\n    \n    return dask_df\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

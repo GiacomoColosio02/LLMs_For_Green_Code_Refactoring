@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-8737",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T10:24:16.548026",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49694
+  },
+  "llm_response": "### xarray/core/indexes.py\n<<<<<<< SEARCH\n        if key not in self._indexes:\n            if errors == \"raise\":\n                raise ValueError(f\"no index found for {key!r} coordinate\")\n            else:\n                return {}\n\n        all_coord_names = self._id_coord_names[self._coord_name_id[key]]\n        return {k: self._variables[k] for k in all_coord_names}\n=======\n        if key not in self._indexes:\n            if errors == \"raise\":\n                raise ValueError(f\"no index found for {key!r} coordinate\")\n            else:\n                return {}\n\n        return {k: self._variables[k] for k in self._id_coord_names[self._coord_name_id[key]]}\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/core/indexes.py\n<<<<<<< SEARCH\n        if key not in self._indexes:\n            if errors == \"raise\":\n                raise ValueError(f\"no index found for {key!r} coordinate\")\n            else:\n                return {}\n\n        all_coord_names = self._id_coord_names[self._coord_name_id[key]]\n        return {k: self._variables[k] for k in all_coord_names}\n=======\n        if key not in self._indexes:\n            if errors == \"raise\":\n                raise ValueError(f\"no index found for {key!r} coordinate\")\n            else:\n                return {}\n\n        return {k: self._variables[k] for k in self._id_coord_names[self._coord_name_id[key]]}\n>>>>>>> REPLACE",
+      "patch_content": "### xarray/core/indexes.py\n<<<<<<< SEARCH\n        if key not in self._indexes:\n            if errors == \"raise\":\n                raise ValueError(f\"no index found for {key!r} coordinate\")\n            else:\n                return {}\n\n        all_coord_names = self._id_coord_names[self._coord_name_id[key]]\n        return {k: self._variables[k] for k in all_coord_names}\n=======\n        if key not in self._indexes:\n            if errors == \"raise\":\n                raise ValueError(f\"no index found for {key!r} coordinate\")\n            else:\n                return {}\n\n        return {k: self._variables[k] for k in self._id_coord_names[self._coord_name_id[key]]}\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 12741,
+  "llm_latency": 9.752856969833374,
+  "patch_content": "### xarray/core/indexes.py\n<<<<<<< SEARCH\n        if key not in self._indexes:\n            if errors == \"raise\":\n                raise ValueError(f\"no index found for {key!r} coordinate\")\n            else:\n                return {}\n\n        all_coord_names = self._id_coord_names[self._coord_name_id[key]]\n        return {k: self._variables[k] for k in all_coord_names}\n=======\n        if key not in self._indexes:\n            if errors == \"raise\":\n                raise ValueError(f\"no index found for {key!r} coordinate\")\n            else:\n                return {}\n\n        return {k: self._variables[k] for k in self._id_coord_names[self._coord_name_id[key]]}\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/indexes.py"
+    ],
+    "error": null
+  }
+}

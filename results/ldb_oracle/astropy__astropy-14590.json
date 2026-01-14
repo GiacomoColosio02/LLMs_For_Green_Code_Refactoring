@@ -1,0 +1,38 @@
+{
+  "instance_id": "astropy__astropy-14590",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T21:10:41.814505",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24891
+  },
+  "llm_response": "### path/to/file.py\n<<<<<<< SEARCH\n        if mask is None:\n            mask = False if data_mask is None else data_mask\n=======\n        if mask is None:\n            mask = np.zeros_like(data, dtype=bool) if data_mask is None else data_mask\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### path/to/file.py\n<<<<<<< SEARCH\n        if mask is None:\n            mask = False if data_mask is None else data_mask\n=======\n        if mask is None:\n            mask = np.zeros_like(data, dtype=bool) if data_mask is None else data_mask\n>>>>>>> REPLACE",
+      "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n        if mask is None:\n            mask = False if data_mask is None else data_mask\n=======\n        if mask is None:\n            mask = np.zeros_like(data, dtype=bool) if data_mask is None else data_mask\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 6160,
+  "llm_latency": 3.7889785766601562,
+  "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n        if mask is None:\n            mask = False if data_mask is None else data_mask\n=======\n        if mask is None:\n            mask = np.zeros_like(data, dtype=bool) if data_mask is None else data_mask\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/utils/masked/core.py"
+    ],
+    "error": null
+  }
+}

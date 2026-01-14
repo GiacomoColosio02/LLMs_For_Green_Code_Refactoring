@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-8415",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T13:51:48.168134",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49819
+  },
+  "llm_response": "### xarray/coding/cftimeindex.py\n<<<<<<< SEARCH\ndef parse_iso8601_like(datetime_string):\n    for pattern in _PATTERNS:\n        match = re.match(pattern, datetime_string)\n        if match:\n            return match.groupdict()\n    raise ValueError(\n        f\"no ISO-8601 or cftime-string-like match for string: {datetime_string}\"\n    )\n=======\n@cache\ndef parse_iso8601_like(datetime_string):\n    for pattern in _PATTERNS:\n        match = re.match(pattern, datetime_string)\n        if match:\n            return match.groupdict()\n    raise ValueError(\n        f\"no ISO-8601 or cftime-string-like match for string: {datetime_string}\"\n    )\n>>>>>>> REPLACE",
+  "all_responses": [
+    "1. The bottleneck is the `_parse_iso8601_with_reso` function in `xarray/coding/cftimeindex.py`.\n2. It is slow due to repeated parsing and creation of `cftime.datetime` objects, leading to O(n\u00b2) complexity.\n3. Memoization or caching of parsed results could significantly improve performance.",
+    "Replace the nested loop with a dictionary lookup to cache already parsed ISO 8601 strings. This reduces the time complexity from O(n\u00b2) to O(n). Edge cases to consider include handling invalid ISO 8601 strings gracefully and ensuring thread safety if the function is used in a multi-threaded environment.",
+    "### xarray/coding/cftimeindex.py\n<<<<<<< SEARCH\ndef parse_iso8601_like(datetime_string):\n    for pattern in _PATTERNS:\n        match = re.match(pattern, datetime_string)\n        if match:\n            return match.groupdict()\n    raise ValueError(\n        f\"no ISO-8601 or cftime-string-like match for string: {datetime_string}\"\n    )\n=======\n@cache\ndef parse_iso8601_like(datetime_string):\n    for pattern in _PATTERNS:\n        match = re.match(pattern, datetime_string)\n        if match:\n            return match.groupdict()\n    raise ValueError(\n        f\"no ISO-8601 or cftime-string-like match for string: {datetime_string}\"\n    )\n>>>>>>> REPLACE"
+  ],
+  "llm_tokens": 27715,
+  "llm_latency": 19.3411226272583,
+  "patch_content": "### xarray/coding/cftimeindex.py\n<<<<<<< SEARCH\ndef parse_iso8601_like(datetime_string):\n    for pattern in _PATTERNS:\n        match = re.match(pattern, datetime_string)\n        if match:\n            return match.groupdict()\n    raise ValueError(\n        f\"no ISO-8601 or cftime-string-like match for string: {datetime_string}\"\n    )\n=======\n@cache\ndef parse_iso8601_like(datetime_string):\n    for pattern in _PATTERNS:\n        match = re.match(pattern, datetime_string)\n        if match:\n            return match.groupdict()\n    raise ValueError(\n        f\"no ISO-8601 or cftime-string-like match for string: {datetime_string}\"\n    )\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. The bottleneck is the `_parse_iso8601_with_reso` function in `xarray/coding/cftimeindex.py`.\n2. It is slow due to repeated parsing and creation of `cftime.datetime` objects, leading to O(n\u00b2) complexity.\n3. Memoization or caching of parsed results could significantly improve performance.",
+    "optimizer": "Replace the nested loop with a dictionary lookup to cache already parsed ISO 8601 strings. This reduces the time complexity from O(n\u00b2) to O(n). Edge cases to consider include handling invalid ISO 8601 strings gracefully and ensuring thread safety if the function is used in a multi-threaded environment.",
+    "reviewer": "### xarray/coding/cftimeindex.py\n<<<<<<< SEARCH\ndef parse_iso8601_like(datetime_string):\n    for pattern in _PATTERNS:\n        match = re.match(pattern, datetime_string)\n        if match:\n            return match.groupdict()\n    raise ValueError(\n        f\"no ISO-8601 or cftime-string-like match for string: {datetime_string}\"\n    )\n=======\n@cache\ndef parse_iso8601_like(datetime_string):\n    for pattern in _PATTERNS:\n        match = re.match(pattern, datetime_string)\n        if match:\n            return match.groupdict()\n    raise ValueError(\n        f\"no ISO-8601 or cftime-string-like match for string: {datetime_string}\"\n    )\n>>>>>>> REPLACE"
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/coding/cftimeindex.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13174",
+  "prompt_type": "ldb",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T23:45:44.703505",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34862
+  },
+  "llm_response": "### sklearn/model_selection/_search.py\n<<<<<<< SEARCH\n        if not items:\n            yield {}\n        else:\n            keys, values = zip(*items)\n            for v in product(*values):\n                params = dict(zip(keys, v))\n                yield params\n=======\n        if not items:\n            yield {}\n        else:\n            keys, values = zip(*sorted(items))\n            for v in product(*values):\n                params = dict(zip(keys, v))\n                yield params\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sklearn/model_selection/_search.py\n<<<<<<< SEARCH\n        if not items:\n            yield {}\n        else:\n            keys, values = zip(*items)\n            for v in product(*values):\n                params = dict(zip(keys, v))\n                yield params\n=======\n        if not items:\n            yield {}\n        else:\n            keys, values = zip(*sorted(items))\n            for v in product(*values):\n                params = dict(zip(keys, v))\n                yield params\n>>>>>>> REPLACE",
+      "patch_content": "### sklearn/model_selection/_search.py\n<<<<<<< SEARCH\n        if not items:\n            yield {}\n        else:\n            keys, values = zip(*items)\n            for v in product(*values):\n                params = dict(zip(keys, v))\n                yield params\n=======\n        if not items:\n            yield {}\n        else:\n            keys, values = zip(*sorted(items))\n            for v in product(*values):\n                params = dict(zip(keys, v))\n                yield params\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 9024,
+  "llm_latency": 6.359925746917725,
+  "patch_content": "### sklearn/model_selection/_search.py\n<<<<<<< SEARCH\n        if not items:\n            yield {}\n        else:\n            keys, values = zip(*items)\n            for v in product(*values):\n                params = dict(zip(keys, v))\n                yield params\n=======\n        if not items:\n            yield {}\n        else:\n            keys, values = zip(*sorted(items))\n            for v in product(*values):\n                params = dict(zip(keys, v))\n                yield params\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/model_selection/_search.py"
+    ],
+    "error": null
+  }
+}

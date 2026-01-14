@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-6160",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:03:19.353613",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34988
+  },
+  "llm_response": "Let's think step by step.\n\nThe `plot_cartopy_facetgrid.py` file contains a loop that iterates over each axis to set coastlines and extent. This loop is inefficient because it performs redundant operations for each axis.\n\n### doc/gallery/plot_cartopy_facetgrid.py\n<<<<<<< SEARCH\nfor ax in p.axes.flat:\n    ax.coastlines()\n    ax.set_extent([-160, -30, 5, 75])\n    ax.set_aspect(\"equal\")\n=======\naxs = p.axes.flat\naxs[0].coastlines()\naxs[0].set_extent([-160, -30, 5, 75])\naxs[0].set_aspect(\"equal\")\nfor ax in axs[1:]:\n    ax.remove()\n>>>>>>> REPLACE",
+  "llm_tokens": 10565,
+  "llm_latency": 10.192476511001587,
+  "patch_content": "### doc/gallery/plot_cartopy_facetgrid.py\n<<<<<<< SEARCH\nfor ax in p.axes.flat:\n    ax.coastlines()\n    ax.set_extent([-160, -30, 5, 75])\n    ax.set_aspect(\"equal\")\n=======\naxs = p.axes.flat\naxs[0].coastlines()\naxs[0].set_extent([-160, -30, 5, 75])\naxs[0].set_aspect(\"equal\")\nfor ax in axs[1:]:\n    ax.remove()\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

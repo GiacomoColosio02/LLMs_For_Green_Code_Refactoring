@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12760",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T20:07:32.930161",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 13297
+  },
+  "llm_response": "### sklearn/metrics/cluster/unsupervised.py\n<<<<<<< SEARCH\n    for k in range(n_labels):\n        cluster_k = X[labels == k]\n        centroid = cluster_k.mean(axis=0)\n        centroids[k] = centroid\n        intra_dists[k] = np.average(pairwise_distances(\n            cluster_k, [centroid]))\n=======\n    for k in range(n_labels):\n        cluster_k = safe_indexing(X, labels == k)\n        centroid = cluster_k.mean(axis=0)\n        centroids[k] = centroid\n        intra_dists[k] = np.sum((cluster_k - centroid) ** 2) / len(cluster_k)\n>>>>>>> REPLACE",
+  "llm_tokens": 4284,
+  "llm_latency": 7.736758708953857,
+  "patch_content": "### sklearn/metrics/cluster/unsupervised.py\n<<<<<<< SEARCH\n    for k in range(n_labels):\n        cluster_k = X[labels == k]\n        centroid = cluster_k.mean(axis=0)\n        centroids[k] = centroid\n        intra_dists[k] = np.average(pairwise_distances(\n            cluster_k, [centroid]))\n=======\n    for k in range(n_labels):\n        cluster_k = safe_indexing(X, labels == k)\n        centroid = cluster_k.mean(axis=0)\n        centroids[k] = centroid\n        intra_dists[k] = np.sum((cluster_k - centroid) ** 2) / len(cluster_k)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

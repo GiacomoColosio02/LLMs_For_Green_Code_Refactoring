@@ -1,0 +1,38 @@
+{
+  "instance_id": "astropy__astropy-15710",
+  "prompt_type": "self_collab",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T16:20:33.685381",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34945
+  },
+  "llm_response": "### astropy/io/fits/hdu/hdulist.py\n<<<<<<< SEARCH\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None:\n                        # https://github.com/numpy/numpy/issues/8628\n                        with warnings.catch_warnings():\n                            warnings.simplefilter(\"ignore\", category=DeprecationWarning)\n                            arr.data = self[idx].data.data\n                del mmaps  # Just to be sure\n=======\n                seen_hdu_ids = set()\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None and idx not in seen_hdu_ids:\n                        seen_hdu_ids.add(idx)\n                        # https://github.com/numpy/numpy/issues/8628\n                        with warnings.catch_warnings():\n                            warnings.simplefilter(\"ignore\", category=DeprecationWarning)\n                            arr.data = self[idx].data.data\n                del mmaps  # Just to be sure\n>>>>>>> REPLACE",
+  "all_responses": [
+    "1. The files `hdulist.py`, `table.py`, and `data.py` are relevant to the performance issue.\n2. The bottleneck functions are `fitsopen` in `hdulist.py`, `QTable` in `table.py`, and `download_file` in `data.py`.\n3. They are slow due to their complexity, involving numerous operations like file handling, data parsing, and network requests.\n4. Optimizations could include parallelizing file operations, optimizing data structures, and reducing redundant computations.",
+    "Replace nested loops with set lookup in the `fitsopen` function to reduce time complexity from O(n\u00b2) to O(n). This will improve performance by avoiding repeated lookups. Edge cases to consider include ensuring the set is properly initialized and that the elements being looked up are hashable.",
+    "### astropy/io/fits/hdu/hdulist.py\n<<<<<<< SEARCH\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None:\n                        # https://github.com/numpy/numpy/issues/8628\n                        with warnings.catch_warnings():\n                            warnings.simplefilter(\"ignore\", category=DeprecationWarning)\n                            arr.data = self[idx].data.data\n                del mmaps  # Just to be sure\n=======\n                seen_hdu_ids = set()\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None and idx not in seen_hdu_ids:\n                        seen_hdu_ids.add(idx)\n                        # https://github.com/numpy/numpy/issues/8628\n                        with warnings.catch_warnings():\n                            warnings.simplefilter(\"ignore\", category=DeprecationWarning)\n                            arr.data = self[idx].data.data\n                del mmaps  # Just to be sure\n>>>>>>> REPLACE"
+  ],
+  "llm_tokens": 18485,
+  "llm_latency": 21.57053852081299,
+  "patch_content": "### astropy/io/fits/hdu/hdulist.py\n<<<<<<< SEARCH\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None:\n                        # https://github.com/numpy/numpy/issues/8628\n                        with warnings.catch_warnings():\n                            warnings.simplefilter(\"ignore\", category=DeprecationWarning)\n                            arr.data = self[idx].data.data\n                del mmaps  # Just to be sure\n=======\n                seen_hdu_ids = set()\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None and idx not in seen_hdu_ids:\n                        seen_hdu_ids.add(idx)\n                        # https://github.com/numpy/numpy/issues/8628\n                        with warnings.catch_warnings():\n                            warnings.simplefilter(\"ignore\", category=DeprecationWarning)\n                            arr.data = self[idx].data.data\n                del mmaps  # Just to be sure\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. The files `hdulist.py`, `table.py`, and `data.py` are relevant to the performance issue.\n2. The bottleneck functions are `fitsopen` in `hdulist.py`, `QTable` in `table.py`, and `download_file` in `data.py`.\n3. They are slow due to their complexity, involving numerous operations like file handling, data parsing, and network requests.\n4. Optimizations could include parallelizing file operations, optimizing data structures, and reducing redundant computations.",
+    "optimizer": "Replace nested loops with set lookup in the `fitsopen` function to reduce time complexity from O(n\u00b2) to O(n). This will improve performance by avoiding repeated lookups. Edge cases to consider include ensuring the set is properly initialized and that the elements being looked up are hashable.",
+    "reviewer": "### astropy/io/fits/hdu/hdulist.py\n<<<<<<< SEARCH\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None:\n                        # https://github.com/numpy/numpy/issues/8628\n                        with warnings.catch_warnings():\n                            warnings.simplefilter(\"ignore\", category=DeprecationWarning)\n                            arr.data = self[idx].data.data\n                del mmaps  # Just to be sure\n=======\n                seen_hdu_ids = set()\n                for idx, mmap, arr in mmaps:\n                    if mmap is not None and idx not in seen_hdu_ids:\n                        seen_hdu_ids.add(idx)\n                        # https://github.com/numpy/numpy/issues/8628\n                        with warnings.catch_warnings():\n                            warnings.simplefilter(\"ignore\", category=DeprecationWarning)\n                            arr.data = self[idx].data.data\n                del mmaps  # Just to be sure\n>>>>>>> REPLACE"
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/io/fits/hdu/hdulist.py"
+    ],
+    "error": null
+  }
+}

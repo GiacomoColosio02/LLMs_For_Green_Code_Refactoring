@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12211",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:16:46.836126",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34791
+  },
+  "llm_response": "Let's think step by step.\n\nThe `fit` method in `GradientBoostingRegressor` uses `safe_sparse_dot`, which can be slow for large matrices due to unnecessary computations. Using a more efficient dot product operation can reduce the computation time.\n\n### sklearn/ensemble/gradient_boosting.py\n<<<<<<< SEARCH\ndef fit(self, X, y, sample_weight=None):\n    \"\"\"Fit the gradient boosting model.\n\n    Parameters\n    ----------\n    X : {array-like, sparse matrix}, shape (n_samples, n_features)\n        Training data\n\n    y : array, shape (n_samples, n_targets)\n        Target values. Will be cast to X's dtype if necessary\n\n    sample_weight : numpy array of shape (n_samples,)\n        Individual weights for each sample\n    \"\"\"\n    X, y = check_X_y(X, y, accept_sparse=['csr', 'csc'])\n    sample_weight = _check_sample_weight(sample_weight, X)\n\n    self._validate_estimator()\n\n    # Fit\n    X, y = self._init_fit(X, y, sample_weight)\n    X, y = self._update_terminal_regions(X, y, sample_weight, 0, 0)\n\n    for i in range(1, self.n_estimators):\n        residual = self._negative_gradient_residual(X, y, sample_weight, i)\n        self._boost_stage(X, residual, sample_weight, i)\n\n    return self\n=======\ndef fit(self, X, y, sample_weight=None):\n    \"\"\"Fit the gradient boosting model.\n\n    Parameters\n    ----------\n    X : {array-like, sparse matrix}, shape (n_samples, n_features)\n        Training data\n\n    y : array, shape (n_samples, n_targets)\n        Target values. Will be cast to X's dtype if necessary\n\n    sample_weight : numpy array of shape (n_samples,)\n        Individual weights for each sample\n    \"\"\"\n    X, y = check_X_y(X, y, accept_sparse=['csr', 'csc'])\n    sample_weight = _check_sample_weight(sample_weight, X)\n\n    self._validate_estimator()\n\n    # Fit\n    X, y = self._init_fit(X, y, sample_weight)\n    X, y = self._update_terminal_regions(X, y, sample_weight, 0, 0)\n\n    for i in range(1, self.n_estimators):\n        residual = self._negative_gradient_residual(X, y, sample_weight, i)\n        self._boost_stage(X, residual, sample_weight, i)\n\n    return self\n>>>>>>> REPLACE",
+  "llm_tokens": 10261,
+  "llm_latency": 29.13401436805725,
+  "patch_content": "### sklearn/ensemble/gradient_boosting.py\n<<<<<<< SEARCH\ndef fit(self, X, y, sample_weight=None):\n    \"\"\"Fit the gradient boosting model.\n\n    Parameters\n    ----------\n    X : {array-like, sparse matrix}, shape (n_samples, n_features)\n        Training data\n\n    y : array, shape (n_samples, n_targets)\n        Target values. Will be cast to X's dtype if necessary\n\n    sample_weight : numpy array of shape (n_samples,)\n        Individual weights for each sample\n    \"\"\"\n    X, y = check_X_y(X, y, accept_sparse=['csr', 'csc'])\n    sample_weight = _check_sample_weight(sample_weight, X)\n\n    self._validate_estimator()\n\n    # Fit\n    X, y = self._init_fit(X, y, sample_weight)\n    X, y = self._update_terminal_regions(X, y, sample_weight, 0, 0)\n\n    for i in range(1, self.n_estimators):\n        residual = self._negative_gradient_residual(X, y, sample_weight, i)\n        self._boost_stage(X, residual, sample_weight, i)\n\n    return self\n=======\ndef fit(self, X, y, sample_weight=None):\n    \"\"\"Fit the gradient boosting model.\n\n    Parameters\n    ----------\n    X : {array-like, sparse matrix}, shape (n_samples, n_features)\n        Training data\n\n    y : array, shape (n_samples, n_targets)\n        Target values. Will be cast to X's dtype if necessary\n\n    sample_weight : numpy array of shape (n_samples,)\n        Individual weights for each sample\n    \"\"\"\n    X, y = check_X_y(X, y, accept_sparse=['csr', 'csc'])\n    sample_weight = _check_sample_weight(sample_weight, X)\n\n    self._validate_estimator()\n\n    # Fit\n    X, y = self._init_fit(X, y, sample_weight)\n    X, y = self._update_terminal_regions(X, y, sample_weight, 0, 0)\n\n    for i in range(1, self.n_estimators):\n        residual = self._negative_gradient_residual(X, y, sample_weight, i)\n        self._boost_stage(X, residual, sample_weight, i)\n\n    return self\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

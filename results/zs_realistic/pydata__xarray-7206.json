@@ -1,0 +1,32 @@
+{
+  "instance_id": "pydata__xarray-7206",
+  "prompt_type": "zero_shot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T16:12:52.348455",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34959
+  },
+  "llm_response": "### doc/gallery/plot_cartopy_facetgrid.py\n<<<<<<< SEARCH\nax.set_aspect(\"equal\")\n=======\nax.set_aspect(\"auto\")\n>>>>>>> REPLACE\n\n### xarray/core/dataarray.py\n<<<<<<< SEARCH\nreturn self._resample(\n    resample_cls=DataArrayResample,\n    indexer=indexer,\n    skipna=skipna,\n    closed=closed,\n    label=label,\n    base=base,\n    offset=offset,\n    origin=origin,\n    keep_attrs=keep_attrs,\n    loffset=loffset,\n    restore_coord_dims=restore_coord_dims,\n    **indexer_kwargs,\n)\n=======\nreturn self._resample(\n    resample_cls=DataArrayResample,\n    indexer=indexer,\n    skipna=skipna,\n    closed=closed,\n    label=label,\n    base=base,\n    offset=offset,\n    origin=origin,\n    keep_attrs=keep_attrs,\n    loffset=loffset,\n    restore_coord_dims=restore_coord_dims,\n    **indexer_kwargs,\n).compute()\n>>>>>>> REPLACE\n\n### xarray/core/dataset.py\n<<<<<<< SEARCH\nreturn self._resample(\n    resample_cls=DatasetResample,\n    indexer=indexer,\n    skipna=skipna,\n    closed=closed,\n    label=label,\n    base=base,\n    offset=offset,\n    origin=origin,\n    keep_attrs=keep_attrs,\n    loffset=loffset,\n    restore_coord_dims=restore_coord_dims,\n    **indexer_kwargs,\n)\n=======\nreturn self._resample(\n    resample_cls=DatasetResample,\n    indexer=indexer,\n    skipna=skipna,\n    closed=closed,\n    label=label,\n    base=base,\n    offset=offset,\n    origin=origin,\n    keep_attrs=keep_attrs,\n    loffset=loffset,\n    restore_coord_dims=restore_coord_dims,\n    **indexer_kwargs,\n).compute()\n>>>>>>> REPLACE\n\n### xarray/tests/test_groupby.py\n<<<<<<< SEARCH\nexpected = gb.sum()\nwith xr.set_options(use_flox=True):\n    actual = gb.sum()\nassert_identical(expected, actual)\n=======\nexpected = gb.sum(compute=False)\nactual = gb.sum(compute=True)\nassert_identical(expected, actual)\n>>>>>>> REPLACE\n\n### xarray/tests/test_plot.py\n<<<<<<< SEARCH\nimages = plt.gca().findobj(mpl.image.AxesImage)\nreturn len(images) > 0\n=======\nimages = plt.gca().findobj(mpl.image.AxesImage, visible=True)\nreturn len(images) > 0\n>>>>>>> REPLACE",
+  "llm_tokens": 11273,
+  "llm_latency": 29.418449878692627,
+  "patch_content": "### doc/gallery/plot_cartopy_facetgrid.py\n<<<<<<< SEARCH\nax.set_aspect(\"equal\")\n=======\nax.set_aspect(\"auto\")\n>>>>>>> REPLACE\n\n### xarray/core/dataarray.py\n<<<<<<< SEARCH\nreturn self._resample(\n    resample_cls=DataArrayResample,\n    indexer=indexer,\n    skipna=skipna,\n    closed=closed,\n    label=label,\n    base=base,\n    offset=offset,\n    origin=origin,\n    keep_attrs=keep_attrs,\n    loffset=loffset,\n    restore_coord_dims=restore_coord_dims,\n    **indexer_kwargs,\n)\n=======\nreturn self._resample(\n    resample_cls=DataArrayResample,\n    indexer=indexer,\n    skipna=skipna,\n    closed=closed,\n    label=label,\n    base=base,\n    offset=offset,\n    origin=origin,\n    keep_attrs=keep_attrs,\n    loffset=loffset,\n    restore_coord_dims=restore_coord_dims,\n    **indexer_kwargs,\n).compute()\n>>>>>>> REPLACE\n\n### xarray/core/dataset.py\n<<<<<<< SEARCH\nreturn self._resample(\n    resample_cls=DatasetResample,\n    indexer=indexer,\n    skipna=skipna,\n    closed=closed,\n    label=label,\n    base=base,\n    offset=offset,\n    origin=origin,\n    keep_attrs=keep_attrs,\n    loffset=loffset,\n    restore_coord_dims=restore_coord_dims,\n    **indexer_kwargs,\n)\n=======\nreturn self._resample(\n    resample_cls=DatasetResample,\n    indexer=indexer,\n    skipna=skipna,\n    closed=closed,\n    label=label,\n    base=base,\n    offset=offset,\n    origin=origin,\n    keep_attrs=keep_attrs,\n    loffset=loffset,\n    restore_coord_dims=restore_coord_dims,\n    **indexer_kwargs,\n).compute()\n>>>>>>> REPLACE\n\n### xarray/tests/test_groupby.py\n<<<<<<< SEARCH\nexpected = gb.sum()\nwith xr.set_options(use_flox=True):\n    actual = gb.sum()\nassert_identical(expected, actual)\n=======\nexpected = gb.sum(compute=False)\nactual = gb.sum(compute=True)\nassert_identical(expected, actual)\n>>>>>>> REPLACE\n\n### xarray/tests/test_plot.py\n<<<<<<< SEARCH\nimages = plt.gca().findobj(mpl.image.AxesImage)\nreturn len(images) > 0\n=======\nimages = plt.gca().findobj(mpl.image.AxesImage, visible=True)\nreturn len(images) > 0\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 5,
+    "total_blocks": 5,
+    "method": "search_replace",
+    "modified_files": [
+      "doc/gallery/plot_cartopy_facetgrid.py",
+      "xarray/core/dataarray.py",
+      "xarray/core/dataset.py",
+      "xarray/tests/test_groupby.py",
+      "xarray/tests/test_plot.py"
+    ],
+    "error": null
+  }
+}

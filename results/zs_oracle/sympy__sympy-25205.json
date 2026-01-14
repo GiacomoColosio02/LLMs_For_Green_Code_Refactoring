@@ -1,0 +1,26 @@
+{
+  "instance_id": "sympy__sympy-25205",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T20:28:26.768857",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24887
+  },
+  "llm_response": "### sympy/matrices/matrices.py\n<<<<<<< SEARCH\ndef _det(self, method=\"bareiss\", iszerofunc=None):\n    if method == \"bareiss\":\n        return _det_bareiss(self, iszerofunc=iszerofunc)\n    elif method == \"berkowitz\":\n        return _det_berkowitz(self)\n    elif method == \"lu\":\n        return _det_LU(self, iszerofunc=iszerofunc)\n    else:\n        raise ValueError(\"Invalid method for determinant calculation\")\n=======\ndef _det(self, method=\"bareiss\", iszerofunc=None):\n    if method == \"bareiss\":\n        return _det_bareiss(self, iszerofunc=iszerofunc)\n    elif method == \"berkowitz\":\n        return _det_berkowitz(self)\n    elif method == \"lu\":\n        return _det_LU(self, iszerofunc=iszerofunc)\n    else:\n        raise ValueError(\"Invalid method for determinant calculation\")\n    return 0  # Placeholder to avoid syntax errors\n>>>>>>> REPLACE",
+  "llm_tokens": 7549,
+  "llm_latency": 12.798922300338745,
+  "patch_content": "### sympy/matrices/matrices.py\n<<<<<<< SEARCH\ndef _det(self, method=\"bareiss\", iszerofunc=None):\n    if method == \"bareiss\":\n        return _det_bareiss(self, iszerofunc=iszerofunc)\n    elif method == \"berkowitz\":\n        return _det_berkowitz(self)\n    elif method == \"lu\":\n        return _det_LU(self, iszerofunc=iszerofunc)\n    else:\n        raise ValueError(\"Invalid method for determinant calculation\")\n=======\ndef _det(self, method=\"bareiss\", iszerofunc=None):\n    if method == \"bareiss\":\n        return _det_bareiss(self, iszerofunc=iszerofunc)\n    elif method == \"berkowitz\":\n        return _det_berkowitz(self)\n    elif method == \"lu\":\n        return _det_LU(self, iszerofunc=iszerofunc)\n    else:\n        raise ValueError(\"Invalid method for determinant calculation\")\n    return 0  # Placeholder to avoid syntax errors\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

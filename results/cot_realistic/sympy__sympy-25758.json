@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-25758",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:41:57.281616",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34991
+  },
+  "llm_response": "Let's think step by step.\n\nThe `timeit_exp_subs` function in `sympy/functions/elementary/benchmarks/bench_exp.py` performs a substitution operation inside a loop, which is inefficient due to repeated calculations. By precomputing the substitution, we can avoid redundant operations.\n\n### sympy/functions/elementary/benchmarks/bench_exp.py\n<<<<<<< SEARCH\ndef timeit_exp_subs():\n    e.subs(q, y)\n=======\ndef timeit_exp_subs():\n    e_substituted = e.subs(q, y)\n    for _ in range(1000):  # Example loop to simulate multiple calls\n        e_substituted\n>>>>>>> REPLACE",
+  "llm_tokens": 11360,
+  "llm_latency": 9.002495288848877,
+  "patch_content": "### sympy/functions/elementary/benchmarks/bench_exp.py\n<<<<<<< SEARCH\ndef timeit_exp_subs():\n    e.subs(q, y)\n=======\ndef timeit_exp_subs():\n    e_substituted = e.subs(q, y)\n    for _ in range(1000):  # Example loop to simulate multiple calls\n        e_substituted\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/functions/elementary/benchmarks/bench_exp.py"
+    ],
+    "error": null
+  }
+}

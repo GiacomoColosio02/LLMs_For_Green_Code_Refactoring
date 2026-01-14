@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-14278",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T03:16:37.523352",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34882
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `as_Basic` function in `sympy/core/basic.py` is the bottleneck.\n**DIAGNOSIS**: It uses `_sympify` inside a loop, which can lead to redundant computations and increased memory usage.\n**SOLUTION**: Cache results of `_sympify` calls to avoid repeated processing.\n\n### SECTION 2: PATCH\n\n### sympy/core/basic.py\n<<<<<<< SEARCH\ndef as_Basic(expr):\n    \"\"\"Return expr as a Basic instance using strict sympify\n    or raise a TypeError; this is just a wrapper to _sympify,\n    raising a TypeError instead of a SympifyError.\"\"\"\n    from sympy.utilities.misc import func_name\n    try:\n        return _sympify(expr)\n    except SympifyError:\n        raise TypeError(\n            'Argument must be a Basic object, not `%s`' % func_name(\n            expr))\n=======\nfrom functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef _cached_sympify(expr):\n    try:\n        return _sympify(expr)\n    except SympifyError:\n        raise TypeError(\n            'Argument must be a Basic object, not `%s`' % func_name(\n            expr))\n\ndef as_Basic(expr):\n    \"\"\"Return expr as a Basic instance using strict sympify\n    or raise a TypeError; this is just a wrapper to _sympify,\n    raising a TypeError instead of a SympifyError.\"\"\"\n    return _cached_sympify(expr)\n>>>>>>> REPLACE",
+  "llm_tokens": 12009,
+  "llm_latency": 19.36349081993103,
+  "patch_content": "### sympy/core/basic.py\n<<<<<<< SEARCH\ndef as_Basic(expr):\n    \"\"\"Return expr as a Basic instance using strict sympify\n    or raise a TypeError; this is just a wrapper to _sympify,\n    raising a TypeError instead of a SympifyError.\"\"\"\n    from sympy.utilities.misc import func_name\n    try:\n        return _sympify(expr)\n    except SympifyError:\n        raise TypeError(\n            'Argument must be a Basic object, not `%s`' % func_name(\n            expr))\n=======\nfrom functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef _cached_sympify(expr):\n    try:\n        return _sympify(expr)\n    except SympifyError:\n        raise TypeError(\n            'Argument must be a Basic object, not `%s`' % func_name(\n            expr))\n\ndef as_Basic(expr):\n    \"\"\"Return expr as a Basic instance using strict sympify\n    or raise a TypeError; this is just a wrapper to _sympify,\n    raising a TypeError instead of a SympifyError.\"\"\"\n    return _cached_sympify(expr)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/core/basic.py"
+    ],
+    "error": null
+  }
+}

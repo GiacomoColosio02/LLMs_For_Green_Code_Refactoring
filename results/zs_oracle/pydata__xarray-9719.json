@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-9719",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T20:05:08.530624",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24908
+  },
+  "llm_response": "### xarray/core/variable.py\n<<<<<<< SEARCH\ndef quantile(self, q, dim=None, interpolation='linear', keep_attrs=None):\n    if dim is None:\n        dim = self.dims\n    if interpolation not in ('linear', 'lower', 'higher', 'midpoint', 'nearest'):\n        raise ValueError(f\"interpolation must be one of {{'linear', 'lower', 'higher', 'midpoint', 'nearest'}}, got {interpolation}\")\n\n    result = self._reduce(lambda x, y: np.percentile(x, y, interpolation=interpolation), q, dim=dim, keep_attrs=keep_attrs)\n    return result\n=======\ndef quantile(self, q, dim=None, interpolation='linear', keep_attrs=None):\n    if dim is None:\n        dim = self.dims\n    if interpolation not in ('linear', 'lower', 'higher', 'midpoint', 'nearest'):\n        raise ValueError(f\"interpolation must be one of {{'linear', 'lower', 'higher', 'midpoint', 'nearest'}}, got {interpolation}\")\n\n    result = self._reduce(lambda x, y: np.percentile(x, y, interpolation=interpolation), q, dim=dim, keep_attrs=keep_attrs)\n    return result\n>>>>>>> REPLACE",
+  "llm_tokens": 6612,
+  "llm_latency": 14.882849216461182,
+  "patch_content": "### xarray/core/variable.py\n<<<<<<< SEARCH\ndef quantile(self, q, dim=None, interpolation='linear', keep_attrs=None):\n    if dim is None:\n        dim = self.dims\n    if interpolation not in ('linear', 'lower', 'higher', 'midpoint', 'nearest'):\n        raise ValueError(f\"interpolation must be one of {{'linear', 'lower', 'higher', 'midpoint', 'nearest'}}, got {interpolation}\")\n\n    result = self._reduce(lambda x, y: np.percentile(x, y, interpolation=interpolation), q, dim=dim, keep_attrs=keep_attrs)\n    return result\n=======\ndef quantile(self, q, dim=None, interpolation='linear', keep_attrs=None):\n    if dim is None:\n        dim = self.dims\n    if interpolation not in ('linear', 'lower', 'higher', 'midpoint', 'nearest'):\n        raise ValueError(f\"interpolation must be one of {{'linear', 'lower', 'higher', 'midpoint', 'nearest'}}, got {interpolation}\")\n\n    result = self._reduce(lambda x, y: np.percentile(x, y, interpolation=interpolation), q, dim=dim, keep_attrs=keep_attrs)\n    return result\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

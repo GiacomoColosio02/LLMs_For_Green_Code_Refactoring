@@ -1,0 +1,28 @@
+{
+  "instance_id": "mwaskom__seaborn-2458",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:27:41.749297",
+  "status": "success",
+  "error": null,
+  "repo": "mwaskom/seaborn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 26831
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_compute_univariate_density` function in `seaborn/distributions.py` is the bottleneck.\n**DIAGNOSIS**: It computes the density for each subset of data independently, leading to redundant computations and high memory usage.\n**SOLUTION**: Use vectorized operations and avoid redundant calculations by leveraging NumPy's efficient array operations.\n\n### SECTION 2: PATCH\n\n### seaborn/distributions.py\n<<<<<<< SEARCH\nfor sub_vars, sub_data in self.iter_data(\"hue\", from_comp_data=True):\n    # Extract the data points from this sub set and remove nulls\n    observations = sub_data[data_variable]\n\n    observation_variance = observations.var()\n    if math.isclose(observation_variance, 0) or np.isnan(observation_variance):\n        msg = \"Dataset has 0 variance; skipping density estimate.\"\n        warnings.warn(msg, UserWarning)\n        continue\n\n    # Extract the weights for this subset of observations\n    if \"weights\" in self.variables:\n        weights = sub_data[\"weights\"]\n    else:\n        weights = None\n\n    # Estimate the density of observations at this level\n    density, support = estimator(observations, weights=weights)\n\n    if log_scale:\n        support = np.power(10, support)\n\n    # Apply a scaling factor so that the integral over all subsets is 1\n    if common_norm:\n        density *= len(sub_data) / len(all_data)\n\n    # Store the density for this level\n    key = tuple(sub_vars.items())\n    densities[key] = pd.Series(density, index=support)\n=======\nfor sub_vars, sub_data in self.iter_data(\"hue\", from_comp_data=True):\n    # Extract the data points from this sub set and remove nulls\n    observations = sub_data[data_variable]\n\n    observation_variance = observations.var()\n    if math.isclose(observation_variance, 0) or np.isnan(observation_variance):\n        msg = \"Dataset has 0 variance; skipping density estimate.\"\n        warnings.warn(msg, UserWarning)\n        continue\n\n    # Extract the weights for this subset of observations\n    weights = sub_data.get(\"weights\", None)\n\n    # Estimate the density of observations at this level using vectorized operations\n    density = estimator.evaluate(observations, weights=weights)\n\n    if log_scale:\n        support = np.power(10, estimator.support)\n\n    # Apply a scaling factor so that the integral over all subsets is 1\n    if common_norm:\n        density *= len(sub_data) / len(all_data)\n\n    # Store the density for this level\n    key = tuple(sub_vars.items())\n    densities[key] = pd.Series(density, index=estimator.support)\n>>>>>>> REPLACE",
+  "llm_tokens": 7582,
+  "llm_latency": 31.325546741485596,
+  "patch_content": "### seaborn/distributions.py\n<<<<<<< SEARCH\nfor sub_vars, sub_data in self.iter_data(\"hue\", from_comp_data=True):\n    # Extract the data points from this sub set and remove nulls\n    observations = sub_data[data_variable]\n\n    observation_variance = observations.var()\n    if math.isclose(observation_variance, 0) or np.isnan(observation_variance):\n        msg = \"Dataset has 0 variance; skipping density estimate.\"\n        warnings.warn(msg, UserWarning)\n        continue\n\n    # Extract the weights for this subset of observations\n    if \"weights\" in self.variables:\n        weights = sub_data[\"weights\"]\n    else:\n        weights = None\n\n    # Estimate the density of observations at this level\n    density, support = estimator(observations, weights=weights)\n\n    if log_scale:\n        support = np.power(10, support)\n\n    # Apply a scaling factor so that the integral over all subsets is 1\n    if common_norm:\n        density *= len(sub_data) / len(all_data)\n\n    # Store the density for this level\n    key = tuple(sub_vars.items())\n    densities[key] = pd.Series(density, index=support)\n=======\nfor sub_vars, sub_data in self.iter_data(\"hue\", from_comp_data=True):\n    # Extract the data points from this sub set and remove nulls\n    observations = sub_data[data_variable]\n\n    observation_variance = observations.var()\n    if math.isclose(observation_variance, 0) or np.isnan(observation_variance):\n        msg = \"Dataset has 0 variance; skipping density estimate.\"\n        warnings.warn(msg, UserWarning)\n        continue\n\n    # Extract the weights for this subset of observations\n    weights = sub_data.get(\"weights\", None)\n\n    # Estimate the density of observations at this level using vectorized operations\n    density = estimator.evaluate(observations, weights=weights)\n\n    if log_scale:\n        support = np.power(10, estimator.support)\n\n    # Apply a scaling factor so that the integral over all subsets is 1\n    if common_norm:\n        density *= len(sub_data) / len(all_data)\n\n    # Store the density for this level\n    key = tuple(sub_vars.items())\n    densities[key] = pd.Series(density, index=estimator.support)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "seaborn/distributions.py"
+    ],
+    "error": null
+  }
+}

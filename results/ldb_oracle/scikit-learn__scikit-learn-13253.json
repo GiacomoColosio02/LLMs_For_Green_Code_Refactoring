@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13253",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T11:13:10.621888",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24901
+  },
+  "llm_response": "### sklearn/preprocessing/_encoders.py\n<<<<<<< SEARCH\ndef _check_X(self, X):\n    \"\"\"\n    Perform custom check_array:\n    - convert list of strings to object dtype\n    - check for missing values for object dtype data (check_array does\n      not do that)\n\n    \"\"\"\n    X_temp = check_array(X, dtype=None)\n    if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):\n        X = check_array(X, dtype=np.object)\n    else:\n        X = X_temp\n\n    return X\n=======\ndef _check_X(self, X):\n    \"\"\"\n    Perform custom check_array:\n    - convert list of strings to object dtype\n    - check for missing values for object dtype data (check_array does\n      not do that)\n\n    \"\"\"\n    X = check_array(X, dtype=None, force_all_finite=False)\n    if X.dtype == np.object:\n        X = np.where(_object_dtype_isnan(X), np.nan, X)\n\n    return X\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sklearn/preprocessing/_encoders.py\n<<<<<<< SEARCH\ndef _check_X(self, X):\n    \"\"\"\n    Perform custom check_array:\n    - convert list of strings to object dtype\n    - check for missing values for object dtype data (check_array does\n      not do that)\n\n    \"\"\"\n    X_temp = check_array(X, dtype=None)\n    if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):\n        X = check_array(X, dtype=np.object)\n    else:\n        X = X_temp\n\n    return X\n=======\ndef _check_X(self, X):\n    \"\"\"\n    Perform custom check_array:\n    - convert list of strings to object dtype\n    - check for missing values for object dtype data (check_array does\n      not do that)\n\n    \"\"\"\n    X = check_array(X, dtype=None, force_all_finite=False)\n    if X.dtype == np.object:\n        X = np.where(_object_dtype_isnan(X), np.nan, X)\n\n    return X\n>>>>>>> REPLACE",
+      "patch_content": "### sklearn/preprocessing/_encoders.py\n<<<<<<< SEARCH\ndef _check_X(self, X):\n    \"\"\"\n    Perform custom check_array:\n    - convert list of strings to object dtype\n    - check for missing values for object dtype data (check_array does\n      not do that)\n\n    \"\"\"\n    X_temp = check_array(X, dtype=None)\n    if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):\n        X = check_array(X, dtype=np.object)\n    else:\n        X = X_temp\n\n    return X\n=======\ndef _check_X(self, X):\n    \"\"\"\n    Perform custom check_array:\n    - convert list of strings to object dtype\n    - check for missing values for object dtype data (check_array does\n      not do that)\n\n    \"\"\"\n    X = check_array(X, dtype=None, force_all_finite=False)\n    if X.dtype == np.object:\n        X = np.where(_object_dtype_isnan(X), np.nan, X)\n\n    return X\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 6095,
+  "llm_latency": 12.230031728744507,
+  "patch_content": "### sklearn/preprocessing/_encoders.py\n<<<<<<< SEARCH\ndef _check_X(self, X):\n    \"\"\"\n    Perform custom check_array:\n    - convert list of strings to object dtype\n    - check for missing values for object dtype data (check_array does\n      not do that)\n\n    \"\"\"\n    X_temp = check_array(X, dtype=None)\n    if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):\n        X = check_array(X, dtype=np.object)\n    else:\n        X = X_temp\n\n    return X\n=======\ndef _check_X(self, X):\n    \"\"\"\n    Perform custom check_array:\n    - convert list of strings to object dtype\n    - check for missing values for object dtype data (check_array does\n      not do that)\n\n    \"\"\"\n    X = check_array(X, dtype=None, force_all_finite=False)\n    if X.dtype == np.object:\n        X = np.where(_object_dtype_isnan(X), np.nan, X)\n\n    return X\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/preprocessing/_encoders.py"
+    ],
+    "error": null
+  }
+}

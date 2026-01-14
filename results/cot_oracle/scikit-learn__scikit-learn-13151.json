@@ -3,20 +3,24 @@
   "prompt_type": "cot",
   "strategy": "oracle",
   "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
-  "timestamp": "2026-01-08T19:51:31.550801",
-  "status": "success",
-  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n1. **IDENTIFICATION**: The function `accuracy_score` is identified as having potential inefficiencies.\n   \n2. **DIAGNOSIS**: The primary inefficiency in `accuracy_score` lies in the line `if y_type.startswith('multilabel'): differing_labels = count_nonzero(y_true - y_pred, axis=1)`. This operation involves subtracting two sparse matrices and counting non-zero elements, which can be computationally expensive, especially for large datasets.\n\n3. **HYPOTHESIS**: By optimizing the subtraction and counting operations, we can reduce the computational complexity and improve the execution speed of the function.\n\n### SECTION 2: PATCH\n\n### sklearn/metrics/classification.py\n<<<<<<< SEARCH\nif y_type.startswith('multilabel'):\n    differing_labels = count_nonzero(y_true - y_pred, axis=1)\n    score = differing_labels == 0\n=======\nif y_type.startswith('multilabel'):\n    differing_labels = (y_true != y_pred).astype(int).sum(axis=1)\n    score = differing_labels == 0\n>>>>>>> REPLACE",
-  "patch_result": {
-    "success": true,
-    "changes_applied": 1,
-    "total_blocks": 1,
-    "method": "search_replace",
-    "modified_files": [
-      "sklearn/metrics/classification.py"
-    ]
-  },
+  "timestamp": "2026-01-12T11:10:28.967753",
+  "status": "patch_failed",
   "error": null,
   "repo": "scikit-learn/scikit-learn",
-  "llm_tokens": 15844,
-  "llm_latency": 14.828274965286255
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49901
+  },
+  "llm_response": "Let's think step by step.\n\nThe `accuracy_score` function in `classification.py` uses element-wise comparison followed by summation. This can be optimized by using vectorized operations instead of explicit loops.\n\n### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score, sample_weight, normalize)\n=======\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score.astype(int), sample_weight, normalize)\n>>>>>>> REPLACE",
+  "llm_tokens": 13605,
+  "llm_latency": 17.297163009643555,
+  "patch_content": "### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score, sample_weight, normalize)\n=======\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score.astype(int), sample_weight, normalize)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
 }

@@ -1,0 +1,28 @@
+{
+  "instance_id": "astropy__astropy-15710",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T11:58:16.663227",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24882
+  },
+  "llm_response": "### astropy/units/quantity_helper/function_helpers.py\n<<<<<<< SEARCH\ndef outer(a, b, /):\n    # maybe this one can be marked as subclass-safe in the near future ?\n    # see https://github.com/numpy/numpy/pull/25101#discussion_r1419879122\n    a, b = _as_quantities(a, b)\n    return (a.view(np.ndarray), b.view(np.ndarray)), {}, a.unit * b.unit, None\n=======\nfrom numpy import outer as np_outer\n\ndef outer(a, b, /):\n    a, b = _as_quantities(a, b)\n    result = np_outer(a.value, b.value)\n    return (result,) + args, kwargs, a.unit * b.unit, None\n>>>>>>> REPLACE",
+  "llm_tokens": 7416,
+  "llm_latency": 9.89025330543518,
+  "patch_content": "### astropy/units/quantity_helper/function_helpers.py\n<<<<<<< SEARCH\ndef outer(a, b, /):\n    # maybe this one can be marked as subclass-safe in the near future ?\n    # see https://github.com/numpy/numpy/pull/25101#discussion_r1419879122\n    a, b = _as_quantities(a, b)\n    return (a.view(np.ndarray), b.view(np.ndarray)), {}, a.unit * b.unit, None\n=======\nfrom numpy import outer as np_outer\n\ndef outer(a, b, /):\n    a, b = _as_quantities(a, b)\n    result = np_outer(a.value, b.value)\n    return (result,) + args, kwargs, a.unit * b.unit, None\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/units/quantity_helper/function_helpers.py"
+    ],
+    "error": null
+  }
+}

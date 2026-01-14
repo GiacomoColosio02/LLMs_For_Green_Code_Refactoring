@@ -1,0 +1,28 @@
+{
+  "instance_id": "sphinx-doc__sphinx-10807",
+  "prompt_type": "zero_shot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T22:14:30.507263",
+  "status": "success",
+  "error": null,
+  "repo": "sphinx-doc/sphinx",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34965
+  },
+  "llm_response": "### sphinx/domains/c.py\n<<<<<<< SEARCH\n        print(\"Target: \", target)\n        print(\"ParentKey: \", parentKey)\n        print(rootSymbol.dump(1))\n=======\n        logger.debug(f\"Target: {target}, ParentKey: {parentKey}\")\n        logger.debug(rootSymbol.dump(1))\n>>>>>>> REPLACE\n\n### sphinx/domains/cpp.py\n<<<<<<< SEARCH\n        print(\"Target: \", target)\n        print(\"ParentKey: \", parentKey)\n        print(rootSymbol.dump(1))\n=======\n        logger.debug(f\"Target: {target}, ParentKey: {parentKey}\")\n        logger.debug(rootSymbol.dump(1))\n>>>>>>> REPLACE\n\n### sphinx/domains/python.py\n<<<<<<< SEARCH\n        print(\"Target: \", target)\n        print(\"ParentKey: \", parentKey)\n        print(rootSymbol.dump(1))\n=======\n        logger.debug(f\"Target: {target}, ParentKey: {parentKey}\")\n        logger.debug(rootSymbol.dump(1))\n>>>>>>> REPLACE\n\n### sphinx/domains/std.py\n<<<<<<< SEARCH\n        print(\"Target: \", target)\n        print(\"ParentKey: \", parentKey)\n        print(rootSymbol.dump(1))\n=======\n        logger.debug(f\"Target: {target}, ParentKey: {parentKey}\")\n        logger.debug(rootSymbol.dump(1))\n>>>>>>> REPLACE",
+  "llm_tokens": 10196,
+  "llm_latency": 15.675571918487549,
+  "patch_content": "### sphinx/domains/c.py\n<<<<<<< SEARCH\n        print(\"Target: \", target)\n        print(\"ParentKey: \", parentKey)\n        print(rootSymbol.dump(1))\n=======\n        logger.debug(f\"Target: {target}, ParentKey: {parentKey}\")\n        logger.debug(rootSymbol.dump(1))\n>>>>>>> REPLACE\n\n### sphinx/domains/cpp.py\n<<<<<<< SEARCH\n        print(\"Target: \", target)\n        print(\"ParentKey: \", parentKey)\n        print(rootSymbol.dump(1))\n=======\n        logger.debug(f\"Target: {target}, ParentKey: {parentKey}\")\n        logger.debug(rootSymbol.dump(1))\n>>>>>>> REPLACE\n\n### sphinx/domains/python.py\n<<<<<<< SEARCH\n        print(\"Target: \", target)\n        print(\"ParentKey: \", parentKey)\n        print(rootSymbol.dump(1))\n=======\n        logger.debug(f\"Target: {target}, ParentKey: {parentKey}\")\n        logger.debug(rootSymbol.dump(1))\n>>>>>>> REPLACE\n\n### sphinx/domains/std.py\n<<<<<<< SEARCH\n        print(\"Target: \", target)\n        print(\"ParentKey: \", parentKey)\n        print(rootSymbol.dump(1))\n=======\n        logger.debug(f\"Target: {target}, ParentKey: {parentKey}\")\n        logger.debug(rootSymbol.dump(1))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 4,
+    "method": "search_replace",
+    "modified_files": [
+      "sphinx/domains/c.py"
+    ],
+    "error": null
+  }
+}

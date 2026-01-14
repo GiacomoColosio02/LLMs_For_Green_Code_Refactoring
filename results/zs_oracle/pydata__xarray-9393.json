@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9393",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T13:00:23.512077",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49797
+  },
+  "llm_response": "### xarray/core/common.py\n<<<<<<< SEARCH\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.asarray(self.values, dtype=dtype)\n=======\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.ascontiguousarray(self.values, dtype=dtype)\n>>>>>>> REPLACE",
+  "llm_tokens": 14055,
+  "llm_latency": 6.220433473587036,
+  "patch_content": "### xarray/core/common.py\n<<<<<<< SEARCH\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.asarray(self.values, dtype=dtype)\n=======\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.ascontiguousarray(self.values, dtype=dtype)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/common.py"
+    ],
+    "error": null
+  }
+}

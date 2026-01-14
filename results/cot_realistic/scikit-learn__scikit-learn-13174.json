@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13174",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:04:33.019071",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34862
+  },
+  "llm_response": "Let's think step by step.\n\nThe `ParameterGrid` class in `model_selection/_search.py` generates all possible parameter combinations using nested loops, leading to O(n^2) complexity. This is inefficient for large parameter spaces.\n\nWe will replace the nested loop with a Cartesian product operation to achieve O(n) complexity.\n\n### sklearn/model_selection/_search.py\n<<<<<<< SEARCH\nfor p in self.param_grid:\n    # Always sort the keys of a dictionary, for reproducibility\n    items = sorted(p.items())\n    if not items:\n        yield {}\n    else:\n        keys, values = zip(*items)\n        for v in product(*values):\n            params = dict(zip(keys, v))\n            yield params\n=======\nfrom itertools import product\n\nfor p in self.param_grid:\n    # Always sort the keys of a dictionary, for reproducibility\n    items = sorted(p.items())\n    if not items:\n        yield {}\n    else:\n        keys, values = zip(*items)\n        for v in product(*values):\n            params = dict(zip(keys, v))\n            yield params\n>>>>>>> REPLACE",
+  "llm_tokens": 9386,
+  "llm_latency": 13.254189729690552,
+  "patch_content": "### sklearn/model_selection/_search.py\n<<<<<<< SEARCH\nfor p in self.param_grid:\n    # Always sort the keys of a dictionary, for reproducibility\n    items = sorted(p.items())\n    if not items:\n        yield {}\n    else:\n        keys, values = zip(*items)\n        for v in product(*values):\n            params = dict(zip(keys, v))\n            yield params\n=======\nfrom itertools import product\n\nfor p in self.param_grid:\n    # Always sort the keys of a dictionary, for reproducibility\n    items = sorted(p.items())\n    if not items:\n        yield {}\n    else:\n        keys, values = zip(*items)\n        for v in product(*values):\n            params = dict(zip(keys, v))\n            yield params\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/model_selection/_search.py"
+    ],
+    "error": null
+  }
+}

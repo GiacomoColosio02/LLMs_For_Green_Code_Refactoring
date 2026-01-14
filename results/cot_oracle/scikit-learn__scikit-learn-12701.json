@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12701",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:12:06.692013",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49749
+  },
+  "llm_response": "Let's think step by step.\n\nThe `euclidean_distances` function in `pairwise.py` uses `safe_sparse_dot` which can be inefficient for large sparse matrices. Using `numpy.dot` directly can be faster.\n\n### sklearn/metrics/pairwise.py\n<<<<<<< SEARCH\ndistances = safe_sparse_dot(X, Y.T, dense_output=True)\n=======\ndistances = np.dot(X, Y.T)\n>>>>>>> REPLACE",
+  "llm_tokens": 13895,
+  "llm_latency": 6.355153560638428,
+  "patch_content": "### sklearn/metrics/pairwise.py\n<<<<<<< SEARCH\ndistances = safe_sparse_dot(X, Y.T, dense_output=True)\n=======\ndistances = np.dot(X, Y.T)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/metrics/pairwise.py"
+    ],
+    "error": null
+  }
+}

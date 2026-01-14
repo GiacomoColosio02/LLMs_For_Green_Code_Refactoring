@@ -1,0 +1,30 @@
+{
+  "instance_id": "pydata__xarray-9457",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T12:53:00.858301",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49981
+  },
+  "llm_response": "### asv_bench/benchmarks/datatree.py\n<<<<<<< SEARCH\n        run1 = DataTree.from_dict({\"run1\": xr.Dataset({\"a\": 1})})\n        self.d = {\"run1\": run1}\n=======\n        self.d = {\"run1\": DataTree.from_dict({\"run1\": xr.Dataset({\"a\": 1})})}\n>>>>>>> REPLACE\n\n### xarray/core/datatree.py\n<<<<<<< SEARCH\n        if isinstance(data, Dataset):\n            ds = data.copy(deep=False)\n        elif data is None:\n            ds = Dataset()\n        else:\n            raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n        return ds\n=======\n        return _to_new_dataset(data)\n>>>>>>> REPLACE\n\n### xarray/core/formatting.py\n<<<<<<< SEARCH\ndef _single_node_repr(node: DataTree) -> str:\n    \"\"\"Information about this node, not including its relationships to other nodes.\"\"\"\n    if node.has_data or node.has_attrs:\n        ds_info = \"\\n\" + repr(node._to_dataset_view(rebuild_dims=False))\n    else:\n        ds_info = \"\"\n    return f\"Group: {node.path}{ds_info}\"\n=======\ndef _single_node_repr(node: DataTree) -> str:\n    \"\"\"Information about this node, not including its relationships to other nodes.\"\"\"\n    ds_info = \"\\n\" + repr(node._to_dataset_view(rebuild_dims=False)) if node.has_data or node.has_attrs else \"\"\n    return f\"Group: {node.path}{ds_info}\"\n>>>>>>> REPLACE",
+  "llm_tokens": 13201,
+  "llm_latency": 18.92147397994995,
+  "patch_content": "### asv_bench/benchmarks/datatree.py\n<<<<<<< SEARCH\n        run1 = DataTree.from_dict({\"run1\": xr.Dataset({\"a\": 1})})\n        self.d = {\"run1\": run1}\n=======\n        self.d = {\"run1\": DataTree.from_dict({\"run1\": xr.Dataset({\"a\": 1})})}\n>>>>>>> REPLACE\n\n### xarray/core/datatree.py\n<<<<<<< SEARCH\n        if isinstance(data, Dataset):\n            ds = data.copy(deep=False)\n        elif data is None:\n            ds = Dataset()\n        else:\n            raise TypeError(f\"data object is not an xarray.Dataset, dict, or None: {data}\")\n        return ds\n=======\n        return _to_new_dataset(data)\n>>>>>>> REPLACE\n\n### xarray/core/formatting.py\n<<<<<<< SEARCH\ndef _single_node_repr(node: DataTree) -> str:\n    \"\"\"Information about this node, not including its relationships to other nodes.\"\"\"\n    if node.has_data or node.has_attrs:\n        ds_info = \"\\n\" + repr(node._to_dataset_view(rebuild_dims=False))\n    else:\n        ds_info = \"\"\n    return f\"Group: {node.path}{ds_info}\"\n=======\ndef _single_node_repr(node: DataTree) -> str:\n    \"\"\"Information about this node, not including its relationships to other nodes.\"\"\"\n    ds_info = \"\\n\" + repr(node._to_dataset_view(rebuild_dims=False)) if node.has_data or node.has_attrs else \"\"\n    return f\"Group: {node.path}{ds_info}\"\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 3,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "asv_bench/benchmarks/datatree.py",
+      "xarray/core/datatree.py",
+      "xarray/core/formatting.py"
+    ],
+    "error": null
+  }
+}

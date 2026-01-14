@@ -1,0 +1,38 @@
+{
+  "instance_id": "mwaskom__seaborn-2449",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T21:32:15.607093",
+  "status": "success",
+  "error": null,
+  "repo": "mwaskom/seaborn",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49898
+  },
+  "llm_response": "### seaborn/distributions.py\n<<<<<<< SEARCH\n    if kde:\n        kde_color = kde_kws.pop(\"color\", color)\n        kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n        if kde_color != color:\n            kde_kws[\"color\"] = kde_color\n=======\n    if kde:\n        kde_color = kde_kws.pop(\"color\", color)\n        kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n        if kde_color != color:\n            kde_kws[\"color\"] = kde_color\n        kde_kws.pop(\"color\", None)\n>>>>>>> REPLACE\n\n### seaborn/relational.py\n<<<<<<< SEARCH\n    if legend:\n        # Replace the original plot data so the legend uses\n        # numeric data with the correct type\n        p.plot_data = plot_data\n        p.add_legend_data(g.axes.flat[0])\n        if p.legend_data:\n            g.add_legend(legend_data=p.legend_data,\n                         label_order=p.legend_order,\n                         title=p.legend_title,\n                         adjust_subtitles=True)\n=======\n    if legend:\n        # Replace the original plot data so the legend uses\n        # numeric data with the correct type\n        p.plot_data = plot_data\n        p.add_legend_data(g.axes.flat[0])\n        if p.legend_data:\n            g.add_legend(legend_data=p.legend_data,\n                         label_order=p.legend_order,\n                         title=p.legend_title,\n                         adjust_subtitles=True)\n        p.legend_data.clear()\n        p.legend_order.clear()\n        p.legend_title = \"\"\n>>>>>>> REPLACE\n\n### seaborn/utils.py\n<<<<<<< SEARCH\n    if name == \"tips\":\n        df[\"day\"] = pd.Categorical(df[\"day\"], [\"Thur\", \"Fri\", \"Sat\", \"Sun\"])\n        df[\"sex\"] = pd.Categorical(df[\"sex\"], [\"Male\", \"Female\"])\n        df[\"time\"] = pd.Categorical(df[\"time\"], [\"Lunch\", \"Dinner\"])\n        df[\"smoker\"] = pd.Categorical(df[\"smoker\"], [\"Yes\", \"No\"])\n=======\n    if name == \"tips\":\n        df[\"day\"] = pd.Categorical(df[\"day\"], [\"Thur\", \"Fri\", \"Sat\", \"Sun\"])\n        df[\"sex\"] = pd.Categorical(df[\"sex\"], [\"Male\", \"Female\"])\n        df[\"time\"] = pd.Categorical(df[\"time\"], [\"Lunch\", \"Dinner\"])\n        df[\"smoker\"] = pd.Categorical(df[\"smoker\"], [\"Yes\", \"No\"])\n        df.drop_duplicates(inplace=True)\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### seaborn/distributions.py\n<<<<<<< SEARCH\n    if kde:\n        kde_color = kde_kws.pop(\"color\", color)\n        kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n        if kde_color != color:\n            kde_kws[\"color\"] = kde_color\n=======\n    if kde:\n        kde_color = kde_kws.pop(\"color\", color)\n        kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n        if kde_color != color:\n            kde_kws[\"color\"] = kde_color\n        kde_kws.pop(\"color\", None)\n>>>>>>> REPLACE\n\n### seaborn/relational.py\n<<<<<<< SEARCH\n    if legend:\n        # Replace the original plot data so the legend uses\n        # numeric data with the correct type\n        p.plot_data = plot_data\n        p.add_legend_data(g.axes.flat[0])\n        if p.legend_data:\n            g.add_legend(legend_data=p.legend_data,\n                         label_order=p.legend_order,\n                         title=p.legend_title,\n                         adjust_subtitles=True)\n=======\n    if legend:\n        # Replace the original plot data so the legend uses\n        # numeric data with the correct type\n        p.plot_data = plot_data\n        p.add_legend_data(g.axes.flat[0])\n        if p.legend_data:\n            g.add_legend(legend_data=p.legend_data,\n                         label_order=p.legend_order,\n                         title=p.legend_title,\n                         adjust_subtitles=True)\n        p.legend_data.clear()\n        p.legend_order.clear()\n        p.legend_title = \"\"\n>>>>>>> REPLACE\n\n### seaborn/utils.py\n<<<<<<< SEARCH\n    if name == \"tips\":\n        df[\"day\"] = pd.Categorical(df[\"day\"], [\"Thur\", \"Fri\", \"Sat\", \"Sun\"])\n        df[\"sex\"] = pd.Categorical(df[\"sex\"], [\"Male\", \"Female\"])\n        df[\"time\"] = pd.Categorical(df[\"time\"], [\"Lunch\", \"Dinner\"])\n        df[\"smoker\"] = pd.Categorical(df[\"smoker\"], [\"Yes\", \"No\"])\n=======\n    if name == \"tips\":\n        df[\"day\"] = pd.Categorical(df[\"day\"], [\"Thur\", \"Fri\", \"Sat\", \"Sun\"])\n        df[\"sex\"] = pd.Categorical(df[\"sex\"], [\"Male\", \"Female\"])\n        df[\"time\"] = pd.Categorical(df[\"time\"], [\"Lunch\", \"Dinner\"])\n        df[\"smoker\"] = pd.Categorical(df[\"smoker\"], [\"Yes\", \"No\"])\n        df.drop_duplicates(inplace=True)\n>>>>>>> REPLACE",
+      "patch_content": "### seaborn/distributions.py\n<<<<<<< SEARCH\n    if kde:\n        kde_color = kde_kws.pop(\"color\", color)\n        kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n        if kde_color != color:\n            kde_kws[\"color\"] = kde_color\n=======\n    if kde:\n        kde_color = kde_kws.pop(\"color\", color)\n        kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n        if kde_color != color:\n            kde_kws[\"color\"] = kde_color\n        kde_kws.pop(\"color\", None)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 12872,
+  "llm_latency": 31.501646041870117,
+  "patch_content": "### seaborn/distributions.py\n<<<<<<< SEARCH\n    if kde:\n        kde_color = kde_kws.pop(\"color\", color)\n        kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n        if kde_color != color:\n            kde_kws[\"color\"] = kde_color\n=======\n    if kde:\n        kde_color = kde_kws.pop(\"color\", color)\n        kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n        if kde_color != color:\n            kde_kws[\"color\"] = kde_color\n        kde_kws.pop(\"color\", None)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "seaborn/distributions.py"
+    ],
+    "error": null
+  }
+}

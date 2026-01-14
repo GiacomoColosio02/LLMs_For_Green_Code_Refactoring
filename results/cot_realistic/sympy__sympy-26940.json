@@ -1,0 +1,26 @@
+{
+  "instance_id": "sympy__sympy-26940",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:36:43.739777",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34880
+  },
+  "llm_response": "Let's think step by step.\n\nThe `meijerint_indefinite` function in `meijerint.py` involves a lot of recursive calls and redundant computations. Optimizing this function will involve memoization and avoiding unnecessary recalculations.\n\n### sympy/integrals/meijerint.py\n<<<<<<< SEARCH\ndef meijerint_indefinite(f, x):\n    # ... (original code)\n    return result\n=======\n@cacheit\ndef meijerint_indefinite(f, x):\n    # ... (original code)\n    return result\n>>>>>>> REPLACE",
+  "llm_tokens": 10583,
+  "llm_latency": 7.77200174331665,
+  "patch_content": "### sympy/integrals/meijerint.py\n<<<<<<< SEARCH\ndef meijerint_indefinite(f, x):\n    # ... (original code)\n    return result\n=======\n@cacheit\ndef meijerint_indefinite(f, x):\n    # ... (original code)\n    return result\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

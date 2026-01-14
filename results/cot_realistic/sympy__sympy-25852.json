@@ -1,0 +1,26 @@
+{
+  "instance_id": "sympy__sympy-25852",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:41:13.132047",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34996
+  },
+  "llm_response": "Let's think step by step.\n\nThe `sympify` function in `sympy/core/sympify.py` uses recursion without memoization, leading to redundant computations. Adding memoization will significantly improve performance.\n\n### sympy/core/sympify.py\n<<<<<<< SEARCH\ndef sympify(a, locals=None, convert_singletons=True, rational=False, evaluate=True):\n    if isinstance(a, Basic):\n        return a\n    elif isinstance(a, (int, float, complex)):\n        return a\n    elif isinstance(a, str):\n        return parse_expr(a, local_dict=locals, convert_singletons=convert_singletons, rational=rational, evaluate=evaluate)\n    elif isinstance(a, Iterable):\n        return type(a)(sympify(i, locals, convert_singletons, rational, evaluate) for i in a)\n    else:\n        return a\n=======\nfrom functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef sympify(a, locals=None, convert_singletons=True, rational=False, evaluate=True):\n    if isinstance(a, Basic):\n        return a\n    elif isinstance(a, (int, float, complex)):\n        return a\n    elif isinstance(a, str):\n        return parse_expr(a, local_dict=locals, convert_singletons=convert_singletons, rational=rational, evaluate=evaluate)\n    elif isinstance(a, Iterable):\n        return type(a)(sympify(i, locals, convert_singletons, rational, evaluate) for i in a)\n    else:\n        return a\n>>>>>>> REPLACE",
+  "llm_tokens": 10901,
+  "llm_latency": 18.33487558364868,
+  "patch_content": "### sympy/core/sympify.py\n<<<<<<< SEARCH\ndef sympify(a, locals=None, convert_singletons=True, rational=False, evaluate=True):\n    if isinstance(a, Basic):\n        return a\n    elif isinstance(a, (int, float, complex)):\n        return a\n    elif isinstance(a, str):\n        return parse_expr(a, local_dict=locals, convert_singletons=convert_singletons, rational=rational, evaluate=evaluate)\n    elif isinstance(a, Iterable):\n        return type(a)(sympify(i, locals, convert_singletons, rational, evaluate) for i in a)\n    else:\n        return a\n=======\nfrom functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef sympify(a, locals=None, convert_singletons=True, rational=False, evaluate=True):\n    if isinstance(a, Basic):\n        return a\n    elif isinstance(a, (int, float, complex)):\n        return a\n    elif isinstance(a, str):\n        return parse_expr(a, local_dict=locals, convert_singletons=convert_singletons, rational=rational, evaluate=evaluate)\n    elif isinstance(a, Iterable):\n        return type(a)(sympify(i, locals, convert_singletons, rational, evaluate) for i in a)\n    else:\n        return a\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

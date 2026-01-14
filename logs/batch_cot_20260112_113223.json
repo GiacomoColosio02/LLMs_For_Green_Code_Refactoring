@@ -1,0 +1,21 @@
+{
+  "start_time": "2026-01-12T10:53:02.242186",
+  "dataset": "/home/giacomo/LLMs_For_Green_Code_Refactoring/data/processed/swe_perf_reduced.json",
+  "prompt_type": "cot",
+  "strategies": [
+    "oracle"
+  ],
+  "results": {
+    "oracle": {
+      "total": 131,
+      "skipped": 74,
+      "processed": 57,
+      "success": 25,
+      "failed": 0,
+      "patch_failed": 32,
+      "errors": []
+    }
+  },
+  "end_time": "2026-01-12T11:32:23.912850",
+  "total_duration_seconds": 2361.6706643104553
+}

@@ -1,0 +1,29 @@
+{
+  "instance_id": "pydata__xarray-8711",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T13:10:42.297618",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49780
+  },
+  "llm_response": "### xarray/core/coordinates.py\n<<<<<<< SEARCH\n        for name, obj in coords_promoted.items():\n            if isinstance(obj, DataArray):\n                dataarray_coords.append(obj.coords)\n            variable = as_variable(obj, name=name)\n            if variable.dims == (name,):\n                idx, idx_vars = create_default_index_implicit(variable, all_variables)\n                indexes.update({k: idx for k in idx_vars})\n                variables.update(idx_vars)\n                all_variables.update(idx_vars)\n            else:\n                variables[name] = variable\n=======\n        for name, obj in coords_promoted.items():\n            if isinstance(obj, DataArray):\n                dataarray_coords.append(obj.coords)\n            variable = as_variable(obj, name=name)\n            if variable.dims == (name,):\n                idx, idx_vars = create_default_index_implicit(variable, all_variables)\n                indexes.update(idx_vars)\n                variables.update(idx_vars)\n                all_variables.update(idx_vars)\n            else:\n                variables[name] = variable\n            if isinstance(obj, DataArray):\n                dataarray_coords.append(obj.coords)\n>>>>>>> REPLACE\n\n### xarray/core/merge.py\n<<<<<<< SEARCH\n    for obj in objects:\n        if not isinstance(obj, (DataArray, Dataset, Coordinates, dict)):\n            raise TypeError(\n                \"objects must be an iterable containing only \"\n                \"Dataset(s), DataArray(s), and dictionaries.\"\n            )\n        if isinstance(obj, DataArray):\n            obj = obj.to_dataset(promote_attrs=True)\n        elif isinstance(obj, Coordinates):\n            obj = obj.to_dataset()\n        dict_like_objects.append(obj)\n=======\n    for obj in objects:\n        if not isinstance(obj, (DataArray, Dataset, Coordinates, dict)):\n            raise TypeError(\n                \"objects must be an iterable containing only \"\n                \"Dataset(s), DataArray(s), and dictionaries.\"\n            )\n        if isinstance(obj, DataArray):\n            obj = obj.to_dataset(promote_attrs=True)\n        elif isinstance(obj, Coordinates):\n            obj = obj.to_dataset()\n        dict_like_objects.append(obj)\n        if isinstance(obj, DataArray):\n            dataarray_coords.append(obj.coords)\n>>>>>>> REPLACE",
+  "llm_tokens": 13544,
+  "llm_latency": 25.137455940246582,
+  "patch_content": "### xarray/core/coordinates.py\n<<<<<<< SEARCH\n        for name, obj in coords_promoted.items():\n            if isinstance(obj, DataArray):\n                dataarray_coords.append(obj.coords)\n            variable = as_variable(obj, name=name)\n            if variable.dims == (name,):\n                idx, idx_vars = create_default_index_implicit(variable, all_variables)\n                indexes.update({k: idx for k in idx_vars})\n                variables.update(idx_vars)\n                all_variables.update(idx_vars)\n            else:\n                variables[name] = variable\n=======\n        for name, obj in coords_promoted.items():\n            if isinstance(obj, DataArray):\n                dataarray_coords.append(obj.coords)\n            variable = as_variable(obj, name=name)\n            if variable.dims == (name,):\n                idx, idx_vars = create_default_index_implicit(variable, all_variables)\n                indexes.update(idx_vars)\n                variables.update(idx_vars)\n                all_variables.update(idx_vars)\n            else:\n                variables[name] = variable\n            if isinstance(obj, DataArray):\n                dataarray_coords.append(obj.coords)\n>>>>>>> REPLACE\n\n### xarray/core/merge.py\n<<<<<<< SEARCH\n    for obj in objects:\n        if not isinstance(obj, (DataArray, Dataset, Coordinates, dict)):\n            raise TypeError(\n                \"objects must be an iterable containing only \"\n                \"Dataset(s), DataArray(s), and dictionaries.\"\n            )\n        if isinstance(obj, DataArray):\n            obj = obj.to_dataset(promote_attrs=True)\n        elif isinstance(obj, Coordinates):\n            obj = obj.to_dataset()\n        dict_like_objects.append(obj)\n=======\n    for obj in objects:\n        if not isinstance(obj, (DataArray, Dataset, Coordinates, dict)):\n            raise TypeError(\n                \"objects must be an iterable containing only \"\n                \"Dataset(s), DataArray(s), and dictionaries.\"\n            )\n        if isinstance(obj, DataArray):\n            obj = obj.to_dataset(promote_attrs=True)\n        elif isinstance(obj, Coordinates):\n            obj = obj.to_dataset()\n        dict_like_objects.append(obj)\n        if isinstance(obj, DataArray):\n            dataarray_coords.append(obj.coords)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 2,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/coordinates.py",
+      "xarray/core/merge.py"
+    ],
+    "error": null
+  }
+}

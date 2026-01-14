@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12822",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T11:21:35.425984",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24879
+  },
+  "llm_response": "### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n=======\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n            if len(tokens) == 0:\n                continue\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n=======\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n            if len(tokens) == 0:\n                continue\n>>>>>>> REPLACE",
+      "patch_content": "### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n=======\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n            if len(tokens) == 0:\n                continue\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 5761,
+  "llm_latency": 4.66532826423645,
+  "patch_content": "### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n=======\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n            if len(tokens) == 0:\n                continue\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/feature_extraction/text.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "instance_id": "mwaskom__seaborn-2449",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:50:10.138779",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "mwaskom/seaborn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34959
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_kde_support` function in `seaborn/distributions.py` uses a loop to compute the support for the kernel density estimate. This can be optimized by using NumPy's vectorized operations instead of iterating over each element.\n\n### seaborn/distributions.py\n<<<<<<< SEARCH\ndef _kde_support(a, bw, gridsize, cut, clip):\n    \"\"\"Compute the support for a kernel density estimate.\"\"\"\n    support = np.linspace(min(a) - cut * bw, max(a) + cut * bw, gridsize)\n    return support.clip(*clip)\n=======\ndef _kde_support(a, bw, gridsize, cut, clip):\n    \"\"\"Compute the support for a kernel density estimate.\"\"\"\n    min_val = np.min(a) - cut * bw\n    max_val = np.max(a) + cut * bw\n    support = np.linspace(min_val, max_val, gridsize)\n    return np.clip(support, *clip)\n>>>>>>> REPLACE",
+  "llm_tokens": 9800,
+  "llm_latency": 12.107956171035767,
+  "patch_content": "### seaborn/distributions.py\n<<<<<<< SEARCH\ndef _kde_support(a, bw, gridsize, cut, clip):\n    \"\"\"Compute the support for a kernel density estimate.\"\"\"\n    support = np.linspace(min(a) - cut * bw, max(a) + cut * bw, gridsize)\n    return support.clip(*clip)\n=======\ndef _kde_support(a, bw, gridsize, cut, clip):\n    \"\"\"Compute the support for a kernel density estimate.\"\"\"\n    min_val = np.min(a) - cut * bw\n    max_val = np.max(a) + cut * bw\n    support = np.linspace(min_val, max_val, gridsize)\n    return np.clip(support, *clip)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

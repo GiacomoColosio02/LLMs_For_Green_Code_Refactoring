@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12581",
+  "prompt_type": "self_collab",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T19:45:47.418564",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34726
+  },
+  "llm_response": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs = np.array(linear_model.lars_path(X, y, method='lasso', verbose=True)[2]).T\nxx = np.sum(np.abs(coefs), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/decomposition/tests/test_kernel_pca.py\nNo changes needed.\n\n### sklearn/linear_model/coordinate_descent.py\nNo changes needed.\n\n### sklearn/linear_model/tests/test_coordinate_descent.py\nNo changes needed.\n\n### sklearn/preprocessing/data.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed.",
+  "all_responses": [
+    "1. The files `sklearn/linear_model/coordinate_descent.py` and `sklearn/linear_model/tests/test_coordinate_descent.py` are relevant to the performance issue.\n2. The bottleneck is the `lasso_path` function within `coordinate_descent.py`.\n3. It is slow because it performs a computationally expensive operation (iteratively solving linear systems) for each alpha value.\n4. An optimization would involve parallelizing the computation of the paths for different alpha values or using a more efficient numerical method to solve the linear systems.",
+    "Replace the nested loop iterating over alpha values with a vectorized operation using NumPy. This reduces the time complexity from \\(O(n^2)\\) per alpha value to approximately \\(O(n)\\). Edge cases to consider include ensuring compatibility with existing data types and handling potential broadcasting issues.",
+    "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs = np.array(linear_model.lars_path(X, y, method='lasso', verbose=True)[2]).T\nxx = np.sum(np.abs(coefs), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/decomposition/tests/test_kernel_pca.py\nNo changes needed.\n\n### sklearn/linear_model/coordinate_descent.py\nNo changes needed.\n\n### sklearn/linear_model/tests/test_coordinate_descent.py\nNo changes needed.\n\n### sklearn/preprocessing/data.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed."
+  ],
+  "llm_tokens": 19710,
+  "llm_latency": 27.919318199157715,
+  "patch_content": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs = np.array(linear_model.lars_path(X, y, method='lasso', verbose=True)[2]).T\nxx = np.sum(np.abs(coefs), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. The files `sklearn/linear_model/coordinate_descent.py` and `sklearn/linear_model/tests/test_coordinate_descent.py` are relevant to the performance issue.\n2. The bottleneck is the `lasso_path` function within `coordinate_descent.py`.\n3. It is slow because it performs a computationally expensive operation (iteratively solving linear systems) for each alpha value.\n4. An optimization would involve parallelizing the computation of the paths for different alpha values or using a more efficient numerical method to solve the linear systems.",
+    "optimizer": "Replace the nested loop iterating over alpha values with a vectorized operation using NumPy. This reduces the time complexity from \\(O(n^2)\\) per alpha value to approximately \\(O(n)\\). Edge cases to consider include ensuring compatibility with existing data types and handling potential broadcasting issues.",
+    "reviewer": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs = np.array(linear_model.lars_path(X, y, method='lasso', verbose=True)[2]).T\nxx = np.sum(np.abs(coefs), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/decomposition/tests/test_kernel_pca.py\nNo changes needed.\n\n### sklearn/linear_model/coordinate_descent.py\nNo changes needed.\n\n### sklearn/linear_model/tests/test_coordinate_descent.py\nNo changes needed.\n\n### sklearn/preprocessing/data.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed."
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "examples/linear_model/plot_lasso_lars.py"
+    ],
+    "error": null
+  }
+}

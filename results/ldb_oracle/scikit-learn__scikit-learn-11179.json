@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-11179",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T14:04:10.231919",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49852
+  },
+  "llm_response": "### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndef _weighted_sum(sample_score, sample_weight, normalize=False):\n    if normalize:\n        return np.average(sample_score, weights=sample_weight)\n    elif sample_weight is not None:\n        return np.dot(sample_score, sample_weight)\n    else:\n        return sample_score.sum()\n=======\ndef _weighted_sum(sample_score, sample_weight, normalize=False):\n    if normalize:\n        return np.average(sample_score, weights=sample_weight)\n    elif sample_weight is not None:\n        return np.dot(sample_score, sample_weight)\n    else:\n        return sample_score.sum(dtype=float)\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndef _weighted_sum(sample_score, sample_weight, normalize=False):\n    if normalize:\n        return np.average(sample_score, weights=sample_weight)\n    elif sample_weight is not None:\n        return np.dot(sample_score, sample_weight)\n    else:\n        return sample_score.sum()\n=======\ndef _weighted_sum(sample_score, sample_weight, normalize=False):\n    if normalize:\n        return np.average(sample_score, weights=sample_weight)\n    elif sample_weight is not None:\n        return np.dot(sample_score, sample_weight)\n    else:\n        return sample_score.sum(dtype=float)\n>>>>>>> REPLACE",
+      "patch_content": "### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndef _weighted_sum(sample_score, sample_weight, normalize=False):\n    if normalize:\n        return np.average(sample_score, weights=sample_weight)\n    elif sample_weight is not None:\n        return np.dot(sample_score, sample_weight)\n    else:\n        return sample_score.sum()\n=======\ndef _weighted_sum(sample_score, sample_weight, normalize=False):\n    if normalize:\n        return np.average(sample_score, weights=sample_weight)\n    elif sample_weight is not None:\n        return np.dot(sample_score, sample_weight)\n    else:\n        return sample_score.sum(dtype=float)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 13406,
+  "llm_latency": 8.655596494674683,
+  "patch_content": "### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndef _weighted_sum(sample_score, sample_weight, normalize=False):\n    if normalize:\n        return np.average(sample_score, weights=sample_weight)\n    elif sample_weight is not None:\n        return np.dot(sample_score, sample_weight)\n    else:\n        return sample_score.sum()\n=======\ndef _weighted_sum(sample_score, sample_weight, normalize=False):\n    if normalize:\n        return np.average(sample_score, weights=sample_weight)\n    elif sample_weight is not None:\n        return np.dot(sample_score, sample_weight)\n    else:\n        return sample_score.sum(dtype=float)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/metrics/classification.py"
+    ],
+    "error": null
+  }
+}

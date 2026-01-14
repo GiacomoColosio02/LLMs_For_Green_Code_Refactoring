@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-26693",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:25:37.121459",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24902
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_eval_nseries` method in `sympy/functions/elementary/exponential.py` contains a nested loop that iterates over a large number of terms, making it computationally expensive. By optimizing the summation process, we can reduce the time complexity.\n\n### sympy/functions/elementary/exponential.py\n<<<<<<< SEARCH\nfor ex in terms:\n    res += terms[ex]*t**(ex)\n=======\nterms_list = list(terms.items())\nterms_list.sort(key=lambda x: x[0])  # Sort terms by their exponents\nfor ex, coeff in terms_list:\n    res += coeff*t**ex\n>>>>>>> REPLACE",
+  "llm_tokens": 7242,
+  "llm_latency": 8.283176898956299,
+  "patch_content": "### sympy/functions/elementary/exponential.py\n<<<<<<< SEARCH\nfor ex in terms:\n    res += terms[ex]*t**(ex)\n=======\nterms_list = list(terms.items())\nterms_list.sort(key=lambda x: x[0])  # Sort terms by their exponents\nfor ex, coeff in terms_list:\n    res += coeff*t**ex\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/functions/elementary/exponential.py"
+    ],
+    "error": null
+  }
+}

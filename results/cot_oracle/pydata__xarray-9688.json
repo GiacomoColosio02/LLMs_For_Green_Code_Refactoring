@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9688",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T10:56:47.534628",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49911
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_binary_op` and `_inplace_binary_op` methods in `xarray/core/_typed_ops.py` use generic binary operations which can lead to unnecessary overhead due to repeated type checks and method calls. By using specific type hints and optimizing the method signatures, we can reduce the number of operations and improve performance.\n\n### xarray/core/_typed_ops.py\n<<<<<<< SEARCH\n    def _binary_op(\n        self, other: DaCompatible, f: Callable, reflexive: bool = False\n    ) -> Self:\n        raise NotImplementedError\n=======\n    def _binary_op(\n        self, other: DaCompatible, f: Callable[[Any, Any], Any], reflexive: bool = False\n    ) -> Self:\n        raise NotImplementedError\n>>>>>>> REPLACE\n\n### xarray/core/_typed_ops.py\n<<<<<<< SEARCH\n    def _inplace_binary_op(self, other: DaCompatible, f: Callable) -> Self:\n        raise NotImplementedError\n=======\n    def _inplace_binary_op(self, other: DaCompatible, f: Callable[[Any, Any], Any]) -> Self:\n        raise NotImplementedError\n>>>>>>> REPLACE",
+  "llm_tokens": 15073,
+  "llm_latency": 14.561822891235352,
+  "patch_content": "### xarray/core/_typed_ops.py\n<<<<<<< SEARCH\n    def _binary_op(\n        self, other: DaCompatible, f: Callable, reflexive: bool = False\n    ) -> Self:\n        raise NotImplementedError\n=======\n    def _binary_op(\n        self, other: DaCompatible, f: Callable[[Any, Any], Any], reflexive: bool = False\n    ) -> Self:\n        raise NotImplementedError\n>>>>>>> REPLACE\n\n### xarray/core/_typed_ops.py\n<<<<<<< SEARCH\n    def _inplace_binary_op(self, other: DaCompatible, f: Callable) -> Self:\n        raise NotImplementedError\n=======\n    def _inplace_binary_op(self, other: DaCompatible, f: Callable[[Any, Any], Any]) -> Self:\n        raise NotImplementedError\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 2,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/_typed_ops.py"
+    ],
+    "error": null
+  }
+}

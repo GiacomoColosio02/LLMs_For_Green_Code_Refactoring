@@ -1,0 +1,50 @@
+{
+  "instance_id": "pydata__xarray-9369",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T19:21:34.214880",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49691
+  },
+  "llm_response": "### xarray/core/dataset.py\n```diff\n@@ -100,7 +100,7 @@ class Dataset(DatasetAggregations, DatasetArithmetic, DatasetPlotAccessor):\n     def get_clean_interp_index(self, index, fill_value=np.nan):\n         \"\"\"\n         Get a clean interpolation index for a given index.\n \n         Parameters\n         ----------\n         index : Index\n             The index to interpolate.\n         fill_value : float, optional\n             The fill value to use for missing values.\n \n         Returns\n         -------\n         Index\n             The cleaned interpolation index.\n         \"\"\"\n-        return index.where(~index.isnull(), fill_value)\n+        return index.fillna(fill_value)\n```",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/core/dataset.py\n<<<<<<< SEARCH\ndef get_clean_interp_index(index, fill_value=np.nan):\n    \"\"\"\n    Get a clean interpolation index for a given index.\n\n    Parameters\n    ----------\n    index : Index\n        The index to interpolate.\n    fill_value : float, optional\n        The fill value to use for missing values.\n\n    Returns\n    -------\n    Index\n        The cleaned interpolation index.\n    \"\"\"\n    return index.where(~index.isnull(), fill_value)\n=======\ndef get_clean_interp_index(index, fill_value=np.nan):\n    \"\"\"\n    Get a clean interpolation index for a given index.\n\n    Parameters\n    ----------\n    index : Index\n        The index to interpolate.\n    fill_value : float, optional\n        The fill value to use for missing values.\n\n    Returns\n    -------\n    Index\n        The cleaned interpolation index.\n    \"\"\"\n    return index.fillna(fill_value)\n>>>>>>> REPLACE",
+      "patch_content": "### xarray/core/dataset.py\n<<<<<<< SEARCH\ndef get_clean_interp_index(index, fill_value=np.nan):\n    \"\"\"\n    Get a clean interpolation index for a given index.\n\n    Parameters\n    ----------\n    index : Index\n        The index to interpolate.\n    fill_value : float, optional\n        The fill value to use for missing values.\n\n    Returns\n    -------\n    Index\n        The cleaned interpolation index.\n    \"\"\"\n    return index.where(~index.isnull(), fill_value)\n=======\ndef get_clean_interp_index(index, fill_value=np.nan):\n    \"\"\"\n    Get a clean interpolation index for a given index.\n\n    Parameters\n    ----------\n    index : Index\n        The index to interpolate.\n    fill_value : float, optional\n        The fill value to use for missing values.\n\n    Returns\n    -------\n    Index\n        The cleaned interpolation index.\n    \"\"\"\n    return index.fillna(fill_value)\n>>>>>>> REPLACE",
+      "success": false,
+      "error": "Could not apply patch with any method"
+    },
+    {
+      "iteration": 2,
+      "response": "### xarray/core/dataset.py\n```diff\n@@ -100,7 +100,7 @@ class Dataset(DatasetAggregations, DatasetArithmetic, DatasetPlotAccessor):\n     def get_clean_interp_index(self, index, fill_value=np.nan):\n         \"\"\"\n         Get a clean interpolation index for a given index.\n \n         Parameters\n         ----------\n         index : Index\n             The index to interpolate.\n         fill_value : float, optional\n             The fill value to use for missing values.\n \n         Returns\n         -------\n         Index\n             The cleaned interpolation index.\n         \"\"\"\n-        return index.where(~index.isnull(), fill_value)\n+        return index.fillna(fill_value)\n```",
+      "patch_content": "### xarray/core/dataset.py\n@@ -100,7 +100,7 @@ class Dataset(DatasetAggregations, DatasetArithmetic, DatasetPlotAccessor):\n     def get_clean_interp_index(self, index, fill_value=np.nan):\n         \"\"\"\n         Get a clean interpolation index for a given index.\n \n         Parameters\n         ----------\n         index : Index\n             The index to interpolate.\n         fill_value : float, optional\n             The fill value to use for missing values.\n \n         Returns\n         -------\n         Index\n             The cleaned interpolation index.\n         \"\"\"\n-        return index.where(~index.isnull(), fill_value)\n+        return index.fillna(fill_value)",
+      "success": false,
+      "error": "Could not apply patch with any method"
+    },
+    {
+      "iteration": 3,
+      "response": "### xarray/core/dataset.py\n```diff\n@@ -100,7 +100,7 @@ class Dataset(DatasetAggregations, DatasetArithmetic, DatasetPlotAccessor):\n     def get_clean_interp_index(self, index, fill_value=np.nan):\n         \"\"\"\n         Get a clean interpolation index for a given index.\n \n         Parameters\n         ----------\n         index : Index\n             The index to interpolate.\n         fill_value : float, optional\n             The fill value to use for missing values.\n \n         Returns\n         -------\n         Index\n             The cleaned interpolation index.\n         \"\"\"\n-        return index.where(~index.isnull(), fill_value)\n+        return index.fillna(fill_value)\n```",
+      "patch_content": "### xarray/core/dataset.py\n@@ -100,7 +100,7 @@ class Dataset(DatasetAggregations, DatasetArithmetic, DatasetPlotAccessor):\n     def get_clean_interp_index(self, index, fill_value=np.nan):\n         \"\"\"\n         Get a clean interpolation index for a given index.\n \n         Parameters\n         ----------\n         index : Index\n             The index to interpolate.\n         fill_value : float, optional\n             The fill value to use for missing values.\n \n         Returns\n         -------\n         Index\n             The cleaned interpolation index.\n         \"\"\"\n-        return index.where(~index.isnull(), fill_value)\n+        return index.fillna(fill_value)",
+      "success": false,
+      "error": "Could not apply patch with any method"
+    }
+  ],
+  "num_iterations": 3,
+  "llm_tokens": 39461,
+  "llm_latency": 30.598179817199707,
+  "patch_content": "### xarray/core/dataset.py\n@@ -100,7 +100,7 @@ class Dataset(DatasetAggregations, DatasetArithmetic, DatasetPlotAccessor):\n     def get_clean_interp_index(self, index, fill_value=np.nan):\n         \"\"\"\n         Get a clean interpolation index for a given index.\n \n         Parameters\n         ----------\n         index : Index\n             The index to interpolate.\n         fill_value : float, optional\n             The fill value to use for missing values.\n \n         Returns\n         -------\n         Index\n             The cleaned interpolation index.\n         \"\"\"\n-        return index.where(~index.isnull(), fill_value)\n+        return index.fillna(fill_value)",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

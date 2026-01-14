@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13124",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T02:44:40.042566",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34750
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `lars_path` function in `sklearn/linear_model/least_angle.py` is the bottleneck.\n**DIAGNOSIS**: It performs a lot of redundant computations, particularly in the loop where it calculates the covariance between the current residual and the predictors. This operation is repeated multiple times unnecessarily.\n**SOLUTION**: Cache intermediate results and reuse them to reduce redundant calculations.\n\n### SECTION 2: PATCH\n\n### sklearn/linear_model/least_angle.py\n<<<<<<< SEARCH\nfor i, coef_ in enumerate(coef_path_.T):\n    res = y - np.dot(X, coef_)\n    cov = np.dot(X.T, res)\n    C = np.max(abs(cov))\n    eps = 1e-3\n    ocur = len(cov[C - eps < abs(cov)])\n    if i < X.shape[1]:\n        assert ocur == i + 1\n    else:\n        # no more than max_pred variables can go into the active set\n        assert ocur == X.shape[1]\n=======\nfor i, coef_ in enumerate(coef_path_.T):\n    if i == 0:\n        res = y - np.dot(X, coef_)\n        cov = np.dot(X.T, res)\n        C = np.max(abs(cov))\n        eps = 1e-3\n        ocur = len(cov[C - eps < abs(cov)])\n    else:\n        res += np.dot(X[:, i-1:i], coef_[i-1:i])[0]\n        cov += np.dot(X[:, i-1:i].T, X[:, i:i+1])[0]\n        C += np.max(abs(cov[:, i]))\n        ocur += len(cov[:, i][C - eps < abs(cov[:, i])])\n    if i < X.shape[1]:\n        assert ocur == i + 1\n    else:\n        # no more than max_pred variables can go into the active set\n        assert ocur == X.shape[1]\n>>>>>>> REPLACE",
+  "llm_tokens": 10690,
+  "llm_latency": 24.284261226654053,
+  "patch_content": "### sklearn/linear_model/least_angle.py\n<<<<<<< SEARCH\nfor i, coef_ in enumerate(coef_path_.T):\n    res = y - np.dot(X, coef_)\n    cov = np.dot(X.T, res)\n    C = np.max(abs(cov))\n    eps = 1e-3\n    ocur = len(cov[C - eps < abs(cov)])\n    if i < X.shape[1]:\n        assert ocur == i + 1\n    else:\n        # no more than max_pred variables can go into the active set\n        assert ocur == X.shape[1]\n=======\nfor i, coef_ in enumerate(coef_path_.T):\n    if i == 0:\n        res = y - np.dot(X, coef_)\n        cov = np.dot(X.T, res)\n        C = np.max(abs(cov))\n        eps = 1e-3\n        ocur = len(cov[C - eps < abs(cov)])\n    else:\n        res += np.dot(X[:, i-1:i], coef_[i-1:i])[0]\n        cov += np.dot(X[:, i-1:i].T, X[:, i:i+1])[0]\n        C += np.max(abs(cov[:, i]))\n        ocur += len(cov[:, i][C - eps < abs(cov[:, i])])\n    if i < X.shape[1]:\n        assert ocur == i + 1\n    else:\n        # no more than max_pred variables can go into the active set\n        assert ocur == X.shape[1]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/linear_model/tests/test_least_angle.py"
+    ],
+    "error": null
+  }
+}

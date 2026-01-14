@@ -1,0 +1,26 @@
+{
+  "instance_id": "mwaskom__seaborn-2313",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:51:00.930658",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "mwaskom/seaborn",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34922
+  },
+  "llm_response": "Let's think step by step.\n\nThe `displot` function in `distributions.py` calls `distplot`, which internally uses `plt.hist`. This can be inefficient due to repeated computations. We can optimize by caching results.\n\n### seaborn/distributions.py\n<<<<<<< SEARCH\ndef displot(data=None, variables={}, **kwargs):\n    return distplot(data=data, variables=variables, **kwargs)\n=======\n@functools.lru_cache(maxsize=None)\ndef displot(data=None, variables={}, **kwargs):\n    return distplot(data=data, variables=variables, **kwargs)\n>>>>>>> REPLACE",
+  "llm_tokens": 9237,
+  "llm_latency": 7.609210729598999,
+  "patch_content": "### seaborn/distributions.py\n<<<<<<< SEARCH\ndef displot(data=None, variables={}, **kwargs):\n    return distplot(data=data, variables=variables, **kwargs)\n=======\n@functools.lru_cache(maxsize=None)\ndef displot(data=None, variables={}, **kwargs):\n    return distplot(data=data, variables=variables, **kwargs)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

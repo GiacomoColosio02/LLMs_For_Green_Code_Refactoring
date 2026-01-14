@@ -1,0 +1,26 @@
+{
+  "instance_id": "astropy__astropy-14590",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T20:04:00.215361",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24891
+  },
+  "llm_response": "### astropy/utils/masked/core.py\n<<<<<<< SEARCH\ndef _masked_result(self, result, mask, null_value):\n    if mask is None:\n        return result\n    if isinstance(result, np.ndarray):\n        return np.ma.masked_array(result, mask=mask, copy=False)\n    elif isinstance(result, np.ma.MaskedArray):\n        return result.filled(null_value)\n    else:\n        raise TypeError(f\"Unsupported type for masked result: {type(result)}\")\n=======\ndef _masked_result(self, result, mask, null_value):\n    if mask is None:\n        return result\n    if isinstance(result, np.ndarray):\n        return np.ma.masked_array(result, mask=mask, copy=False)\n    elif isinstance(result, np.ma.MaskedArray):\n        return result.filled(null_value)\n    else:\n        raise TypeError(f\"Unsupported type for masked result: {type(result)}\")\n>>>>>>> REPLACE",
+  "llm_tokens": 6773,
+  "llm_latency": 12.314980506896973,
+  "patch_content": "### astropy/utils/masked/core.py\n<<<<<<< SEARCH\ndef _masked_result(self, result, mask, null_value):\n    if mask is None:\n        return result\n    if isinstance(result, np.ndarray):\n        return np.ma.masked_array(result, mask=mask, copy=False)\n    elif isinstance(result, np.ma.MaskedArray):\n        return result.filled(null_value)\n    else:\n        raise TypeError(f\"Unsupported type for masked result: {type(result)}\")\n=======\ndef _masked_result(self, result, mask, null_value):\n    if mask is None:\n        return result\n    if isinstance(result, np.ndarray):\n        return np.ma.masked_array(result, mask=mask, copy=False)\n    elif isinstance(result, np.ma.MaskedArray):\n        return result.filled(null_value)\n    else:\n        raise TypeError(f\"Unsupported type for masked result: {type(result)}\")\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

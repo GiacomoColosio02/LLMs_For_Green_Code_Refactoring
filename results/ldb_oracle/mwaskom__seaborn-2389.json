@@ -1,0 +1,38 @@
+{
+  "instance_id": "mwaskom__seaborn-2389",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T21:32:53.581203",
+  "status": "success",
+  "error": null,
+  "repo": "mwaskom/seaborn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24885
+  },
+  "llm_response": "### seaborn/matrix.py\n<<<<<<< SEARCH\ndef _convert_colors(colors):\n    \"\"\"Convert either a list of colors or nested lists of colors to RGB.\"\"\"\n    to_rgb = mpl.colors.colorConverter.to_rgb\n\n    if isinstance(colors, pd.DataFrame):\n        # Convert dataframe\n        return pd.DataFrame({col: colors[col].map(to_rgb)\n                            for col in colors})\n    elif isinstance(colors, pd.Series):\n        return colors.map(to_rgb)\n    else:\n        try:\n            to_rgb(colors[0])\n            # If this works, there is only one level of colors\n            return list(map(to_rgb, colors))\n        except ValueError:\n            # If we get here, we have nested lists\n            return [list(map(to_rgb, l)) for l in colors]\n=======\ndef _convert_colors(colors):\n    \"\"\"Convert either a list of colors or nested lists of colors to RGB.\"\"\"\n    to_rgb = mpl.colors.colorConverter.to_rgb\n\n    if isinstance(colors, pd.DataFrame):\n        # Convert dataframe\n        return pd.DataFrame({col: colors[col].apply(to_rgb)\n                            for col in colors})\n    elif isinstance(colors, pd.Series):\n        return colors.apply(to_rgb)\n    else:\n        try:\n            to_rgb(colors[0])\n            # If this works, there is only one level of colors\n            return list(map(to_rgb, colors))\n        except ValueError:\n            # If we get here, we have nested lists\n            return [list(map(to_rgb, l)) for l in colors]\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### seaborn/matrix.py\n<<<<<<< SEARCH\ndef _convert_colors(colors):\n    \"\"\"Convert either a list of colors or nested lists of colors to RGB.\"\"\"\n    to_rgb = mpl.colors.colorConverter.to_rgb\n\n    if isinstance(colors, pd.DataFrame):\n        # Convert dataframe\n        return pd.DataFrame({col: colors[col].map(to_rgb)\n                            for col in colors})\n    elif isinstance(colors, pd.Series):\n        return colors.map(to_rgb)\n    else:\n        try:\n            to_rgb(colors[0])\n            # If this works, there is only one level of colors\n            return list(map(to_rgb, colors))\n        except ValueError:\n            # If we get here, we have nested lists\n            return [list(map(to_rgb, l)) for l in colors]\n=======\ndef _convert_colors(colors):\n    \"\"\"Convert either a list of colors or nested lists of colors to RGB.\"\"\"\n    to_rgb = mpl.colors.colorConverter.to_rgb\n\n    if isinstance(colors, pd.DataFrame):\n        # Convert dataframe\n        return pd.DataFrame({col: colors[col].apply(to_rgb)\n                            for col in colors})\n    elif isinstance(colors, pd.Series):\n        return colors.apply(to_rgb)\n    else:\n        try:\n            to_rgb(colors[0])\n            # If this works, there is only one level of colors\n            return list(map(to_rgb, colors))\n        except ValueError:\n            # If we get here, we have nested lists\n            return [list(map(to_rgb, l)) for l in colors]\n>>>>>>> REPLACE",
+      "patch_content": "### seaborn/matrix.py\n<<<<<<< SEARCH\ndef _convert_colors(colors):\n    \"\"\"Convert either a list of colors or nested lists of colors to RGB.\"\"\"\n    to_rgb = mpl.colors.colorConverter.to_rgb\n\n    if isinstance(colors, pd.DataFrame):\n        # Convert dataframe\n        return pd.DataFrame({col: colors[col].map(to_rgb)\n                            for col in colors})\n    elif isinstance(colors, pd.Series):\n        return colors.map(to_rgb)\n    else:\n        try:\n            to_rgb(colors[0])\n            # If this works, there is only one level of colors\n            return list(map(to_rgb, colors))\n        except ValueError:\n            # If we get here, we have nested lists\n            return [list(map(to_rgb, l)) for l in colors]\n=======\ndef _convert_colors(colors):\n    \"\"\"Convert either a list of colors or nested lists of colors to RGB.\"\"\"\n    to_rgb = mpl.colors.colorConverter.to_rgb\n\n    if isinstance(colors, pd.DataFrame):\n        # Convert dataframe\n        return pd.DataFrame({col: colors[col].apply(to_rgb)\n                            for col in colors})\n    elif isinstance(colors, pd.Series):\n        return colors.apply(to_rgb)\n    else:\n        try:\n            to_rgb(colors[0])\n            # If this works, there is only one level of colors\n            return list(map(to_rgb, colors))\n        except ValueError:\n            # If we get here, we have nested lists\n            return [list(map(to_rgb, l)) for l in colors]\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 6483,
+  "llm_latency": 17.309268474578857,
+  "patch_content": "### seaborn/matrix.py\n<<<<<<< SEARCH\ndef _convert_colors(colors):\n    \"\"\"Convert either a list of colors or nested lists of colors to RGB.\"\"\"\n    to_rgb = mpl.colors.colorConverter.to_rgb\n\n    if isinstance(colors, pd.DataFrame):\n        # Convert dataframe\n        return pd.DataFrame({col: colors[col].map(to_rgb)\n                            for col in colors})\n    elif isinstance(colors, pd.Series):\n        return colors.map(to_rgb)\n    else:\n        try:\n            to_rgb(colors[0])\n            # If this works, there is only one level of colors\n            return list(map(to_rgb, colors))\n        except ValueError:\n            # If we get here, we have nested lists\n            return [list(map(to_rgb, l)) for l in colors]\n=======\ndef _convert_colors(colors):\n    \"\"\"Convert either a list of colors or nested lists of colors to RGB.\"\"\"\n    to_rgb = mpl.colors.colorConverter.to_rgb\n\n    if isinstance(colors, pd.DataFrame):\n        # Convert dataframe\n        return pd.DataFrame({col: colors[col].apply(to_rgb)\n                            for col in colors})\n    elif isinstance(colors, pd.Series):\n        return colors.apply(to_rgb)\n    else:\n        try:\n            to_rgb(colors[0])\n            # If this works, there is only one level of colors\n            return list(map(to_rgb, colors))\n        except ValueError:\n            # If we get here, we have nested lists\n            return [list(map(to_rgb, l)) for l in colors]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "seaborn/matrix.py"
+    ],
+    "error": null
+  }
+}

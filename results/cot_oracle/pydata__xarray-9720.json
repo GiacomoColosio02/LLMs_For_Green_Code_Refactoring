@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9720",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:36:05.879310",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49816
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_dask_or_eager_func` function in `duck_array_ops.py` is the bottleneck.\n**DIAGNOSIS**: It uses a simple function dispatch mechanism which involves checking if the input is a dask array and then importing the appropriate module. This repeated import operation can lead to unnecessary overhead, especially if the function is called frequently.\n**SOLUTION**: Cache the imported modules to avoid repeated imports.\n\n### SECTION 2: PATCH\n\n### xarray/core/duck_array_ops.py\n<<<<<<< SEARCH\ndef _dask_or_eager_func(\n    name,\n    eager_module=np,\n    dask_module=\"dask.array\",\n):\n    \"\"\"Create a function that dispatches to dask for dask array inputs.\"\"\"\n\n    def f(*args, **kwargs):\n        if any(is_duck_dask_array(a) for a in args):\n            mod = (\n                import_module(dask_module)\n                if isinstance(dask_module, str)\n                else dask_module\n            )\n            wrapped = getattr(mod, name)\n        else:\n            wrapped = getattr(eager_module, name)\n        return wrapped(*args, **kwargs)\n\n    return f\n=======\n@functools.lru_cache(maxsize=None)\ndef _dask_or_eager_func(\n    name,\n    eager_module=np,\n    dask_module=\"dask.array\",\n):\n    \"\"\"Create a function that dispatches to dask for dask array inputs.\"\"\"\n\n    def f(*args, **kwargs):\n        if any(is_duck_dask_array(a) for a in args):\n            mod = (\n                import_module(dask_module)\n                if isinstance(dask_module, str)\n                else dask_module\n            )\n            wrapped = getattr(mod, name)\n        else:\n            wrapped = getattr(eager_module, name)\n        return wrapped(*args, **kwargs)\n\n    return f\n>>>>>>> REPLACE",
+  "llm_tokens": 12951,
+  "llm_latency": 23.274207830429077,
+  "patch_content": "### xarray/core/duck_array_ops.py\n<<<<<<< SEARCH\ndef _dask_or_eager_func(\n    name,\n    eager_module=np,\n    dask_module=\"dask.array\",\n):\n    \"\"\"Create a function that dispatches to dask for dask array inputs.\"\"\"\n\n    def f(*args, **kwargs):\n        if any(is_duck_dask_array(a) for a in args):\n            mod = (\n                import_module(dask_module)\n                if isinstance(dask_module, str)\n                else dask_module\n            )\n            wrapped = getattr(mod, name)\n        else:\n            wrapped = getattr(eager_module, name)\n        return wrapped(*args, **kwargs)\n\n    return f\n=======\n@functools.lru_cache(maxsize=None)\ndef _dask_or_eager_func(\n    name,\n    eager_module=np,\n    dask_module=\"dask.array\",\n):\n    \"\"\"Create a function that dispatches to dask for dask array inputs.\"\"\"\n\n    def f(*args, **kwargs):\n        if any(is_duck_dask_array(a) for a in args):\n            mod = (\n                import_module(dask_module)\n                if isinstance(dask_module, str)\n                else dask_module\n            )\n            wrapped = getattr(mod, name)\n        else:\n            wrapped = getattr(eager_module, name)\n        return wrapped(*args, **kwargs)\n\n    return f\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/duck_array_ops.py"
+    ],
+    "error": null
+  }
+}

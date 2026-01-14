@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12172",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:17:35.416788",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34758
+  },
+  "llm_response": "Let's think step by step.\n\nThe `lars_path` function in `examples/linear_model/plot_lasso_lars.py` uses a loop to compute the regularization path, which is inefficient due to repeated calculations.\n\n### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\n=======\ncoefs = linear_model.lars_path(X, y, method='lasso', verbose=True)[2]\n>>>>>>> REPLACE",
+  "llm_tokens": 9539,
+  "llm_latency": 7.087725639343262,
+  "patch_content": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\n=======\ncoefs = linear_model.lars_path(X, y, method='lasso', verbose=True)[2]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "examples/linear_model/plot_lasso_lars.py"
+    ],
+    "error": null
+  }
+}

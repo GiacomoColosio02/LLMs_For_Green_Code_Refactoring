@@ -1,0 +1,38 @@
+{
+  "instance_id": "sympy__sympy-25758",
+  "prompt_type": "ldb",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-14T02:38:53.898261",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34991
+  },
+  "llm_response": "### sympy/functions/elementary/benchmarks/bench_exp.py\n<<<<<<< SEARCH\nfrom sympy.core.symbol import symbols\nfrom sympy.functions.elementary.exponential import exp\n\nx, y = symbols('x,y')\n\ne = exp(2*x)\nq = exp(3*x)\n\n\ndef timeit_exp_subs():\n    e.subs(q, y)\n=======\nfrom sympy.core.symbol import symbols\nfrom sympy.functions.elementary.exponential import exp\n\nx, y = symbols('x,y')\n\ne = exp(2*x)\nq = exp(3*x)\n\n@profile\ndef timeit_exp_subs():\n    e.subs(q, y)\n>>>>>>> REPLACE\n\n### sympy/integrals/meijerint_doc.py\nNo changes needed.\n\n### sympy/solvers/solvers.py\nNo changes needed.\n\n### sympy/solvers/solveset.py\nNo changes needed.\n\n### sympy/stats/crv_types.py\nNo changes needed.\n\n### sympy/stats/tests/test_continuous_rv.py\nNo changes needed.",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sympy/functions/elementary/benchmarks/bench_exp.py\n<<<<<<< SEARCH\nfrom sympy.core.symbol import symbols\nfrom sympy.functions.elementary.exponential import exp\n\nx, y = symbols('x,y')\n\ne = exp(2*x)\nq = exp(3*x)\n\n\ndef timeit_exp_subs():\n    e.subs(q, y)\n=======\nfrom sympy.core.symbol import symbols\nfrom sympy.functions.elementary.exponential import exp\n\nx, y = symbols('x,y')\n\ne = exp(2*x)\nq = exp(3*x)\n\n@profile\ndef timeit_exp_subs():\n    e.subs(q, y)\n>>>>>>> REPLACE\n\n### sympy/integrals/meijerint_doc.py\nNo changes needed.\n\n### sympy/solvers/solvers.py\nNo changes needed.\n\n### sympy/solvers/solveset.py\nNo changes needed.\n\n### sympy/stats/crv_types.py\nNo changes needed.\n\n### sympy/stats/tests/test_continuous_rv.py\nNo changes needed.",
+      "patch_content": "### sympy/functions/elementary/benchmarks/bench_exp.py\n<<<<<<< SEARCH\nfrom sympy.core.symbol import symbols\nfrom sympy.functions.elementary.exponential import exp\n\nx, y = symbols('x,y')\n\ne = exp(2*x)\nq = exp(3*x)\n\n\ndef timeit_exp_subs():\n    e.subs(q, y)\n=======\nfrom sympy.core.symbol import symbols\nfrom sympy.functions.elementary.exponential import exp\n\nx, y = symbols('x,y')\n\ne = exp(2*x)\nq = exp(3*x)\n\n@profile\ndef timeit_exp_subs():\n    e.subs(q, y)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 11193,
+  "llm_latency": 12.711727619171143,
+  "patch_content": "### sympy/functions/elementary/benchmarks/bench_exp.py\n<<<<<<< SEARCH\nfrom sympy.core.symbol import symbols\nfrom sympy.functions.elementary.exponential import exp\n\nx, y = symbols('x,y')\n\ne = exp(2*x)\nq = exp(3*x)\n\n\ndef timeit_exp_subs():\n    e.subs(q, y)\n=======\nfrom sympy.core.symbol import symbols\nfrom sympy.functions.elementary.exponential import exp\n\nx, y = symbols('x,y')\n\ne = exp(2*x)\nq = exp(3*x)\n\n@profile\ndef timeit_exp_subs():\n    e.subs(q, y)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/functions/elementary/benchmarks/bench_exp.py"
+    ],
+    "error": null
+  }
+}

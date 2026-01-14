@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-8668",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T13:12:27.084497",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49696
+  },
+  "llm_response": "### xarray/core/missing.py\n<<<<<<< SEARCH\ndef _get_nan_block_lengths(\n    obj: Dataset | DataArray | Variable, dim: Hashable, index: Variable\n):\n    \"\"\"\n    Return an object where each NaN element in 'obj' is replaced by the\n    length of the gap the element is in.\n    \"\"\"\n\n    # make variable so that we get broadcasting for free\n    index = Variable([dim], index)\n\n    # algorithm from https://github.com/pydata/xarray/pull/3302#discussion_r324707072\n    arange = ones_like(obj) * index\n    valid = obj.notnull()\n    valid_arange = arange.where(valid)\n    cumulative_nans = valid_arange.ffill(dim=dim).fillna(index[0])\n\n    nan_block_lengths = (\n        cumulative_nans.diff(dim=dim, label=\"upper\")\n        .reindex({dim: obj[dim]})\n        .where(valid)\n        .bfill(dim=dim)\n        .where(~valid, 0)\n        .fillna(index[-1] - valid_arange.max(dim=[dim]))\n    )\n\n    return nan_block_lengths\n=======\ndef _get_nan_block_lengths(\n    obj: Dataset | DataArray | Variable, dim: Hashable, index: Variable\n):\n    \"\"\"\n    Return an object where each NaN element in 'obj' is replaced by the\n    length of the gap the element is in.\n    \"\"\"\n\n    # make variable so that we get broadcasting for free\n    index = Variable([dim], index)\n\n    # algorithm from https://github.com/pydata/xarray/pull/3302#discussion_r324707072\n    arange = ones_like(obj) * index\n    valid = obj.notnull()\n    valid_arange = arange.where(valid)\n    cumulative_nans = valid_arange.ffill(dim=dim).fillna(index[0])\n\n    nan_block_lengths = (\n        cumulative_nans.diff(dim=dim, label=\"upper\")\n        .reindex({dim: obj[dim]})\n        .where(valid)\n        .bfill(dim=dim)\n        .where(~valid, 0)\n        .fillna(index[-1] - valid_arange.max(dim=[dim]))\n    )\n\n    return nan_block_lengths\n>>>>>>> REPLACE",
+  "llm_tokens": 14322,
+  "llm_latency": 27.858452081680298,
+  "patch_content": "### xarray/core/missing.py\n<<<<<<< SEARCH\ndef _get_nan_block_lengths(\n    obj: Dataset | DataArray | Variable, dim: Hashable, index: Variable\n):\n    \"\"\"\n    Return an object where each NaN element in 'obj' is replaced by the\n    length of the gap the element is in.\n    \"\"\"\n\n    # make variable so that we get broadcasting for free\n    index = Variable([dim], index)\n\n    # algorithm from https://github.com/pydata/xarray/pull/3302#discussion_r324707072\n    arange = ones_like(obj) * index\n    valid = obj.notnull()\n    valid_arange = arange.where(valid)\n    cumulative_nans = valid_arange.ffill(dim=dim).fillna(index[0])\n\n    nan_block_lengths = (\n        cumulative_nans.diff(dim=dim, label=\"upper\")\n        .reindex({dim: obj[dim]})\n        .where(valid)\n        .bfill(dim=dim)\n        .where(~valid, 0)\n        .fillna(index[-1] - valid_arange.max(dim=[dim]))\n    )\n\n    return nan_block_lengths\n=======\ndef _get_nan_block_lengths(\n    obj: Dataset | DataArray | Variable, dim: Hashable, index: Variable\n):\n    \"\"\"\n    Return an object where each NaN element in 'obj' is replaced by the\n    length of the gap the element is in.\n    \"\"\"\n\n    # make variable so that we get broadcasting for free\n    index = Variable([dim], index)\n\n    # algorithm from https://github.com/pydata/xarray/pull/3302#discussion_r324707072\n    arange = ones_like(obj) * index\n    valid = obj.notnull()\n    valid_arange = arange.where(valid)\n    cumulative_nans = valid_arange.ffill(dim=dim).fillna(index[0])\n\n    nan_block_lengths = (\n        cumulative_nans.diff(dim=dim, label=\"upper\")\n        .reindex({dim: obj[dim]})\n        .where(valid)\n        .bfill(dim=dim)\n        .where(~valid, 0)\n        .fillna(index[-1] - valid_arange.max(dim=[dim]))\n    )\n\n    return nan_block_lengths\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/missing.py"
+    ],
+    "error": null
+  }
+}

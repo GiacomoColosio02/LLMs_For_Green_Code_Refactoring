@@ -1,0 +1,28 @@
+{
+  "instance_id": "astropy__astropy-16058",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:13:53.512797",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 33866
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_expand_and_gather` method in `core.py` is the bottleneck.\n**DIAGNOSIS**: It uses nested loops and sorting, leading to high time complexity and memory usage.\n**SOLUTION**: Replace the nested loop with a dictionary to reduce lookup times and simplify the sorting process.\n\n### SECTION 2: PATCH\n\n### astropy/units/core.py\n<<<<<<< SEARCH\ndef _expand_and_gather(self, decompose=False, bases=set()):\n    def add_unit(unit, power, scale):\n        if bases and unit not in bases:\n            for base in bases:\n                try:\n                    scale *= unit._to(base) ** power\n                except UnitsError:\n                    pass\n                else:\n                    unit = base\n                    break\n\n        if unit in new_parts:\n            a, b = resolve_fractions(new_parts[unit], power)\n            new_parts[unit] = a + b\n        else:\n            new_parts[unit] = power\n        return scale\n\n    new_parts = {}\n    scale = self._scale\n\n    for b, p in zip(self._bases, self._powers):\n        if decompose and b not in bases:\n            b = b.decompose(bases=bases)\n\n        if isinstance(b, CompositeUnit):\n            scale *= b._scale**p\n            for b_sub, p_sub in zip(b._bases, b._powers):\n                a, b = resolve_fractions(p_sub, p)\n                scale = add_unit(b_sub, a * b, scale)\n        else:\n            scale = add_unit(b, p, scale)\n\n    new_parts = [x for x in new_parts.items() if x[1] != 0]\n    new_parts.sort(key=lambda x: (-x[1], getattr(x[0], \"name\", \"\")))\n\n    self._bases = [x[0] for x in new_parts]\n    self._powers = [x[1] for x in new_parts]\n    self._scale = sanitize_scale(scale)\n=======\n    new_parts = {}\n    scale = self._scale\n\n    for b, p in zip(self._bases, self._powers):\n        if decompose and b not in bases:\n            b = b.decompose(bases=bases)\n\n        if isinstance(b, CompositeUnit):\n            scale *= b._scale**p\n            for b_sub, p_sub in zip(b._bases, b._powers):\n                a, b = resolve_fractions(p_sub, p)\n                scale *= b_sub._to(b)**a\n        else:\n            scale *= b._to(b)**p\n\n    self._scale = sanitize_scale(scale)\n    self._bases = [b for b, p in sorted(zip(self._bases, self._powers), key=lambda x: -x[1])]\n    self._powers = [p for _, p in sorted(zip(self._bases, self._powers), key=lambda x: -x[1])]\n>>>>>>> REPLACE",
+  "llm_tokens": 9492,
+  "llm_latency": 34.72807765007019,
+  "patch_content": "### astropy/units/core.py\n<<<<<<< SEARCH\ndef _expand_and_gather(self, decompose=False, bases=set()):\n    def add_unit(unit, power, scale):\n        if bases and unit not in bases:\n            for base in bases:\n                try:\n                    scale *= unit._to(base) ** power\n                except UnitsError:\n                    pass\n                else:\n                    unit = base\n                    break\n\n        if unit in new_parts:\n            a, b = resolve_fractions(new_parts[unit], power)\n            new_parts[unit] = a + b\n        else:\n            new_parts[unit] = power\n        return scale\n\n    new_parts = {}\n    scale = self._scale\n\n    for b, p in zip(self._bases, self._powers):\n        if decompose and b not in bases:\n            b = b.decompose(bases=bases)\n\n        if isinstance(b, CompositeUnit):\n            scale *= b._scale**p\n            for b_sub, p_sub in zip(b._bases, b._powers):\n                a, b = resolve_fractions(p_sub, p)\n                scale = add_unit(b_sub, a * b, scale)\n        else:\n            scale = add_unit(b, p, scale)\n\n    new_parts = [x for x in new_parts.items() if x[1] != 0]\n    new_parts.sort(key=lambda x: (-x[1], getattr(x[0], \"name\", \"\")))\n\n    self._bases = [x[0] for x in new_parts]\n    self._powers = [x[1] for x in new_parts]\n    self._scale = sanitize_scale(scale)\n=======\n    new_parts = {}\n    scale = self._scale\n\n    for b, p in zip(self._bases, self._powers):\n        if decompose and b not in bases:\n            b = b.decompose(bases=bases)\n\n        if isinstance(b, CompositeUnit):\n            scale *= b._scale**p\n            for b_sub, p_sub in zip(b._bases, b._powers):\n                a, b = resolve_fractions(p_sub, p)\n                scale *= b_sub._to(b)**a\n        else:\n            scale *= b._to(b)**p\n\n    self._scale = sanitize_scale(scale)\n    self._bases = [b for b, p in sorted(zip(self._bases, self._powers), key=lambda x: -x[1])]\n    self._powers = [p for _, p in sorted(zip(self._bases, self._powers), key=lambda x: -x[1])]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/units/core.py"
+    ],
+    "error": null
+  }
+}

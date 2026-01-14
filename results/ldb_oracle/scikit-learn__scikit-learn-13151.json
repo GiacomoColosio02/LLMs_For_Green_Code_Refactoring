@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13151",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T11:16:03.059600",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49903
+  },
+  "llm_response": "### examples/multioutput/plot_classifier_chain_yeast.py\n<<<<<<< SEARCH\nbase_lr = LogisticRegression(solver='lbfgs')\novr = OneVsRestClassifier(base_lr)\novr.fit(X_train, Y_train)\nY_pred_ovr = ovr.predict(X_test)\novr_jaccard_score = jaccard_similarity_score(Y_test, Y_pred_ovr)\n=======\nbase_lr = LogisticRegression(solver='lbfgs', max_iter=1000)\novr = OneVsRestClassifier(base_lr)\novr.fit(X_train, Y_train)\nY_pred_ovr = ovr.predict(X_test)\novr_jaccard_score = jaccard_similarity_score(Y_test, Y_pred_ovr)\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### examples/multioutput/plot_classifier_chain_yeast.py\n<<<<<<< SEARCH\nbase_lr = LogisticRegression(solver='lbfgs')\novr = OneVsRestClassifier(base_lr)\novr.fit(X_train, Y_train)\nY_pred_ovr = ovr.predict(X_test)\novr_jaccard_score = jaccard_similarity_score(Y_test, Y_pred_ovr)\n=======\nbase_lr = LogisticRegression(solver='lbfgs', max_iter=1000)\novr = OneVsRestClassifier(base_lr)\novr.fit(X_train, Y_train)\nY_pred_ovr = ovr.predict(X_test)\novr_jaccard_score = jaccard_similarity_score(Y_test, Y_pred_ovr)\n>>>>>>> REPLACE",
+      "patch_content": "### examples/multioutput/plot_classifier_chain_yeast.py\n<<<<<<< SEARCH\nbase_lr = LogisticRegression(solver='lbfgs')\novr = OneVsRestClassifier(base_lr)\novr.fit(X_train, Y_train)\nY_pred_ovr = ovr.predict(X_test)\novr_jaccard_score = jaccard_similarity_score(Y_test, Y_pred_ovr)\n=======\nbase_lr = LogisticRegression(solver='lbfgs', max_iter=1000)\novr = OneVsRestClassifier(base_lr)\novr.fit(X_train, Y_train)\nY_pred_ovr = ovr.predict(X_test)\novr_jaccard_score = jaccard_similarity_score(Y_test, Y_pred_ovr)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 13345,
+  "llm_latency": 9.890145063400269,
+  "patch_content": "### examples/multioutput/plot_classifier_chain_yeast.py\n<<<<<<< SEARCH\nbase_lr = LogisticRegression(solver='lbfgs')\novr = OneVsRestClassifier(base_lr)\novr.fit(X_train, Y_train)\nY_pred_ovr = ovr.predict(X_test)\novr_jaccard_score = jaccard_similarity_score(Y_test, Y_pred_ovr)\n=======\nbase_lr = LogisticRegression(solver='lbfgs', max_iter=1000)\novr = OneVsRestClassifier(base_lr)\novr.fit(X_train, Y_train)\nY_pred_ovr = ovr.predict(X_test)\novr_jaccard_score = jaccard_similarity_score(Y_test, Y_pred_ovr)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "examples/multioutput/plot_classifier_chain_yeast.py"
+    ],
+    "error": null
+  }
+}

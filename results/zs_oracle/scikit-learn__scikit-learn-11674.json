@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-11674",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T20:15:48.421880",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 48086
+  },
+  "llm_response": "### sklearn/pipeline.py\n<<<<<<< SEARCH\ndef _fit_transform_one(transformer, X, y, weight, **fit_params):\n    res = transformer.fit_transform(X, y, **fit_params)\n    return res * weight, transformer\n=======\nfrom joblib import Memory\n\nmemory = Memory(location='./cache', verbose=0)\n\n@memory.cache\ndef _fit_transform_one(transformer, X, y, weight, **fit_params):\n    res = transformer.fit_transform(X, y, **fit_params)\n    return res * weight, transformer\n>>>>>>> REPLACE",
+  "llm_tokens": 12155,
+  "llm_latency": 7.630042552947998,
+  "patch_content": "### sklearn/pipeline.py\n<<<<<<< SEARCH\ndef _fit_transform_one(transformer, X, y, weight, **fit_params):\n    res = transformer.fit_transform(X, y, **fit_params)\n    return res * weight, transformer\n=======\nfrom joblib import Memory\n\nmemory = Memory(location='./cache', verbose=0)\n\n@memory.cache\ndef _fit_transform_one(transformer, X, y, weight, **fit_params):\n    res = transformer.fit_transform(X, y, **fit_params)\n    return res * weight, transformer\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

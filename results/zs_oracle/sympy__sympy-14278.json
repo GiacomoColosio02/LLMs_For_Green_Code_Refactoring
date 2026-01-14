@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-14278",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T14:44:29.377524",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24871
+  },
+  "llm_response": "### sympy/functions/elementary/complexes.py\n<<<<<<< SEARCH\nelif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:\n    return S.Zero\n=======\nelif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:\n    return S.Zero\nelse:\n    return S.Zero\n>>>>>>> REPLACE",
+  "llm_tokens": 7035,
+  "llm_latency": 4.658651351928711,
+  "patch_content": "### sympy/functions/elementary/complexes.py\n<<<<<<< SEARCH\nelif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:\n    return S.Zero\n=======\nelif arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:\n    return S.Zero\nelse:\n    return S.Zero\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/functions/elementary/complexes.py"
+    ],
+    "error": null
+  }
+}

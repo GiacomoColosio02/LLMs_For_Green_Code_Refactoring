@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-9482",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T22:05:16.920255",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 48167
+  },
+  "llm_response": "### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _collect_data_and_coord_variables(\n    data: Dataset,\n) -> tuple[dict[Hashable, Variable], dict[Hashable, Variable]]:\n    data_variables = {}\n    coord_variables = {}\n    for k, v in data.variables.items():\n        if k in data._coord_names:\n            coord_variables[k] = v\n        else:\n            data_variables[k] = v\n    return data_variables, coord_variables\n=======\ndef _collect_data_and_coord_variables(\n    data: Dataset,\n) -> tuple[dict[Hashable, Variable], dict[Hashable, Variable]]:\n    data_variables = {k: v for k, v in data.variables.items() if k not in data._coord_names}\n    coord_variables = {k: v for k, v in data.variables.items() if k in data._coord_names}\n    return data_variables, coord_variables\n>>>>>>> REPLACE\n\n### xarray/core/treenode.py\n<<<<<<< SEARCH\ndef _iter_parents(self: Tree) -> Iterator[Tree]:\n    \"\"\"Iterate up the tree, starting from the current node's parent.\"\"\"\n    node: Tree | None = self.parent\n    while node is not None:\n        yield node\n        node = node.parent\n=======\ndef _iter_parents(self: Tree) -> Iterator[Tree]:\n    \"\"\"Iterate up the tree, starting from the current node's parent.\"\"\"\n    node = self.parent\n    while node is not None:\n        yield node\n        node = node.parent\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _collect_data_and_coord_variables(\n    data: Dataset,\n) -> tuple[dict[Hashable, Variable], dict[Hashable, Variable]]:\n    data_variables = {}\n    coord_variables = {}\n    for k, v in data.variables.items():\n        if k in data._coord_names:\n            coord_variables[k] = v\n        else:\n            data_variables[k] = v\n    return data_variables, coord_variables\n=======\ndef _collect_data_and_coord_variables(\n    data: Dataset,\n) -> tuple[dict[Hashable, Variable], dict[Hashable, Variable]]:\n    data_variables = {k: v for k, v in data.variables.items() if k not in data._coord_names}\n    coord_variables = {k: v for k, v in data.variables.items() if k in data._coord_names}\n    return data_variables, coord_variables\n>>>>>>> REPLACE\n\n### xarray/core/treenode.py\n<<<<<<< SEARCH\ndef _iter_parents(self: Tree) -> Iterator[Tree]:\n    \"\"\"Iterate up the tree, starting from the current node's parent.\"\"\"\n    node: Tree | None = self.parent\n    while node is not None:\n        yield node\n        node = node.parent\n=======\ndef _iter_parents(self: Tree) -> Iterator[Tree]:\n    \"\"\"Iterate up the tree, starting from the current node's parent.\"\"\"\n    node = self.parent\n    while node is not None:\n        yield node\n        node = node.parent\n>>>>>>> REPLACE",
+      "patch_content": "### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _collect_data_and_coord_variables(\n    data: Dataset,\n) -> tuple[dict[Hashable, Variable], dict[Hashable, Variable]]:\n    data_variables = {}\n    coord_variables = {}\n    for k, v in data.variables.items():\n        if k in data._coord_names:\n            coord_variables[k] = v\n        else:\n            data_variables[k] = v\n    return data_variables, coord_variables\n=======\ndef _collect_data_and_coord_variables(\n    data: Dataset,\n) -> tuple[dict[Hashable, Variable], dict[Hashable, Variable]]:\n    data_variables = {k: v for k, v in data.variables.items() if k not in data._coord_names}\n    coord_variables = {k: v for k, v in data.variables.items() if k in data._coord_names}\n    return data_variables, coord_variables\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 11448,
+  "llm_latency": 18.518975257873535,
+  "patch_content": "### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef _collect_data_and_coord_variables(\n    data: Dataset,\n) -> tuple[dict[Hashable, Variable], dict[Hashable, Variable]]:\n    data_variables = {}\n    coord_variables = {}\n    for k, v in data.variables.items():\n        if k in data._coord_names:\n            coord_variables[k] = v\n        else:\n            data_variables[k] = v\n    return data_variables, coord_variables\n=======\ndef _collect_data_and_coord_variables(\n    data: Dataset,\n) -> tuple[dict[Hashable, Variable], dict[Hashable, Variable]]:\n    data_variables = {k: v for k, v in data.variables.items() if k not in data._coord_names}\n    coord_variables = {k: v for k, v in data.variables.items() if k in data._coord_names}\n    return data_variables, coord_variables\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/datatree.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "instance_id": "sphinx-doc__sphinx-10807",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:20:00.713116",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sphinx-doc/sphinx",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49745
+  },
+  "llm_response": "Let's think step by step.\n\nThe `DefinitionParser.parse_xref_object` method in `sphinx/domains/c.py` uses a linear search within a nested loop structure, which is inefficient for large inputs. By converting the relevant parts to sets, we can reduce the complexity to O(n).\n\n### sphinx/domains/c.py\n<<<<<<< SEARCH\ndef parse_xref_object(self) -> ASTNestedName:\n    tokens = self.tokens[:]\n    while tokens:\n        token = tokens.pop(0)\n        if isinstance(token, IdentifierToken):\n            return ASTNestedName([ASTIdentifier(token.value)], rooted=True)\n        elif isinstance(token, DotToken):\n            if not tokens:\n                raise DefinitionError('Expected identifier after dot')\n            next_token = tokens.pop(0)\n            if isinstance(next_token, IdentifierToken):\n                return ASTNestedName([ASTIdentifier(next_token.value)], rooted=True)\n            else:\n                raise DefinitionError('Expected identifier after dot')\n        else:\n            raise DefinitionError('Unexpected token in xref object')\n=======\ndef parse_xref_object(self) -> ASTNestedName:\n    identifiers = []\n    while self.tokens:\n        token = self.tokens.pop(0)\n        if isinstance(token, IdentifierToken):\n            identifiers.append(ASTIdentifier(token.value))\n        elif isinstance(token, DotToken):\n            if not identifiers:\n                raise DefinitionError('Expected identifier before dot')\n            break\n        else:\n            raise DefinitionError('Unexpected token in xref object')\n    return ASTNestedName(identifiers, rooted=True)\n>>>>>>> REPLACE",
+  "llm_tokens": 13564,
+  "llm_latency": 18.46201229095459,
+  "patch_content": "### sphinx/domains/c.py\n<<<<<<< SEARCH\ndef parse_xref_object(self) -> ASTNestedName:\n    tokens = self.tokens[:]\n    while tokens:\n        token = tokens.pop(0)\n        if isinstance(token, IdentifierToken):\n            return ASTNestedName([ASTIdentifier(token.value)], rooted=True)\n        elif isinstance(token, DotToken):\n            if not tokens:\n                raise DefinitionError('Expected identifier after dot')\n            next_token = tokens.pop(0)\n            if isinstance(next_token, IdentifierToken):\n                return ASTNestedName([ASTIdentifier(next_token.value)], rooted=True)\n            else:\n                raise DefinitionError('Expected identifier after dot')\n        else:\n            raise DefinitionError('Unexpected token in xref object')\n=======\ndef parse_xref_object(self) -> ASTNestedName:\n    identifiers = []\n    while self.tokens:\n        token = self.tokens.pop(0)\n        if isinstance(token, IdentifierToken):\n            identifiers.append(ASTIdentifier(token.value))\n        elif isinstance(token, DotToken):\n            if not identifiers:\n                raise DefinitionError('Expected identifier before dot')\n            break\n        else:\n            raise DefinitionError('Unexpected token in xref object')\n    return ASTNestedName(identifiers, rooted=True)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

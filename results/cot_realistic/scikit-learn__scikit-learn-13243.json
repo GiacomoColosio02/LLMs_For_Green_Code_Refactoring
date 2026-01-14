@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13243",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T02:42:11.289092",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34751
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `lars_path` function in `sklearn/linear_model/least_angle.py` is the bottleneck.\n**DIAGNOSIS**: It uses a loop inside another loop to compute the covariance, leading to O(n\u00b2) complexity.\n**SOLUTION**: Replace the nested loop with a more efficient method, such as using NumPy operations to compute the covariance in a single pass.\n\n### SECTION 2: PATCH\n\n### sklearn/linear_model/least_angle.py\n<<<<<<< SEARCH\nfor i in range(y.shape[1]):\n    y_column = y[:, i]\n    info = sp_linalg.lsqr(X, y_column, damp=sqrt_alpha[i],\n                          atol=tol, btol=tol, iter_lim=max_iter)\n    coefs[i] = info[0]\n    n_iter[i] = info[2]\n=======\ncoefs, n_iter = sp_linalg.lsqr(X, y, damp=sqrt_alpha, atol=tol, btol=tol, iter_lim=max_iter)\n>>>>>>> REPLACE",
+  "llm_tokens": 10679,
+  "llm_latency": 13.569446563720703,
+  "patch_content": "### sklearn/linear_model/least_angle.py\n<<<<<<< SEARCH\nfor i in range(y.shape[1]):\n    y_column = y[:, i]\n    info = sp_linalg.lsqr(X, y_column, damp=sqrt_alpha[i],\n                          atol=tol, btol=tol, iter_lim=max_iter)\n    coefs[i] = info[0]\n    n_iter[i] = info[2]\n=======\ncoefs, n_iter = sp_linalg.lsqr(X, y, damp=sqrt_alpha, atol=tol, btol=tol, iter_lim=max_iter)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/linear_model/ridge.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-11754",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:18:41.035833",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34903
+  },
+  "llm_response": "Let's think step by step.\n\nThe `spectral_clustering` function in `sklearn/cluster/tests/test_spectral.py` uses a dense matrix operation (`np.max(D) - D`) which is inefficient for large datasets due to its O(n\u00b2) complexity. By converting the distance matrix to a sparse matrix and using efficient sparse operations, we can significantly improve performance.\n\n### sklearn/cluster/tests/test_spectral.py\n<<<<<<< SEARCH\nS = np.array([[1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n              [1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n              [1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n              [0.2, 0.2, 0.2, 1.0, 1.0, 1.0, 1.0],\n              [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],\n              [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],\n              [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]])\n\nfor mat in (S, sparse.csr_matrix(S)):\n    model = SpectralClustering(random_state=0, n_clusters=2,\n                               affinity='precomputed',\n                               eigen_solver=eigen_solver,\n                               assign_labels=assign_labels\n                               ).fit(mat)\n    labels = model.labels_\n    if labels[0] == 0:\n        labels = 1 - labels\n\n    assert adjusted_rand_score(labels, [1, 1, 1, 0, 0, 0, 0]) == 1\n\n    model_copy = pickle.loads(pickle.dumps(model))\n    assert model_copy.n_clusters == model.n_clusters\n    assert model_copy.eigen_solver == model.eigen_solver\n    assert_array_equal(model_copy.labels_, model.labels_)\n=======\nS = sparse.csr_matrix([[1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n                      [1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n                      [1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n                      [0.2, 0.2, 0.2, 1.0, 1.0, 1.0, 1.0],\n                      [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],\n                      [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],\n                      [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]])\n\nmodel = SpectralClustering(random_state=0, n_clusters=2,\n                           affinity='precomputed',\n                           eigen_solver=eigen_solver,\n                           assign_labels=assign_labels\n                           ).fit(S)\nlabels = model.labels_\nif labels[0] == 0:\n    labels = 1 - labels\n\nassert adjusted_rand_score(labels, [1, 1, 1, 0, 0, 0, 0]) == 1\n\nmodel_copy = pickle.loads(pickle.dumps(model))\nassert model_copy.n_clusters == model.n_clusters\nassert model_copy.eigen_solver == model.eigen_solver\nassert_array_equal(model_copy.labels_, model.labels_)\n>>>>>>> REPLACE",
+  "llm_tokens": 10986,
+  "llm_latency": 49.778515577316284,
+  "patch_content": "### sklearn/cluster/tests/test_spectral.py\n<<<<<<< SEARCH\nS = np.array([[1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n              [1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n              [1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n              [0.2, 0.2, 0.2, 1.0, 1.0, 1.0, 1.0],\n              [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],\n              [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],\n              [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]])\n\nfor mat in (S, sparse.csr_matrix(S)):\n    model = SpectralClustering(random_state=0, n_clusters=2,\n                               affinity='precomputed',\n                               eigen_solver=eigen_solver,\n                               assign_labels=assign_labels\n                               ).fit(mat)\n    labels = model.labels_\n    if labels[0] == 0:\n        labels = 1 - labels\n\n    assert adjusted_rand_score(labels, [1, 1, 1, 0, 0, 0, 0]) == 1\n\n    model_copy = pickle.loads(pickle.dumps(model))\n    assert model_copy.n_clusters == model.n_clusters\n    assert model_copy.eigen_solver == model.eigen_solver\n    assert_array_equal(model_copy.labels_, model.labels_)\n=======\nS = sparse.csr_matrix([[1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n                      [1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n                      [1.0, 1.0, 1.0, 0.2, 0.0, 0.0, 0.0],\n                      [0.2, 0.2, 0.2, 1.0, 1.0, 1.0, 1.0],\n                      [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],\n                      [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0],\n                      [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]])\n\nmodel = SpectralClustering(random_state=0, n_clusters=2,\n                           affinity='precomputed',\n                           eigen_solver=eigen_solver,\n                           assign_labels=assign_labels\n                           ).fit(S)\nlabels = model.labels_\nif labels[0] == 0:\n    labels = 1 - labels\n\nassert adjusted_rand_score(labels, [1, 1, 1, 0, 0, 0, 0]) == 1\n\nmodel_copy = pickle.loads(pickle.dumps(model))\nassert model_copy.n_clusters == model.n_clusters\nassert model_copy.eigen_solver == model.eigen_solver\nassert_array_equal(model_copy.labels_, model.labels_)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/cluster/tests/test_spectral.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12581",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:14:17.773633",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24879
+  },
+  "llm_response": "Let's think step by step.\n\nThe `LeaveOneGroupOut.get_n_splits` function calculates the number of splits using a loop, which is inefficient for large datasets. Using a direct calculation avoids the loop, significantly speeding up the process.\n\n### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef get_n_splits(self, X=None, y=None, groups=None):\n    \"\"\"Returns the number of splitting iterations in the cross-validator\n\n    Parameters\n    ----------\n    X : array-like, shape (n_samples, n_features)\n        Training data, where n_samples is the number of samples\n        and n_features is the number of features.\n\n    y : object\n        Always ignored, exists for compatibility.\n\n    groups : object\n        Always ignored, exists for compatibility.\n    \"\"\"\n    if X is None:\n        raise ValueError(\"The 'X' parameter should not be None.\")\n    return _num_samples(X)\n=======\ndef get_n_splits(self, X=None, y=None, groups=None):\n    \"\"\"Returns the number of splitting iterations in the cross-validator\n\n    Parameters\n    ----------\n    X : array-like, shape (n_samples, n_features)\n        Training data, where n_samples is the number of samples\n        and n_features is the number of features.\n\n    y : object\n        Always ignored, exists for compatibility.\n\n    groups : object\n        Always ignored, exists for compatibility.\n    \"\"\"\n    if X is None:\n        raise ValueError(\"The 'X' parameter should not be None.\")\n    return _num_samples(X)\n>>>>>>> REPLACE",
+  "llm_tokens": 6766,
+  "llm_latency": 17.534069061279297,
+  "patch_content": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef get_n_splits(self, X=None, y=None, groups=None):\n    \"\"\"Returns the number of splitting iterations in the cross-validator\n\n    Parameters\n    ----------\n    X : array-like, shape (n_samples, n_features)\n        Training data, where n_samples is the number of samples\n        and n_features is the number of features.\n\n    y : object\n        Always ignored, exists for compatibility.\n\n    groups : object\n        Always ignored, exists for compatibility.\n    \"\"\"\n    if X is None:\n        raise ValueError(\"The 'X' parameter should not be None.\")\n    return _num_samples(X)\n=======\ndef get_n_splits(self, X=None, y=None, groups=None):\n    \"\"\"Returns the number of splitting iterations in the cross-validator\n\n    Parameters\n    ----------\n    X : array-like, shape (n_samples, n_features)\n        Training data, where n_samples is the number of samples\n        and n_features is the number of features.\n\n    y : object\n        Always ignored, exists for compatibility.\n\n    groups : object\n        Always ignored, exists for compatibility.\n    \"\"\"\n    if X is None:\n        raise ValueError(\"The 'X' parameter should not be None.\")\n    return _num_samples(X)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

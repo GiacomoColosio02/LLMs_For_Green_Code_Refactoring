@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-9393",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T22:11:38.252682",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49797
+  },
+  "llm_response": "### xarray/core/common.py\n<<<<<<< SEARCH\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.asarray(self.values, dtype=dtype)\n=======\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.ascontiguousarray(self.values, dtype=dtype)\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/core/common.py\n<<<<<<< SEARCH\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.asarray(self.values, dtype=dtype)\n=======\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.ascontiguousarray(self.values, dtype=dtype)\n>>>>>>> REPLACE",
+      "patch_content": "### xarray/core/common.py\n<<<<<<< SEARCH\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.asarray(self.values, dtype=dtype)\n=======\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.ascontiguousarray(self.values, dtype=dtype)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 13571,
+  "llm_latency": 6.171862363815308,
+  "patch_content": "### xarray/core/common.py\n<<<<<<< SEARCH\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.asarray(self.values, dtype=dtype)\n=======\ndef __array__(self: Any, dtype: DTypeLike | None = None) -> np.ndarray:\n    return np.ascontiguousarray(self.values, dtype=dtype)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/common.py"
+    ],
+    "error": null
+  }
+}

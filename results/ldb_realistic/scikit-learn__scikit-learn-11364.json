@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-11364",
+  "prompt_type": "ldb",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-14T01:01:32.917468",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34912
+  },
+  "llm_response": "### sklearn/linear_model/stochastic_gradient.py\n<<<<<<< SEARCH\n        if self.max_iter is not None and self.max_iter <= 0:\n            raise ValueError(\"max_iter must be > zero. Got %f\" % self.max_iter)\n        if not (0.0 <= self.l1_ratio <= 1.0):\n            raise ValueError(\"l1_ratio must be in [0, 1]\")\n        if self.alpha < 0.0:\n            raise ValueError(\"alpha must be >= 0\")\n=======\n        if self.max_iter <= 0:\n            raise ValueError(f\"max_iter must be > zero. Got {self.max_iter}\")\n        if not 0.0 <= self.l1_ratio <= 1.0:\n            raise ValueError(f\"l1_ratio must be in [0, 1]\")\n        if self.alpha < 0.0:\n            raise ValueError(f\"alpha must be >= 0\")\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sklearn/linear_model/stochastic_gradient.py\n<<<<<<< SEARCH\n        if self.max_iter is not None and self.max_iter <= 0:\n            raise ValueError(\"max_iter must be > zero. Got %f\" % self.max_iter)\n        if not (0.0 <= self.l1_ratio <= 1.0):\n            raise ValueError(\"l1_ratio must be in [0, 1]\")\n        if self.alpha < 0.0:\n            raise ValueError(\"alpha must be >= 0\")\n=======\n        if self.max_iter <= 0:\n            raise ValueError(f\"max_iter must be > zero. Got {self.max_iter}\")\n        if not 0.0 <= self.l1_ratio <= 1.0:\n            raise ValueError(f\"l1_ratio must be in [0, 1]\")\n        if self.alpha < 0.0:\n            raise ValueError(f\"alpha must be >= 0\")\n>>>>>>> REPLACE",
+      "patch_content": "### sklearn/linear_model/stochastic_gradient.py\n<<<<<<< SEARCH\n        if self.max_iter is not None and self.max_iter <= 0:\n            raise ValueError(\"max_iter must be > zero. Got %f\" % self.max_iter)\n        if not (0.0 <= self.l1_ratio <= 1.0):\n            raise ValueError(\"l1_ratio must be in [0, 1]\")\n        if self.alpha < 0.0:\n            raise ValueError(\"alpha must be >= 0\")\n=======\n        if self.max_iter <= 0:\n            raise ValueError(f\"max_iter must be > zero. Got {self.max_iter}\")\n        if not 0.0 <= self.l1_ratio <= 1.0:\n            raise ValueError(f\"l1_ratio must be in [0, 1]\")\n        if self.alpha < 0.0:\n            raise ValueError(f\"alpha must be >= 0\")\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 10682,
+  "llm_latency": 11.674614191055298,
+  "patch_content": "### sklearn/linear_model/stochastic_gradient.py\n<<<<<<< SEARCH\n        if self.max_iter is not None and self.max_iter <= 0:\n            raise ValueError(\"max_iter must be > zero. Got %f\" % self.max_iter)\n        if not (0.0 <= self.l1_ratio <= 1.0):\n            raise ValueError(\"l1_ratio must be in [0, 1]\")\n        if self.alpha < 0.0:\n            raise ValueError(\"alpha must be >= 0\")\n=======\n        if self.max_iter <= 0:\n            raise ValueError(f\"max_iter must be > zero. Got {self.max_iter}\")\n        if not 0.0 <= self.l1_ratio <= 1.0:\n            raise ValueError(f\"l1_ratio must be in [0, 1]\")\n        if self.alpha < 0.0:\n            raise ValueError(f\"alpha must be >= 0\")\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/linear_model/stochastic_gradient.py"
+    ],
+    "error": null
+  }
+}

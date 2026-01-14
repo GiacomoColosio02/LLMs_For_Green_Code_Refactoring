@@ -1,0 +1,38 @@
+{
+  "instance_id": "astropy__astropy-12842",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T21:25:09.503760",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49744
+  },
+  "llm_response": "### path/to/file.py\n<<<<<<< SEARCH\n        if scale is None:\n            scale = self._default_scale\n\n        if scale not in TIME_SCALES:\n            raise ScaleValueError(\"Scale value '{}' not in \"\n                                  \"allowed values {}\"\n                                  .format(scale, TIME_SCALES))\n\n        return scale\n=======\n        return scale if scale in TIME_SCALES else self._default_scale\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### path/to/file.py\n<<<<<<< SEARCH\n        if scale is None:\n            scale = self._default_scale\n\n        if scale not in TIME_SCALES:\n            raise ScaleValueError(\"Scale value '{}' not in \"\n                                  \"allowed values {}\"\n                                  .format(scale, TIME_SCALES))\n\n        return scale\n=======\n        return scale if scale in TIME_SCALES else self._default_scale\n>>>>>>> REPLACE",
+      "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n        if scale is None:\n            scale = self._default_scale\n\n        if scale not in TIME_SCALES:\n            raise ScaleValueError(\"Scale value '{}' not in \"\n                                  \"allowed values {}\"\n                                  .format(scale, TIME_SCALES))\n\n        return scale\n=======\n        return scale if scale in TIME_SCALES else self._default_scale\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 12743,
+  "llm_latency": 6.178685188293457,
+  "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n        if scale is None:\n            scale = self._default_scale\n\n        if scale not in TIME_SCALES:\n            raise ScaleValueError(\"Scale value '{}' not in \"\n                                  \"allowed values {}\"\n                                  .format(scale, TIME_SCALES))\n\n        return scale\n=======\n        return scale if scale in TIME_SCALES else self._default_scale\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/time/formats.py"
+    ],
+    "error": null
+  }
+}

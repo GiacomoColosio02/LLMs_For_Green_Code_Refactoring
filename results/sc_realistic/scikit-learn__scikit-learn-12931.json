@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12931",
+  "prompt_type": "self_collab",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T19:31:05.866812",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34777
+  },
+  "llm_response": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(zip(*coefs.T))\nxx = np.array([sum(abs(coef)) for coef in coefs.T]) / sum(abs(coefs.T[-1]))\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/decomposition/tests/test_online_lda.py\nNo changes needed.\n\n### sklearn/model_selection/_search.py\nNo changes needed.\n\n### sklearn/tests/test_common.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed.\n\n### sklearn/utils/testing.py\nNo changes needed.",
+  "all_responses": [
+    "1. **Relevant Files**: `examples/linear_model/plot_lasso_lars.py`, `sklearn/decomposition/tests/test_online_lda.py`, `sklearn/model_selection/_search.py`, `sklearn/tests/test_common.py`, `sklearn/utils/estimator_checks.py`, `sklearn/utils/testing.py`.\n2. **Bottleneck Function**: Various functions like `lars_path`, `_dirichlet_expectation_1d`, `check_estimators_dtypes`, etc.\n3. **Why Slow**: These functions involve complex mathematical computations, iterative processes, and potentially large data handling.\n4. **Optimization Help**: Implement efficient algorithms, utilize vectorization, parallelize operations, and ensure data structures are optimized for performance.",
+    "Replace nested loops with set lookups where possible. This reduces time complexity from O(n\u00b2) to O(n), improving performance significantly. Edge cases to consider include ensuring the sets are properly initialized and that the lookups handle missing values gracefully.",
+    "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(zip(*coefs.T))\nxx = np.array([sum(abs(coef)) for coef in coefs.T]) / sum(abs(coefs.T[-1]))\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/decomposition/tests/test_online_lda.py\nNo changes needed.\n\n### sklearn/model_selection/_search.py\nNo changes needed.\n\n### sklearn/tests/test_common.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed.\n\n### sklearn/utils/testing.py\nNo changes needed."
+  ],
+  "llm_tokens": 18114,
+  "llm_latency": 28.45307183265686,
+  "patch_content": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(zip(*coefs.T))\nxx = np.array([sum(abs(coef)) for coef in coefs.T]) / sum(abs(coefs.T[-1]))\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. **Relevant Files**: `examples/linear_model/plot_lasso_lars.py`, `sklearn/decomposition/tests/test_online_lda.py`, `sklearn/model_selection/_search.py`, `sklearn/tests/test_common.py`, `sklearn/utils/estimator_checks.py`, `sklearn/utils/testing.py`.\n2. **Bottleneck Function**: Various functions like `lars_path`, `_dirichlet_expectation_1d`, `check_estimators_dtypes`, etc.\n3. **Why Slow**: These functions involve complex mathematical computations, iterative processes, and potentially large data handling.\n4. **Optimization Help**: Implement efficient algorithms, utilize vectorization, parallelize operations, and ensure data structures are optimized for performance.",
+    "optimizer": "Replace nested loops with set lookups where possible. This reduces time complexity from O(n\u00b2) to O(n), improving performance significantly. Edge cases to consider include ensuring the sets are properly initialized and that the lookups handle missing values gracefully.",
+    "reviewer": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(zip(*coefs.T))\nxx = np.array([sum(abs(coef)) for coef in coefs.T]) / sum(abs(coefs.T[-1]))\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/decomposition/tests/test_online_lda.py\nNo changes needed.\n\n### sklearn/model_selection/_search.py\nNo changes needed.\n\n### sklearn/tests/test_common.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed.\n\n### sklearn/utils/testing.py\nNo changes needed."
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "examples/linear_model/plot_lasso_lars.py"
+    ],
+    "error": null
+  }
+}

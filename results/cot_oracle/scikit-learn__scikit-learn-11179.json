@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-11179",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:18:48.167083",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49860
+  },
+  "llm_response": "Let's think step by step.\n\nThe `confusion_matrix` function in `classification.py` uses `count_nonzero` which is inefficient for large matrices. Using direct comparison and summation is faster.\n\n### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndiffering_labels = count_nonzero(y_true - y_pred, axis=1)\nscore = differing_labels == 0\n=======\ndiffering_labels = (y_true != y_pred).astype(int)\nscore = differing_labels.sum(axis=1) == 0\n>>>>>>> REPLACE",
+  "llm_tokens": 13444,
+  "llm_latency": 7.620433807373047,
+  "patch_content": "### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndiffering_labels = count_nonzero(y_true - y_pred, axis=1)\nscore = differing_labels == 0\n=======\ndiffering_labels = (y_true != y_pred).astype(int)\nscore = differing_labels.sum(axis=1) == 0\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/metrics/classification.py"
+    ],
+    "error": null
+  }
+}

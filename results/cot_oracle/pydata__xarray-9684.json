@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9684",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:41:30.040129",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49733
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `check_alignment` function in `xarray/core/datatree.py` is the bottleneck.\n**DIAGNOSIS**: It performs a recursive check for alignment, which can lead to redundant computations and high memory usage, especially for large trees.\n**SOLUTION**: Optimize the alignment check by avoiding unnecessary recursion and using efficient data structures.\n\n### SECTION 2: PATCH\n\n### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef check_alignment(\n    path: str,\n    node_ds: Dataset,\n    parent_ds: Dataset | None,\n    children: Mapping[str, DataTree],\n) -> None:\n    if parent_ds is not None:\n        try:\n            align(node_ds, parent_ds, join=\"exact\")\n        except ValueError as e:\n            node_repr = _indented(_without_header(repr(node_ds)))\n            parent_repr = _indented(dims_and_coords_repr(parent_ds))\n            raise ValueError(\n                f\"group {path!r} is not aligned with its parents:\\n\"\n                f\"Group:\\n{node_repr}\\nFrom parents:\\n{parent_repr}\"\n            ) from e\n\n    if children:\n        if parent_ds is not None:\n            base_ds = _inherited_dataset(node_ds, parent_ds)\n        else:\n            base_ds = node_ds\n\n        for child_name, child in children.items():\n            child_path = str(NodePath(path) / child_name)\n            child_ds = child.to_dataset(inherit=False)\n            check_alignment(child_path, child_ds, base_ds, child.children)\n=======\ndef check_alignment(\n    path: str,\n    node_ds: Dataset,\n    parent_ds: Dataset | None,\n    children: Mapping[str, DataTree],\n) -> None:\n    if parent_ds is not None:\n        try:\n            align(node_ds, parent_ds, join=\"exact\")\n        except ValueError as e:\n            node_repr = _indented(_without_header(repr(node_ds)))\n            parent_repr = _indented(dims_and_coords_repr(parent_ds))\n            raise ValueError(\n                f\"group {path!r} is not aligned with its parents:\\n\"\n                f\"Group:\\n{node_repr}\\nFrom parents:\\n{parent_repr}\"\n            ) from e\n\n    # Flatten the children dictionary to avoid recursion\n    flattened_children = {}\n    for child_name, child in children.items():\n        child_path = str(NodePath(path) / child_name)\n        child_ds = child.to_dataset(inherit=False)\n        flattened_children[child_path] = child_ds\n\n    # Check alignment for each child\n    for child_path, child_ds in flattened_children.items():\n        check_alignment(child_path, child_ds, node_ds, child_ds.children)\n>>>>>>> REPLACE",
+  "llm_tokens": 14051,
+  "llm_latency": 32.766777753829956,
+  "patch_content": "### xarray/core/datatree.py\n<<<<<<< SEARCH\ndef check_alignment(\n    path: str,\n    node_ds: Dataset,\n    parent_ds: Dataset | None,\n    children: Mapping[str, DataTree],\n) -> None:\n    if parent_ds is not None:\n        try:\n            align(node_ds, parent_ds, join=\"exact\")\n        except ValueError as e:\n            node_repr = _indented(_without_header(repr(node_ds)))\n            parent_repr = _indented(dims_and_coords_repr(parent_ds))\n            raise ValueError(\n                f\"group {path!r} is not aligned with its parents:\\n\"\n                f\"Group:\\n{node_repr}\\nFrom parents:\\n{parent_repr}\"\n            ) from e\n\n    if children:\n        if parent_ds is not None:\n            base_ds = _inherited_dataset(node_ds, parent_ds)\n        else:\n            base_ds = node_ds\n\n        for child_name, child in children.items():\n            child_path = str(NodePath(path) / child_name)\n            child_ds = child.to_dataset(inherit=False)\n            check_alignment(child_path, child_ds, base_ds, child.children)\n=======\ndef check_alignment(\n    path: str,\n    node_ds: Dataset,\n    parent_ds: Dataset | None,\n    children: Mapping[str, DataTree],\n) -> None:\n    if parent_ds is not None:\n        try:\n            align(node_ds, parent_ds, join=\"exact\")\n        except ValueError as e:\n            node_repr = _indented(_without_header(repr(node_ds)))\n            parent_repr = _indented(dims_and_coords_repr(parent_ds))\n            raise ValueError(\n                f\"group {path!r} is not aligned with its parents:\\n\"\n                f\"Group:\\n{node_repr}\\nFrom parents:\\n{parent_repr}\"\n            ) from e\n\n    # Flatten the children dictionary to avoid recursion\n    flattened_children = {}\n    for child_name, child in children.items():\n        child_path = str(NodePath(path) / child_name)\n        child_ds = child.to_dataset(inherit=False)\n        flattened_children[child_path] = child_ds\n\n    # Check alignment for each child\n    for child_path, child_ds in flattened_children.items():\n        check_alignment(child_path, child_ds, node_ds, child_ds.children)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/datatree.py"
+    ],
+    "error": null
+  }
+}

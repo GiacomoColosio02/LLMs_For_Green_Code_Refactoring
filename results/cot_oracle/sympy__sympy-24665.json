@@ -1,0 +1,26 @@
+{
+  "instance_id": "sympy__sympy-24665",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:31:50.576446",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24901
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_symbolic_factor_list` function in `sympy/polys/polytools.py` uses a nested loop to check for common factors, which is inefficient for large polynomials. By using a dictionary to count occurrences, we can identify common factors more quickly.\n\n### sympy/polys/polytools.py\n<<<<<<< SEARCH\ndef _symbolic_factor_list(p, domain=None):\n    factors = []\n    for i in range(1, p.degree() + 1):\n        factor = p.factor(i)\n        if factor not in factors:\n            factors.append(factor)\n    return factors\n=======\ndef _symbolic_factor_list(p, domain=None):\n    factor_counts = {}\n    for i in range(1, p.degree() + 1):\n        factor = p.factor(i)\n        if factor in factor_counts:\n            factor_counts[factor] += 1\n        else:\n            factor_counts[factor] = 1\n    return [factor for factor, count in factor_counts.items() if count > 1]\n>>>>>>> REPLACE",
+  "llm_tokens": 7011,
+  "llm_latency": 12.53965139389038,
+  "patch_content": "### sympy/polys/polytools.py\n<<<<<<< SEARCH\ndef _symbolic_factor_list(p, domain=None):\n    factors = []\n    for i in range(1, p.degree() + 1):\n        factor = p.factor(i)\n        if factor not in factors:\n            factors.append(factor)\n    return factors\n=======\ndef _symbolic_factor_list(p, domain=None):\n    factor_counts = {}\n    for i in range(1, p.degree() + 1):\n        factor = p.factor(i)\n        if factor in factor_counts:\n            factor_counts[factor] += 1\n        else:\n            factor_counts[factor] = 1\n    return [factor for factor, count in factor_counts.items() if count > 1]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

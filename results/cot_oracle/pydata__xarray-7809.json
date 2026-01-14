@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-7809",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:06:58.080808",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49772
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_codes_to_groups` function in `groupby.py` uses a loop to populate `groups`. This can be optimized by using NumPy's advanced indexing to avoid explicit iteration.\n\n### xarray/core/groupby.py\n<<<<<<< SEARCH\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    groups: T_GroupIndices = [[] for _ in range(N)]\n    for n, g in enumerate(inverse):\n        if g >= 0:\n            groups[g].append(n)\n    return groups\n=======\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    groups = [[] for _ in range(N)]\n    np.put_along_axis(groups, inverse[:, None], np.arange(len(inverse)), axis=0)\n    return groups\n>>>>>>> REPLACE",
+  "llm_tokens": 13582,
+  "llm_latency": 11.268820524215698,
+  "patch_content": "### xarray/core/groupby.py\n<<<<<<< SEARCH\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    groups: T_GroupIndices = [[] for _ in range(N)]\n    for n, g in enumerate(inverse):\n        if g >= 0:\n            groups[g].append(n)\n    return groups\n=======\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    groups = [[] for _ in range(N)]\n    np.put_along_axis(groups, inverse[:, None], np.arange(len(inverse)), axis=0)\n    return groups\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/groupby.py"
+    ],
+    "error": null
+  }
+}

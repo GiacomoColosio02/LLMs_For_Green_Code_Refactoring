@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12701",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:11:34.377718",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34802
+  },
+  "llm_response": "Let's think step by step.\n\nThe `johnson_lindenstrauss_min_dim` function in `random_projection.py` uses a loop to calculate the minimum dimension. Using a mathematical formula reduces the complexity to O(1).\n\n### sklearn/random_projection.py\n<<<<<<< SEARCH\ndef johnson_lindenstrauss_min_dim(n_samples, eps=0.1):\n    if eps <= 0 or eps >= 1:\n        raise ValueError(\"eps must be in (0, 1)\")\n    return int(np.ceil(-2 * np.log(eps) / np.log(1 - 1.0 / (4 * n_samples))))\n=======\ndef johnson_lindenstrauss_min_dim(n_samples, eps=0.1):\n    if eps <= 0 or eps >= 1:\n        raise ValueError(\"eps must be in (0, 1)\")\n    return int(np.ceil(-2 * np.log(eps) / np.log(1 - 1.0 / (4 * n_samples))))\n>>>>>>> REPLACE",
+  "llm_tokens": 9397,
+  "llm_latency": 12.290650606155396,
+  "patch_content": "### sklearn/random_projection.py\n<<<<<<< SEARCH\ndef johnson_lindenstrauss_min_dim(n_samples, eps=0.1):\n    if eps <= 0 or eps >= 1:\n        raise ValueError(\"eps must be in (0, 1)\")\n    return int(np.ceil(-2 * np.log(eps) / np.log(1 - 1.0 / (4 * n_samples))))\n=======\ndef johnson_lindenstrauss_min_dim(n_samples, eps=0.1):\n    if eps <= 0 or eps >= 1:\n        raise ValueError(\"eps must be in (0, 1)\")\n    return int(np.ceil(-2 * np.log(eps) / np.log(1 - 1.0 / (4 * n_samples))))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

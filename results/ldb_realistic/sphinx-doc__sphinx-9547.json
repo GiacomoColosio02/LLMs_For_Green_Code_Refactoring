@@ -1,0 +1,38 @@
+{
+  "instance_id": "sphinx-doc__sphinx-9547",
+  "prompt_type": "ldb",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-14T01:17:06.345794",
+  "status": "success",
+  "error": null,
+  "repo": "sphinx-doc/sphinx",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34944
+  },
+  "llm_response": "### sphinx/domains/c.py\n<<<<<<< SEARCH\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        assert identifier is not None\n        assert len(identifier) != 0\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return type(other) is ASTIdentifier and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier[0] == '@'\n=======\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return isinstance(other, ASTIdentifier) and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier.startswith('@')\n>>>>>>> REPLACE\n\n### sphinx/domains/cpp.py\n<<<<<<< SEARCH\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        assert identifier is not None\n        assert len(identifier) != 0\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return type(other) is ASTIdentifier and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier[0] == '@'\n=======\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return isinstance(other, ASTIdentifier) and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier.startswith('@')\n>>>>>>> REPLACE\n\n### sphinx/util/nodes.py\nNo changes needed.\n\n### sphinx/writers/latex.py\nNo changes needed.\n\n### tests/roots/test-ext-intersphinx-cppdomain/conf.py\nNo changes needed.\n\n### tests/test_domain_cpp.py\nNo changes needed.",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sphinx/domains/c.py\n<<<<<<< SEARCH\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        assert identifier is not None\n        assert len(identifier) != 0\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return type(other) is ASTIdentifier and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier[0] == '@'\n=======\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return isinstance(other, ASTIdentifier) and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier.startswith('@')\n>>>>>>> REPLACE\n\n### sphinx/domains/cpp.py\n<<<<<<< SEARCH\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        assert identifier is not None\n        assert len(identifier) != 0\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return type(other) is ASTIdentifier and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier[0] == '@'\n=======\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return isinstance(other, ASTIdentifier) and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier.startswith('@')\n>>>>>>> REPLACE\n\n### sphinx/util/nodes.py\nNo changes needed.\n\n### sphinx/writers/latex.py\nNo changes needed.\n\n### tests/roots/test-ext-intersphinx-cppdomain/conf.py\nNo changes needed.\n\n### tests/test_domain_cpp.py\nNo changes needed.",
+      "patch_content": "### sphinx/domains/c.py\n<<<<<<< SEARCH\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        assert identifier is not None\n        assert len(identifier) != 0\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return type(other) is ASTIdentifier and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier[0] == '@'\n=======\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return isinstance(other, ASTIdentifier) and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier.startswith('@')\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 10027,
+  "llm_latency": 23.88496732711792,
+  "patch_content": "### sphinx/domains/c.py\n<<<<<<< SEARCH\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        assert identifier is not None\n        assert len(identifier) != 0\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return type(other) is ASTIdentifier and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier[0] == '@'\n=======\nclass ASTIdentifier(ASTBaseBase):\n    def __init__(self, identifier: str) -> None:\n        self.identifier = identifier\n\n    def __eq__(self, other: Any) -> bool:\n        return isinstance(other, ASTIdentifier) and self.identifier == other.identifier\n\n    def is_anon(self) -> bool:\n        return self.identifier.startswith('@')\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sphinx/domains/c.py"
+    ],
+    "error": null
+  }
+}

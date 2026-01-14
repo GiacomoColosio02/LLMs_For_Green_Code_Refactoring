@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12822",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T13:55:35.297232",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24879
+  },
+  "llm_response": "### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\ntokens = [w for w in tokens if w not in stop_words]\n=======\ntokens = list(filter(lambda w: w not in stop_words, tokens))\n>>>>>>> REPLACE\n\n### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\nfor n in range(min_n,\n                min(max_n + 1, n_original_tokens + 1)):\n    for i in range(n_original_tokens - n + 1):\n        tokens_append(space_join(original_tokens[i: i + n]))\n=======\nfor n in range(min_n, min(max_n + 1, n_original_tokens + 1)):\n    tokens.extend(map(lambda i: space_join(original_tokens[i: i + n]), range(n_original_tokens - n + 1)))\n>>>>>>> REPLACE\n\n### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\nfor n in range(min_n, max_n + 1):\n    offset = 0\n    ngrams_append(w[offset:offset + n])\n    while offset + n < w_len:\n        offset += 1\n        ngrams_append(w[offset:offset + n])\n    if offset == 0:   # count a short word (w_len < n) only once\n        break\n=======\nfor n in range(min_n, max_n + 1):\n    ngrams.extend(map(lambda offset: w[offset:offset + n], range(min(n, w_len))))\n>>>>>>> REPLACE",
+  "llm_tokens": 6458,
+  "llm_latency": 16.182096004486084,
+  "patch_content": "### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\ntokens = [w for w in tokens if w not in stop_words]\n=======\ntokens = list(filter(lambda w: w not in stop_words, tokens))\n>>>>>>> REPLACE\n\n### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\nfor n in range(min_n,\n                min(max_n + 1, n_original_tokens + 1)):\n    for i in range(n_original_tokens - n + 1):\n        tokens_append(space_join(original_tokens[i: i + n]))\n=======\nfor n in range(min_n, min(max_n + 1, n_original_tokens + 1)):\n    tokens.extend(map(lambda i: space_join(original_tokens[i: i + n]), range(n_original_tokens - n + 1)))\n>>>>>>> REPLACE\n\n### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\nfor n in range(min_n, max_n + 1):\n    offset = 0\n    ngrams_append(w[offset:offset + n])\n    while offset + n < w_len:\n        offset += 1\n        ngrams_append(w[offset:offset + n])\n    if offset == 0:   # count a short word (w_len < n) only once\n        break\n=======\nfor n in range(min_n, max_n + 1):\n    ngrams.extend(map(lambda offset: w[offset:offset + n], range(min(n, w_len))))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 3,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/feature_extraction/text.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12155",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:56:10.270668",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24888
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `KFold._iter_test_indices` method in `model_selection/_split.py` is the bottleneck.\n**DIAGNOSIS**: It uses a loop to generate combinations, which is computationally expensive and memory-intensive.\n**SOLUTION**: Replace the loop with a more efficient algorithm to generate combinations.\n\n### SECTION 2: PATCH\n\n### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef _iter_test_indices(self, X, y=None, groups=None):\n    for combination in combinations(range(_num_samples(X)), self.p):\n        yield np.array(combination)\n=======\ndef _iter_test_indices(self, X, y=None, groups=None):\n    n_samples = _num_samples(X)\n    indices = np.arange(n_samples)\n    np.random.shuffle(indices)\n    for start in range(0, n_samples, self.p):\n        end = min(start + self.p, n_samples)\n        yield indices[start:end]\n>>>>>>> REPLACE",
+  "llm_tokens": 6866,
+  "llm_latency": 12.042256593704224,
+  "patch_content": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef _iter_test_indices(self, X, y=None, groups=None):\n    for combination in combinations(range(_num_samples(X)), self.p):\n        yield np.array(combination)\n=======\ndef _iter_test_indices(self, X, y=None, groups=None):\n    n_samples = _num_samples(X)\n    indices = np.arange(n_samples)\n    np.random.shuffle(indices)\n    for start in range(0, n_samples, self.p):\n        end = min(start + self.p, n_samples)\n        yield indices[start:end]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/model_selection/_split.py"
+    ],
+    "error": null
+  }
+}

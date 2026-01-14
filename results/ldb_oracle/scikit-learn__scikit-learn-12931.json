@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12931",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T11:19:36.378005",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49878
+  },
+  "llm_response": "### benchmarks/bench_isotonic.py\n<<<<<<< SEARCH\ndef generate_perturbed_logarithm_dataset(size):\n    return (np.random.randint(-50, 50, size=size) +\n            50. * np.log(1 + np.arange(size)))\n\ndef generate_logistic_dataset(size):\n    X = np.sort(np.random.normal(size=size))\n    return np.random.random(size=size) < 1.0 / (1.0 + np.exp(-X))\n\ndef generate_pathological_dataset(size):\n    # Triggers O(n^2) complexity on the original implementation.\n    return np.r_[np.arange(size),\n                 np.arange(-(size - 1), size),\n                 np.arange(-(size - 1), 1)]\n=======\ndef generate_perturbed_logarithm_dataset(size):\n    return (np.random.randint(-50, 50, size=size) +\n            50. * np.log(1 + np.arange(size))).astype(np.float32)\n\ndef generate_logistic_dataset(size):\n    X = np.sort(np.random.normal(size=size)).astype(np.float32)\n    return np.random.random(size=size).astype(np.float32) < 1.0 / (1.0 + np.exp(-X))\n\ndef generate_pathological_dataset(size):\n    # Triggers O(n^2) complexity on the original implementation.\n    return np.r_[np.arange(size),\n                 np.arange(-(size - 1), size),\n                 np.arange(-(size - 1), 1)].astype(np.float32)\n>>>>>>> REPLACE\n\n### examples/ensemble/plot_gradient_boosting_oob.py\nNo changes needed.\n\n### sklearn/discriminant_analysis.py\nNo changes needed.\n\n### sklearn/linear_model/base.py\nNo changes needed.",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### benchmarks/bench_isotonic.py\n<<<<<<< SEARCH\ndef generate_perturbed_logarithm_dataset(size):\n    return (np.random.randint(-50, 50, size=size) +\n            50. * np.log(1 + np.arange(size)))\n\ndef generate_logistic_dataset(size):\n    X = np.sort(np.random.normal(size=size))\n    return np.random.random(size=size) < 1.0 / (1.0 + np.exp(-X))\n\ndef generate_pathological_dataset(size):\n    # Triggers O(n^2) complexity on the original implementation.\n    return np.r_[np.arange(size),\n                 np.arange(-(size - 1), size),\n                 np.arange(-(size - 1), 1)]\n=======\ndef generate_perturbed_logarithm_dataset(size):\n    return (np.random.randint(-50, 50, size=size) +\n            50. * np.log(1 + np.arange(size))).astype(np.float32)\n\ndef generate_logistic_dataset(size):\n    X = np.sort(np.random.normal(size=size)).astype(np.float32)\n    return np.random.random(size=size).astype(np.float32) < 1.0 / (1.0 + np.exp(-X))\n\ndef generate_pathological_dataset(size):\n    # Triggers O(n^2) complexity on the original implementation.\n    return np.r_[np.arange(size),\n                 np.arange(-(size - 1), size),\n                 np.arange(-(size - 1), 1)].astype(np.float32)\n>>>>>>> REPLACE\n\n### examples/ensemble/plot_gradient_boosting_oob.py\nNo changes needed.\n\n### sklearn/discriminant_analysis.py\nNo changes needed.\n\n### sklearn/linear_model/base.py\nNo changes needed.",
+      "patch_content": "### benchmarks/bench_isotonic.py\n<<<<<<< SEARCH\ndef generate_perturbed_logarithm_dataset(size):\n    return (np.random.randint(-50, 50, size=size) +\n            50. * np.log(1 + np.arange(size)))\n\ndef generate_logistic_dataset(size):\n    X = np.sort(np.random.normal(size=size))\n    return np.random.random(size=size) < 1.0 / (1.0 + np.exp(-X))\n\ndef generate_pathological_dataset(size):\n    # Triggers O(n^2) complexity on the original implementation.\n    return np.r_[np.arange(size),\n                 np.arange(-(size - 1), size),\n                 np.arange(-(size - 1), 1)]\n=======\ndef generate_perturbed_logarithm_dataset(size):\n    return (np.random.randint(-50, 50, size=size) +\n            50. * np.log(1 + np.arange(size))).astype(np.float32)\n\ndef generate_logistic_dataset(size):\n    X = np.sort(np.random.normal(size=size)).astype(np.float32)\n    return np.random.random(size=size).astype(np.float32) < 1.0 / (1.0 + np.exp(-X))\n\ndef generate_pathological_dataset(size):\n    # Triggers O(n^2) complexity on the original implementation.\n    return np.r_[np.arange(size),\n                 np.arange(-(size - 1), size),\n                 np.arange(-(size - 1), 1)].astype(np.float32)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 12755,
+  "llm_latency": 21.147677421569824,
+  "patch_content": "### benchmarks/bench_isotonic.py\n<<<<<<< SEARCH\ndef generate_perturbed_logarithm_dataset(size):\n    return (np.random.randint(-50, 50, size=size) +\n            50. * np.log(1 + np.arange(size)))\n\ndef generate_logistic_dataset(size):\n    X = np.sort(np.random.normal(size=size))\n    return np.random.random(size=size) < 1.0 / (1.0 + np.exp(-X))\n\ndef generate_pathological_dataset(size):\n    # Triggers O(n^2) complexity on the original implementation.\n    return np.r_[np.arange(size),\n                 np.arange(-(size - 1), size),\n                 np.arange(-(size - 1), 1)]\n=======\ndef generate_perturbed_logarithm_dataset(size):\n    return (np.random.randint(-50, 50, size=size) +\n            50. * np.log(1 + np.arange(size))).astype(np.float32)\n\ndef generate_logistic_dataset(size):\n    X = np.sort(np.random.normal(size=size)).astype(np.float32)\n    return np.random.random(size=size).astype(np.float32) < 1.0 / (1.0 + np.exp(-X))\n\ndef generate_pathological_dataset(size):\n    # Triggers O(n^2) complexity on the original implementation.\n    return np.r_[np.arange(size),\n                 np.arange(-(size - 1), size),\n                 np.arange(-(size - 1), 1)].astype(np.float32)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "benchmarks/bench_isotonic.py"
+    ],
+    "error": null
+  }
+}

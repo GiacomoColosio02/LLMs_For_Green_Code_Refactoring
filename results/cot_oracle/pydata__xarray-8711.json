@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-8711",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:01:06.754380",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49813
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_check_data_shape` function in `xarray/core/dataarray.py` is the bottleneck.\n**DIAGNOSIS**: It uses a loop to check the shape of the data, which can be inefficient for large datasets.\n**SOLUTION**: Replace the loop with a direct comparison to avoid unnecessary iterations.\n\n### SECTION 2: PATCH\n\n### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef _check_data_shape(\n    data: Any,\n    coords: Sequence[Sequence | pd.Index | DataArray] | Mapping | None,\n    dims: str | Iterable[Hashable] | None,\n) -> Any:\n    if data is dtypes.NA:\n        data = np.nan\n    if coords is not None and utils.is_scalar(data, include_0d=False):\n        if utils.is_dict_like(coords):\n            if dims is None:\n                return data\n            else:\n                data_shape = tuple(\n                    as_variable(coords[k], k).size if k in coords.keys() else 1\n                    for k in dims\n                )\n        else:\n            data_shape = tuple(as_variable(coord, \"foo\").size for coord in coords)\n        data = np.full(data_shape, data)\n    return data\n=======\ndef _check_data_shape(\n    data: Any,\n    coords: Sequence[Sequence | pd.Index | DataArray] | Mapping | None,\n    dims: str | Iterable[Hashable] | None,\n) -> Any:\n    if data is dtypes.NA:\n        data = np.nan\n    if coords is not None and utils.is_scalar(data, include_0d=False):\n        if utils.is_dict_like(coords):\n            if dims is None:\n                return data\n            else:\n                data_shape = tuple(\n                    as_variable(coords[k], k).size if k in coords.keys() else 1\n                    for k in dims\n                )\n        else:\n            data_shape = tuple(as_variable(coord, \"foo\").size for coord in coords)\n        data = np.full(data_shape, data)\n    else:\n        data_shape = data.shape\n    return data\n>>>>>>> REPLACE",
+  "llm_tokens": 15264,
+  "llm_latency": 26.380534410476685,
+  "patch_content": "### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef _check_data_shape(\n    data: Any,\n    coords: Sequence[Sequence | pd.Index | DataArray] | Mapping | None,\n    dims: str | Iterable[Hashable] | None,\n) -> Any:\n    if data is dtypes.NA:\n        data = np.nan\n    if coords is not None and utils.is_scalar(data, include_0d=False):\n        if utils.is_dict_like(coords):\n            if dims is None:\n                return data\n            else:\n                data_shape = tuple(\n                    as_variable(coords[k], k).size if k in coords.keys() else 1\n                    for k in dims\n                )\n        else:\n            data_shape = tuple(as_variable(coord, \"foo\").size for coord in coords)\n        data = np.full(data_shape, data)\n    return data\n=======\ndef _check_data_shape(\n    data: Any,\n    coords: Sequence[Sequence | pd.Index | DataArray] | Mapping | None,\n    dims: str | Iterable[Hashable] | None,\n) -> Any:\n    if data is dtypes.NA:\n        data = np.nan\n    if coords is not None and utils.is_scalar(data, include_0d=False):\n        if utils.is_dict_like(coords):\n            if dims is None:\n                return data\n            else:\n                data_shape = tuple(\n                    as_variable(coords[k], k).size if k in coords.keys() else 1\n                    for k in dims\n                )\n        else:\n            data_shape = tuple(as_variable(coord, \"foo\").size for coord in coords)\n        data = np.full(data_shape, data)\n    else:\n        data_shape = data.shape\n    return data\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/dataarray.py"
+    ],
+    "error": null
+  }
+}

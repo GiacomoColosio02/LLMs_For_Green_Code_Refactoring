@@ -3,21 +3,26 @@
   "prompt_type": "zero_shot",
   "strategy": "oracle",
   "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
-  "timestamp": "2026-01-08T19:27:22.972554",
+  "timestamp": "2026-01-10T13:27:20.529507",
   "status": "success",
-  "llm_response": "### xarray/core/indexes.py\n<<<<<<< SEARCH\ndef _sanitize_slice_element(x):\n    from .dataarray import DataArray\n    from .variable import Variable\n\n    if not isinstance(x, tuple) and len(np.shape(x)) != 0:\n        raise ValueError(\n            f\"cannot use non-scalar arrays in a slice for xarray indexing: {x}\"\n        )\n\n    if isinstance(x, (Variable, DataArray)):\n        x = x.values\n\n    if isinstance(x, np.ndarray):\n        x = x[()]\n\n    return x\n=======\ndef _sanitize_slice_element(x):\n    if not isinstance(x, tuple) and len(np.shape(x)) != 0:\n        raise ValueError(\n            f\"cannot use non-scalar arrays in a slice for xarray indexing: {x}\"\n        )\n\n    if isinstance(x, (Variable, DataArray)):\n        x = x.values\n\n    if isinstance(x, np.ndarray):\n        x = x[()]\n\n    return x\n>>>>>>> REPLACE\n\n### xarray/core/variable.py\n<<<<<<< SEARCH\ndef _as_array_or_item(data):\n    \"\"\"Return the given values as a numpy array, or as an individual item if\n    it's a 0d datetime64 or timedelta64 array.\n\n    Importantly, this function does not copy data if it is already an ndarray -\n    otherwise, it will not be possible to update Variable values in place.\n\n    This function mostly exists because 0-dimensional ndarrays with\n    dtype=datetime64 are broken :(\n    https://github.com/numpy/numpy/issues/4337\n    https://github.com/numpy/numpy/issues/7619\n\n    TODO: remove this (replace with np.asarray) once these issues are fixed\n    \"\"\"\n    data = np.asarray(data)\n    if data.ndim == 0:\n        if data.dtype.kind == \"M\":\n            data = np.datetime64(data, \"ns\")\n        elif data.dtype.kind == \"m\":\n            data = np.timedelta64(data, \"ns\")\n    return data\n=======\ndef _as_array_or_item(data):\n    return np.asarray(data)\n>>>>>>> REPLACE",
-  "patch_result": {
-    "success": true,
-    "changes_applied": 2,
-    "total_blocks": 2,
-    "method": "search_replace",
-    "modified_files": [
-      "xarray/core/indexes.py",
-      "xarray/core/variable.py"
-    ]
-  },
   "error": null,
   "repo": "pydata/xarray",
-  "llm_tokens": 14198,
-  "llm_latency": 25.596246004104614
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49787
+  },
+  "llm_response": "### xarray/core/alignment.py\n<<<<<<< SEARCH\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n=======\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0), step=2)):\n            unchanged_dims.add(dim)\n>>>>>>> REPLACE\n\n### xarray/core/indexes.py\n<<<<<<< SEARCH\n        if isinstance(fill_value, dict):\n            fill_value_ = fill_value.get(name, dtypes.NA)\n        else:\n            fill_value_ = fill_value\n=======\n        if isinstance(fill_value, dict):\n            fill_value_ = fill_value.get(name, dtypes.NA)\n        else:\n            fill_value_ = fill_value\n        if isinstance(indxr, slice) and indxr.step == 2:\n            fill_value_ = fill_value_\n>>>>>>> REPLACE\n\n### xarray/core/variable.py\n<<<<<<< SEARCH\n        if isinstance(fill_value, dict):\n            fill_value_ = fill_value.get(name, dtypes.NA)\n        else:\n            fill_value_ = fill_value\n=======\n        if isinstance(fill_value, dict):\n            fill_value_ = fill_value.get(name, dtypes.NA)\n        else:\n            fill_value_ = fill_value\n        if isinstance(indxr, slice) and indxr.step == 2:\n            fill_value_ = fill_value_\n>>>>>>> REPLACE",
+  "llm_tokens": 12531,
+  "llm_latency": 19.864042282104492,
+  "patch_content": "### xarray/core/alignment.py\n<<<<<<< SEARCH\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n=======\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0), step=2)):\n            unchanged_dims.add(dim)\n>>>>>>> REPLACE\n\n### xarray/core/indexes.py\n<<<<<<< SEARCH\n        if isinstance(fill_value, dict):\n            fill_value_ = fill_value.get(name, dtypes.NA)\n        else:\n            fill_value_ = fill_value\n=======\n        if isinstance(fill_value, dict):\n            fill_value_ = fill_value.get(name, dtypes.NA)\n        else:\n            fill_value_ = fill_value\n        if isinstance(indxr, slice) and indxr.step == 2:\n            fill_value_ = fill_value_\n>>>>>>> REPLACE\n\n### xarray/core/variable.py\n<<<<<<< SEARCH\n        if isinstance(fill_value, dict):\n            fill_value_ = fill_value.get(name, dtypes.NA)\n        else:\n            fill_value_ = fill_value\n=======\n        if isinstance(fill_value, dict):\n            fill_value_ = fill_value.get(name, dtypes.NA)\n        else:\n            fill_value_ = fill_value\n        if isinstance(indxr, slice) and indxr.step == 2:\n            fill_value_ = fill_value_\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 3,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/alignment.py"
+    ],
+    "error": null
+  }
 }

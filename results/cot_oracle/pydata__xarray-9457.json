@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9457",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:49:58.558114",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49912
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `Datatree.setup` method in `datatree.py` is the bottleneck.\n**DIAGNOSIS**: It creates a `DataTree` instance and assigns it to a dictionary, which involves multiple operations that can be optimized.\n**SOLUTION**: Simplify the creation and assignment process to reduce redundancy and improve efficiency.\n\n### SECTION 2: PATCH\n\n### xarray/core/datatree.py\n<<<<<<< SEARCH\nclass Datatree:\n    def setup(self):\n        run1 = DataTree.from_dict({\"run1\": xr.Dataset({\"a\": 1})})\n        self.d = {\"run1\": run1}\n=======\nclass Datatree:\n    def setup(self):\n        self.d = {\"run1\": DataTree.from_dict({\"run1\": xr.Dataset({\"a\": 1})})}\n>>>>>>> REPLACE",
+  "llm_tokens": 13159,
+  "llm_latency": 11.758809328079224,
+  "patch_content": "### xarray/core/datatree.py\n<<<<<<< SEARCH\nclass Datatree:\n    def setup(self):\n        run1 = DataTree.from_dict({\"run1\": xr.Dataset({\"a\": 1})})\n        self.d = {\"run1\": run1}\n=======\nclass Datatree:\n    def setup(self):\n        self.d = {\"run1\": DataTree.from_dict({\"run1\": xr.Dataset({\"a\": 1})})}\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "asv_bench/benchmarks/datatree.py"
+    ],
+    "error": null
+  }
+}

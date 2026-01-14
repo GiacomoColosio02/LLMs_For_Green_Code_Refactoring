@@ -3,18 +3,26 @@
   "prompt_type": "cot",
   "strategy": "realistic",
   "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
-  "timestamp": "2026-01-08T19:58:36.160125",
-  "status": "patch_failed",
-  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n1. **IDENTIFICATION**: The `KDE` class in `seaborn/_statistics.py` has potential inefficiencies, particularly in the `define_support` method and the `_compute_density` method.\n\n2. **DIAGNOSIS**: \n   - The `define_support` method creates a dense grid of points (`support`) based on the input data, which can be very memory-intensive for large datasets.\n   - The `_compute_density` method computes the kernel density estimate for each point on the support grid, which can be computationally expensive.\n\n3. **HYPOTHESIS**: \n   - By optimizing the grid creation and density computation, we can significantly reduce both memory usage and computation time.\n\n### SECTION 2: PATCH\n\n### seaborn/_statistics.py\n<<<<<<< SEARCH\ndef define_support(self, x, gridsize=200, cut=3, bw_method=None):\n    \"\"\"Define the support for the KDE.\"\"\"\n    std = x.std(ddof=1)\n    min_val = x.min() - std * cut\n    max_val = x.max() + std * cut\n    support = np.linspace(min_val, max_val, gridsize)\n    self.support = support\n    return support\n\ndef _compute_density(self, x, support):\n    \"\"\"Compute the kernel density estimate.\"\"\"\n    bandwidth = self.bandwidth\n    if bandwidth is None:\n        bandwidth = self._select_bandwidth(x)\n    density = np.zeros_like(support)\n    for xi in x:\n        density += gaussian_kde(xi, bw_method=bandwidth)(support)\n    density /= len(x)\n    return density\n=======\ndef define_support(self, x, gridsize=200, cut=3, bw_method=None):\n    \"\"\"Define the support for the KDE.\"\"\"\n    std = x.std(ddof=1)\n    min_val = x.min() - std * cut\n    max_val = x.max() + std * cut\n    support = np.linspace(min_val, max_val, gridsize)\n    self.support = support\n    return support\n\ndef _compute_density(self, x, support):\n    \"\"\"Compute the kernel density estimate.\"\"\"\n    bandwidth = self.bandwidth\n    if bandwidth is None:\n        bandwidth = self._select_bandwidth(x)\n    density = np.zeros_like(support)\n    for xi in x:\n        density += gaussian_kde(xi, bw_method=bandwidth)(support)\n    density /= len(x)\n    return density\n>>>>>>> REPLACE",
-  "patch_result": {
-    "success": false,
-    "changes_applied": 0,
-    "total_blocks": 0,
-    "method": "none",
-    "modified_files": []
-  },
+  "timestamp": "2026-01-12T11:50:29.215908",
+  "status": "success",
   "error": null,
   "repo": "mwaskom/seaborn",
-  "llm_tokens": 17088,
-  "llm_latency": 30.45461368560791
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34983
+  },
+  "llm_response": "Let's think step by step.\n\nThe `kdeplot` function in `seaborn/distributions.py` uses `numpy.histogram`, which can be slow for large datasets. Using `numpy.histogramdd` for multivariate data can also be inefficient. We can replace these calls with more efficient implementations like `scipy.stats.gaussian_kde`.\n\n### seaborn/distributions.py\n<<<<<<< SEARCH\nif hist:\n    if bins is None:\n        bins = min(_freedman_diaconis_bins(a), 50)\n    hist_kws.setdefault(\"alpha\", 0.4)\n    hist_kws.setdefault(\"density\", norm_hist)\n\n    orientation = \"horizontal\" if vertical else \"vertical\"\n    hist_color = hist_kws.pop(\"color\", color)\n    ax.hist(a, bins, orientation=orientation,\n            color=hist_color, **hist_kws)\n    if hist_color != color:\n        hist_kws[\"color\"] = hist_color\n\nif kde:\n    kde_color = kde_kws.pop(\"color\", color)\n    kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n    if kde_color != color:\n        kde_kws[\"color\"] = kde_color\n=======\nif hist:\n    if bins is None:\n        bins = min(_freedman_diaconis_bins(a), 50)\n    hist_kws.setdefault(\"alpha\", 0.4)\n    hist_kws.setdefault(\"density\", norm_hist)\n\n    orientation = \"horizontal\" if vertical else \"vertical\"\n    hist_color = hist_kws.pop(\"color\", color)\n    ax.hist(a, bins, orientation=orientation,\n            color=hist_color, **hist_kws)\n    if hist_color != color:\n        hist_kws[\"color\"] = hist_color\n\nif kde:\n    kde_color = kde_kws.pop(\"color\", color)\n    kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n    if kde_color != color:\n        kde_kws[\"color\"] = kde_color\n>>>>>>> REPLACE",
+  "llm_tokens": 10303,
+  "llm_latency": 25.247655391693115,
+  "patch_content": "### seaborn/distributions.py\n<<<<<<< SEARCH\nif hist:\n    if bins is None:\n        bins = min(_freedman_diaconis_bins(a), 50)\n    hist_kws.setdefault(\"alpha\", 0.4)\n    hist_kws.setdefault(\"density\", norm_hist)\n\n    orientation = \"horizontal\" if vertical else \"vertical\"\n    hist_color = hist_kws.pop(\"color\", color)\n    ax.hist(a, bins, orientation=orientation,\n            color=hist_color, **hist_kws)\n    if hist_color != color:\n        hist_kws[\"color\"] = hist_color\n\nif kde:\n    kde_color = kde_kws.pop(\"color\", color)\n    kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n    if kde_color != color:\n        kde_kws[\"color\"] = kde_color\n=======\nif hist:\n    if bins is None:\n        bins = min(_freedman_diaconis_bins(a), 50)\n    hist_kws.setdefault(\"alpha\", 0.4)\n    hist_kws.setdefault(\"density\", norm_hist)\n\n    orientation = \"horizontal\" if vertical else \"vertical\"\n    hist_color = hist_kws.pop(\"color\", color)\n    ax.hist(a, bins, orientation=orientation,\n            color=hist_color, **hist_kws)\n    if hist_color != color:\n        hist_kws[\"color\"] = hist_color\n\nif kde:\n    kde_color = kde_kws.pop(\"color\", color)\n    kdeplot(a, vertical=vertical, ax=ax, color=kde_color, **kde_kws)\n    if kde_color != color:\n        kde_kws[\"color\"] = kde_color\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "seaborn/distributions.py"
+    ],
+    "error": null
+  }
 }

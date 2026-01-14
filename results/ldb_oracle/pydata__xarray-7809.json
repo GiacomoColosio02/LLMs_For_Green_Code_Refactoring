@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-7809",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T10:47:44.345570",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49772
+  },
+  "llm_response": "### xarray/core/groupby.py\n<<<<<<< SEARCH\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    groups: T_GroupIndices = [[] for _ in range(N)]\n    for n, g in enumerate(inverse):\n        if g >= 0:\n            groups[g].append(n)\n    return groups\n=======\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    return [np.where(inverse == i)[0] for i in range(N)]\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/core/groupby.py\n<<<<<<< SEARCH\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    groups: T_GroupIndices = [[] for _ in range(N)]\n    for n, g in enumerate(inverse):\n        if g >= 0:\n            groups[g].append(n)\n    return groups\n=======\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    return [np.where(inverse == i)[0] for i in range(N)]\n>>>>>>> REPLACE",
+      "patch_content": "### xarray/core/groupby.py\n<<<<<<< SEARCH\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    groups: T_GroupIndices = [[] for _ in range(N)]\n    for n, g in enumerate(inverse):\n        if g >= 0:\n            groups[g].append(n)\n    return groups\n=======\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    return [np.where(inverse == i)[0] for i in range(N)]\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 13297,
+  "llm_latency": 7.865266561508179,
+  "patch_content": "### xarray/core/groupby.py\n<<<<<<< SEARCH\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    groups: T_GroupIndices = [[] for _ in range(N)]\n    for n, g in enumerate(inverse):\n        if g >= 0:\n            groups[g].append(n)\n    return groups\n=======\ndef _codes_to_groups(inverse: np.ndarray, N: int) -> T_GroupIndices:\n    return [np.where(inverse == i)[0] for i in range(N)]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/groupby.py"
+    ],
+    "error": null
+  }
+}

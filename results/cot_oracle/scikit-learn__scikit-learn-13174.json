@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13174",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:09:58.512633",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 38753
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_boost` method in `weight_boosting.py` has a nested loop for calculating errors, which is inefficient. Using vectorized operations can significantly speed up this process.\n\n### sklearn/ensemble/weight_boosting.py\n<<<<<<< SEARCH\nerror_vect = np.abs(y_predict - y)\nfor i in range(error_vect.shape[0]):\n    if error_vect[i] > 0.5:\n        error_vect[i] = 1. - np.exp(- error_vect[i])\n    else:\n        error_vect[i] = error_vect[i]\n=======\nerror_vect = np.abs(y_predict - y)\nerror_vect[error_vect > 0.5] = 1. - np.exp(- error_vect[error_vect > 0.5])\nerror_vect[error_vect <= 0.5] = error_vect[error_vect <= 0.5]\n>>>>>>> REPLACE",
+  "llm_tokens": 10106,
+  "llm_latency": 11.121919870376587,
+  "patch_content": "### sklearn/ensemble/weight_boosting.py\n<<<<<<< SEARCH\nerror_vect = np.abs(y_predict - y)\nfor i in range(error_vect.shape[0]):\n    if error_vect[i] > 0.5:\n        error_vect[i] = 1. - np.exp(- error_vect[i])\n    else:\n        error_vect[i] = error_vect[i]\n=======\nerror_vect = np.abs(y_predict - y)\nerror_vect[error_vect > 0.5] = 1. - np.exp(- error_vect[error_vect > 0.5])\nerror_vect[error_vect <= 0.5] = error_vect[error_vect <= 0.5]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

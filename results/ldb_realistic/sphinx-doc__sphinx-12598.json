@@ -1,0 +1,38 @@
+{
+  "instance_id": "sphinx-doc__sphinx-12598",
+  "prompt_type": "ldb",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-14T01:14:46.326177",
+  "status": "success",
+  "error": null,
+  "repo": "sphinx-doc/sphinx",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34960
+  },
+  "llm_response": "### sphinx/application.py\n<<<<<<< SEARCH\n        for ext in self.extensions.values():\n            allowed = getattr(ext, attrname, None)\n            if allowed is None:\n                logger.warning(message_not_declared, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n            elif not allowed:\n                logger.warning(message_not_safe, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n=======\n\n        for ext in self.extensions.values():\n            allowed = getattr(ext, attrname, False)\n            if not allowed:\n                logger.warning(message_not_declared, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n            if not allowed:\n                logger.warning(message_not_safe, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sphinx/application.py\n<<<<<<< SEARCH\n        for ext in self.extensions.values():\n            allowed = getattr(ext, attrname, None)\n            if allowed is None:\n                logger.warning(message_not_declared, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n            elif not allowed:\n                logger.warning(message_not_safe, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n=======\n\n        for ext in self.extensions.values():\n            allowed = getattr(ext, attrname, False)\n            if not allowed:\n                logger.warning(message_not_declared, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n            if not allowed:\n                logger.warning(message_not_safe, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n>>>>>>> REPLACE",
+      "patch_content": "### sphinx/application.py\n<<<<<<< SEARCH\n        for ext in self.extensions.values():\n            allowed = getattr(ext, attrname, None)\n            if allowed is None:\n                logger.warning(message_not_declared, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n            elif not allowed:\n                logger.warning(message_not_safe, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n=======\n\n        for ext in self.extensions.values():\n            allowed = getattr(ext, attrname, False)\n            if not allowed:\n                logger.warning(message_not_declared, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n            if not allowed:\n                logger.warning(message_not_safe, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 9524,
+  "llm_latency": 10.57871675491333,
+  "patch_content": "### sphinx/application.py\n<<<<<<< SEARCH\n        for ext in self.extensions.values():\n            allowed = getattr(ext, attrname, None)\n            if allowed is None:\n                logger.warning(message_not_declared, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n            elif not allowed:\n                logger.warning(message_not_safe, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n=======\n\n        for ext in self.extensions.values():\n            allowed = getattr(ext, attrname, False)\n            if not allowed:\n                logger.warning(message_not_declared, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n            if not allowed:\n                logger.warning(message_not_safe, ext.name)\n                logger.warning(__('doing serial %s'), typ)\n                return False\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sphinx/application.py"
+    ],
+    "error": null
+  }
+}

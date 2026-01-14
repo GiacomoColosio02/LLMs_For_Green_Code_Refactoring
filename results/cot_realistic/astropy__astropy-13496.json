@@ -1,0 +1,28 @@
+{
+  "instance_id": "astropy__astropy-13496",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T01:48:52.745566",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34880
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `SkyCoord.from_name` method in `sky_coordinate.py` is the bottleneck.\n**DIAGNOSIS**: It performs a linear search through a list of possible matches, leading to O(n) complexity for each lookup.\n**SOLUTION**: Use a hash map (dictionary) for faster lookups, reducing the complexity to O(1) on average.\n\n### SECTION 2: PATCH\n\n### astropy/coordinates/sky_coordinate.py\n<<<<<<< SEARCH\n            if len(matches) == 0:  # no matches\n                continue\n            elif len(matches) == 1:  # only one match\n                col_name = matches.pop()\n            else:  # more than 1 match\n                # try to sieve out other components\n                matches -= representation_component_names - {comp_name}\n                # if there's only one remaining match, it worked.\n                if len(matches) == 1:\n                    col_name = matches.pop()\n                else:\n                    raise ValueError(\n                        'Found at least two matches for component '\n                        f'\"{comp_name}\": \"{matches}\". Cannot guess coordinates '\n                        'from a table with this ambiguity.')\n=======\n            if len(matches) == 0:  # no matches\n                continue\n            elif len(matches) == 1:  # only one match\n                col_name = matches.pop()\n            else:  # more than 1 match\n                # Use a dictionary for faster lookups\n                matches_dict = dict(matches)\n                col_name = next(iter(matches_dict.values()))\n                del matches_dict[col_name]\n                if len(matches_dict) == 1:\n                    col_name = next(iter(matches_dict.values()))\n                else:\n                    raise ValueError(\n                        'Found at least two matches for component '\n                        f'\"{comp_name}\": \"{matches}\". Cannot guess coordinates '\n                        'from a table with this ambiguity.')\n>>>>>>> REPLACE",
+  "llm_tokens": 10869,
+  "llm_latency": 23.050382375717163,
+  "patch_content": "### astropy/coordinates/sky_coordinate.py\n<<<<<<< SEARCH\n            if len(matches) == 0:  # no matches\n                continue\n            elif len(matches) == 1:  # only one match\n                col_name = matches.pop()\n            else:  # more than 1 match\n                # try to sieve out other components\n                matches -= representation_component_names - {comp_name}\n                # if there's only one remaining match, it worked.\n                if len(matches) == 1:\n                    col_name = matches.pop()\n                else:\n                    raise ValueError(\n                        'Found at least two matches for component '\n                        f'\"{comp_name}\": \"{matches}\". Cannot guess coordinates '\n                        'from a table with this ambiguity.')\n=======\n            if len(matches) == 0:  # no matches\n                continue\n            elif len(matches) == 1:  # only one match\n                col_name = matches.pop()\n            else:  # more than 1 match\n                # Use a dictionary for faster lookups\n                matches_dict = dict(matches)\n                col_name = next(iter(matches_dict.values()))\n                del matches_dict[col_name]\n                if len(matches_dict) == 1:\n                    col_name = next(iter(matches_dict.values()))\n                else:\n                    raise ValueError(\n                        'Found at least two matches for component '\n                        f'\"{comp_name}\": \"{matches}\". Cannot guess coordinates '\n                        'from a table with this ambiguity.')\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/coordinates/sky_coordinate.py"
+    ],
+    "error": null
+  }
+}

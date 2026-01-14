@@ -1,0 +1,26 @@
+{
+  "instance_id": "astropy__astropy-13817",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:42:06.403289",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34917
+  },
+  "llm_response": "Let's think step by step.\n\nThe `LombScargle.power` method in `core.py` uses a nested loop to calculate the periodogram, leading to O(n\u00b2) complexity. Using vectorized operations can reduce this to O(n log n).\n\n### astropy/timeseries/periodograms/lombscargle/core.py\n<<<<<<< SEARCH\nfor i in range(len(frequencies)):\n    power[i] = lombscargle(self._trel, self.y, self.dy, frequencies[i],\n                           fit_mean=self.fit_mean, center_data=self.center_data,\n                           nterms=self.nterms, normalization=self.normalization)\n=======\npower = np.array([\n    lombscargle(self._trel, self.y, self.dy, freq,\n                fit_mean=self.fit_mean, center_data=self.center_data,\n                nterms=self.nterms, normalization=self.normalization)\n    for freq in frequencies\n])\n>>>>>>> REPLACE",
+  "llm_tokens": 10357,
+  "llm_latency": 11.59028148651123,
+  "patch_content": "### astropy/timeseries/periodograms/lombscargle/core.py\n<<<<<<< SEARCH\nfor i in range(len(frequencies)):\n    power[i] = lombscargle(self._trel, self.y, self.dy, frequencies[i],\n                           fit_mean=self.fit_mean, center_data=self.center_data,\n                           nterms=self.nterms, normalization=self.normalization)\n=======\npower = np.array([\n    lombscargle(self._trel, self.y, self.dy, freq,\n                fit_mean=self.fit_mean, center_data=self.center_data,\n                nterms=self.nterms, normalization=self.normalization)\n    for freq in frequencies\n])\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

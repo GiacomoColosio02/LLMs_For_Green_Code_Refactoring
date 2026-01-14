@@ -1,0 +1,26 @@
+{
+  "instance_id": "sphinx-doc__sphinx-12598",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:19:37.396329",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sphinx-doc/sphinx",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49743
+  },
+  "llm_response": "Let's think step by step.\n\nThe `latex_visit_todo_node` function in `sphinx/ext/todo.py` uses a loop to iterate over todo items, which is inefficient. By converting the list to a set, we can reduce the lookup time to O(1).\n\n### sphinx/ext/todo.py\n<<<<<<< SEARCH\ndef latex_visit_todo_node(self, node, state):\n    for todo_item in self.todo_items:\n        if todo_item['node'] == node:\n            state.body.append(todo_item['text'])\n            break\n=======\ndef latex_visit_todo_node(self, node, state):\n    todo_set = set(self.todo_items)\n    if {'node': node} in todo_set:\n        state.body.append(next(item['text'] for item in self.todo_items if item['node'] == node))\n>>>>>>> REPLACE",
+  "llm_tokens": 14980,
+  "llm_latency": 10.869494915008545,
+  "patch_content": "### sphinx/ext/todo.py\n<<<<<<< SEARCH\ndef latex_visit_todo_node(self, node, state):\n    for todo_item in self.todo_items:\n        if todo_item['node'] == node:\n            state.body.append(todo_item['text'])\n            break\n=======\ndef latex_visit_todo_node(self, node, state):\n    todo_set = set(self.todo_items)\n    if {'node': node} in todo_set:\n        state.body.append(next(item['text'] for item in self.todo_items if item['node'] == node))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

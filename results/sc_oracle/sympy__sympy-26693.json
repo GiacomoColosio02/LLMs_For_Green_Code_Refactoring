@@ -1,0 +1,14 @@
+{
+  "instance_id": "sympy__sympy-26693",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T02:46:57.594824",
+  "status": "error",
+  "error": "Connection error.",
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24902
+  }
+}

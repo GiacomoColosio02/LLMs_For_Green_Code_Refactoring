@@ -1,0 +1,36 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12656",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T02:20:21.180515",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 33400
+  },
+  "llm_response": "### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\n    ...\n    \"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score, sample_weight, normalize)\n=======\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\n    ...\n    \"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score, sample_weight, normalize)\n>>>>>>> REPLACE",
+  "all_responses": [
+    "1. The `hamming_loss` function in `sklearn/metrics/classification.py` is the bottleneck.\n2. It uses a nested loop to compare true and predicted labels, resulting in O(n\u00b2) complexity.\n3. Reducing the use of loops and utilizing efficient array operations could help.",
+    "Replace the nested loop with a set lookup for true labels and predicted labels. This reduces the time complexity from O(n\u00b2) to O(n). Edge cases to consider include handling empty arrays and ensuring that both sets contain only unique elements.",
+    "### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\n    ...\n    \"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score, sample_weight, normalize)\n=======\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\n    ...\n    \"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score, sample_weight, normalize)\n>>>>>>> REPLACE"
+  ],
+  "llm_tokens": 18475,
+  "llm_latency": 21.733326196670532,
+  "patch_content": "### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\n    ...\n    \"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score, sample_weight, normalize)\n=======\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\n    ...\n    \"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score, sample_weight, normalize)\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. The `hamming_loss` function in `sklearn/metrics/classification.py` is the bottleneck.\n2. It uses a nested loop to compare true and predicted labels, resulting in O(n\u00b2) complexity.\n3. Reducing the use of loops and utilizing efficient array operations could help.",
+    "optimizer": "Replace the nested loop with a set lookup for true labels and predicted labels. This reduces the time complexity from O(n\u00b2) to O(n). Edge cases to consider include handling empty arrays and ensuring that both sets contain only unique elements.",
+    "reviewer": "### sklearn/metrics/classification.py\n<<<<<<< SEARCH\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\n    ...\n    \"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score, sample_weight, normalize)\n=======\ndef accuracy_score(y_true, y_pred, normalize=True, sample_weight=None):\n    \"\"\"Accuracy classification score.\n    ...\n    \"\"\"\n    y_type, y_true, y_pred = _check_targets(y_true, y_pred)\n    check_consistent_length(y_true, y_pred, sample_weight)\n    if y_type.startswith('multilabel'):\n        differing_labels = count_nonzero(y_true - y_pred, axis=1)\n        score = differing_labels == 0\n    else:\n        score = y_true == y_pred\n\n    return _weighted_sum(score, sample_weight, normalize)\n>>>>>>> REPLACE"
+  },
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

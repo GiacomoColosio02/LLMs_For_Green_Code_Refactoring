@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-9517",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T22:03:56.503591",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24877
+  },
+  "llm_response": "### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    for k, v in coords.items():\n        if any(d not in dim for d in v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        for d, s in v.sizes.items():\n            if s != sizes[d]:\n                raise ValueError(\n                    f\"conflicting sizes for dimension {d!r}: \"\n                    f\"length {sizes[d]} on the data but length {s} on \"\n                    f\"coordinate {k!r}\"\n                )\n=======\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    for k, v in coords.items():\n        if not all(d in dim for d in v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        if not all(v.sizes[d] == sizes[d] for d in v.dims):\n            raise ValueError(\n                f\"conflicting sizes for dimension {d!r}: \"\n                f\"length {sizes[d]} on the data but length {v.sizes[d]} on \"\n                f\"coordinate {k!r}\"\n            )\n>>>>>>> REPLACE\n",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    for k, v in coords.items():\n        if any(d not in dim for d in v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        for d, s in v.sizes.items():\n            if s != sizes[d]:\n                raise ValueError(\n                    f\"conflicting sizes for dimension {d!r}: \"\n                    f\"length {sizes[d]} on the data but length {s} on \"\n                    f\"coordinate {k!r}\"\n                )\n=======\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    for k, v in coords.items():\n        if not all(d in dim for d in v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        if not all(v.sizes[d] == sizes[d] for d in v.dims):\n            raise ValueError(\n                f\"conflicting sizes for dimension {d!r}: \"\n                f\"length {sizes[d]} on the data but length {v.sizes[d]} on \"\n                f\"coordinate {k!r}\"\n            )\n>>>>>>> REPLACE\n",
+      "patch_content": "### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    for k, v in coords.items():\n        if any(d not in dim for d in v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        for d, s in v.sizes.items():\n            if s != sizes[d]:\n                raise ValueError(\n                    f\"conflicting sizes for dimension {d!r}: \"\n                    f\"length {sizes[d]} on the data but length {s} on \"\n                    f\"coordinate {k!r}\"\n                )\n=======\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    for k, v in coords.items():\n        if not all(d in dim for d in v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        if not all(v.sizes[d] == sizes[d] for d in v.dims):\n            raise ValueError(\n                f\"conflicting sizes for dimension {d!r}: \"\n                f\"length {sizes[d]} on the data but length {v.sizes[d]} on \"\n                f\"coordinate {k!r}\"\n            )\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 8046,
+  "llm_latency": 18.416337728500366,
+  "patch_content": "### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    for k, v in coords.items():\n        if any(d not in dim for d in v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        for d, s in v.sizes.items():\n            if s != sizes[d]:\n                raise ValueError(\n                    f\"conflicting sizes for dimension {d!r}: \"\n                    f\"length {sizes[d]} on the data but length {s} on \"\n                    f\"coordinate {k!r}\"\n                )\n=======\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    for k, v in coords.items():\n        if not all(d in dim for d in v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        if not all(v.sizes[d] == sizes[d] for d in v.dims):\n            raise ValueError(\n                f\"conflicting sizes for dimension {d!r}: \"\n                f\"length {sizes[d]} on the data but length {v.sizes[d]} on \"\n                f\"coordinate {k!r}\"\n            )\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/dataarray.py"
+    ],
+    "error": null
+  }
+}

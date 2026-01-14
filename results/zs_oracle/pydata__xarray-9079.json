@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9079",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T13:04:59.402706",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 41716
+  },
+  "llm_response": "### xarray/core/resample.py\n<<<<<<< SEARCH\n        return obj.interp(\n            coords={self._dim: grouper.full_index},\n            assume_sorted=True,\n            method=kind,\n            kwargs={\"bounds_error\": False},\n        )\n=======\n        return obj.interp(\n            coords={self._dim: grouper.full_index},\n            assume_sorted=True,\n            method=kind,\n            fill_value=np.nan,\n            kwargs={\"bounds_error\": False},\n        )\n>>>>>>> REPLACE",
+  "llm_tokens": 11730,
+  "llm_latency": 6.642907619476318,
+  "patch_content": "### xarray/core/resample.py\n<<<<<<< SEARCH\n        return obj.interp(\n            coords={self._dim: grouper.full_index},\n            assume_sorted=True,\n            method=kind,\n            kwargs={\"bounds_error\": False},\n        )\n=======\n        return obj.interp(\n            coords={self._dim: grouper.full_index},\n            assume_sorted=True,\n            method=kind,\n            fill_value=np.nan,\n            kwargs={\"bounds_error\": False},\n        )\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/resample.py"
+    ],
+    "error": null
+  }
+}

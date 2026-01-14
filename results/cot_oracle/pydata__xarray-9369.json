@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9369",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:01:06.147911",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49753
+  },
+  "llm_response": "Let's think step by step.\n\nThe `get_clean_interp_index` function in `missing.py` uses `.to_index()` which can be slow for large datasets. Using `.to_series()` followed by `.index` is faster.\n\n### xarray/core/missing.py\n<<<<<<< SEARCH\nindex = arr.get_index(dim)\n=======\nindex = arr.coords[use_coordinate].to_series().index\n>>>>>>> REPLACE",
+  "llm_tokens": 13774,
+  "llm_latency": 6.094575643539429,
+  "patch_content": "### xarray/core/missing.py\n<<<<<<< SEARCH\nindex = arr.get_index(dim)\n=======\nindex = arr.coords[use_coordinate].to_series().index\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/missing.py"
+    ],
+    "error": null
+  }
+}

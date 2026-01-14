@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-9014",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:02:06.813185",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49838
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_open_datatree_netcdf` function in `xarray/backends/common.py` uses `netCDF4.Dataset` which is inefficient for large files. Using `h5netcdf` can improve performance.\n\n### xarray/backends/common.py\n<<<<<<< SEARCH\ndef _open_datatree_netcdf(cls, ncDataset, filename_or_obj, **kwargs):\n    with ncDataset(filename_or_obj, **kwargs) as ds:\n        return cls._open_datatree(ds, **kwargs)\n=======\ndef _open_datatree_netcdf(cls, ncDataset, filename_or_obj, **kwargs):\n    with ncDataset(filename_or_obj, **kwargs) as ds:\n        if hasattr(ds, 'h5netcdf'):\n            return cls._open_datatree(ds.h5netcdf, **kwargs)\n        else:\n            return cls._open_datatree(ds, **kwargs)\n>>>>>>> REPLACE",
+  "llm_tokens": 12084,
+  "llm_latency": 11.952554941177368,
+  "patch_content": "### xarray/backends/common.py\n<<<<<<< SEARCH\ndef _open_datatree_netcdf(cls, ncDataset, filename_or_obj, **kwargs):\n    with ncDataset(filename_or_obj, **kwargs) as ds:\n        return cls._open_datatree(ds, **kwargs)\n=======\ndef _open_datatree_netcdf(cls, ncDataset, filename_or_obj, **kwargs):\n    with ncDataset(filename_or_obj, **kwargs) as ds:\n        if hasattr(ds, 'h5netcdf'):\n            return cls._open_datatree(ds.h5netcdf, **kwargs)\n        else:\n            return cls._open_datatree(ds, **kwargs)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

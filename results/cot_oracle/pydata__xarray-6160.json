@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-6160",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:07:34.236494",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49755
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_iter_grouped` method in `groupby.py` uses a generator expression inside a loop, which can be inefficient. By using a list comprehension, we can avoid the overhead of generator expressions and potentially improve performance.\n\n### xarray/core/groupby.py\n<<<<<<< SEARCH\ndef _iter_grouped(self):\n    \"\"\"Iterate over each element in this group\"\"\"\n    for i, group_idx in enumerate(self._group_indices):\n        yield self._obj.isel({self._group_dim: group_idx})\n=======\ndef _iter_grouped(self):\n    \"\"\"Iterate over each element in this group\"\"\"\n    return (self._obj.isel({self._group_dim: group_idx}) for group_idx in self._group_indices)\n>>>>>>> REPLACE",
+  "llm_tokens": 13254,
+  "llm_latency": 10.19693636894226,
+  "patch_content": "### xarray/core/groupby.py\n<<<<<<< SEARCH\ndef _iter_grouped(self):\n    \"\"\"Iterate over each element in this group\"\"\"\n    for i, group_idx in enumerate(self._group_indices):\n        yield self._obj.isel({self._group_dim: group_idx})\n=======\ndef _iter_grouped(self):\n    \"\"\"Iterate over each element in this group\"\"\"\n    return (self._obj.isel({self._group_dim: group_idx}) for group_idx in self._group_indices)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

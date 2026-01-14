@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12514",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T14:46:16.384252",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 36053
+  },
+  "llm_response": "### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\n        for jj in range(Xt.shape[1]):\n            # Values which are close to a bin edge are susceptible to numeric\n            # instability. Add eps to X so these values are binned correctly\n            # with respect to their decimal truncation. See documentation of\n            # numpy.isclose for an explanation of ``rtol`` and ``atol``.\n            rtol = 1.e-5\n            atol = 1.e-8\n            eps = atol + rtol * np.abs(Xt[:, jj])\n            Xt[:, jj] = np.digitize(Xt[:, jj] + eps, bin_edges[jj][1:])\n        np.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n=======\n        for jj in range(Xt.shape[1]):\n            Xt[:, jj] = np.searchsorted(bin_edges[jj][1:], Xt[:, jj], side='right') - 1\n        np.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n>>>>>>> REPLACE",
+  "all_responses": [
+    "1. **Function**: `KBinsDiscretizer.transform`\n   2. **Why Slow**: The primary bottleneck lies in the `digitize` operation inside the loop over each feature. This operation involves searching for the bin index for each value, which can be computationally expensive, especially for large datasets.\n   3. **Optimization Type**: Vectorization and efficient data structures. Specifically, using NumPy's vectorized operations and avoiding explicit loops where possible. Additionally, optimizing the binning process itself, such as using more efficient algorithms for determining bin edges.",
+    "Replace the nested loop with a set lookup for bin indices. This reduces the time complexity from \\(O(n^2)\\) to \\(O(n)\\). Edge cases to consider include handling empty bins and ensuring correct bin assignment for boundary values.",
+    "### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\n        for jj in range(Xt.shape[1]):\n            # Values which are close to a bin edge are susceptible to numeric\n            # instability. Add eps to X so these values are binned correctly\n            # with respect to their decimal truncation. See documentation of\n            # numpy.isclose for an explanation of ``rtol`` and ``atol``.\n            rtol = 1.e-5\n            atol = 1.e-8\n            eps = atol + rtol * np.abs(Xt[:, jj])\n            Xt[:, jj] = np.digitize(Xt[:, jj] + eps, bin_edges[jj][1:])\n        np.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n=======\n        for jj in range(Xt.shape[1]):\n            Xt[:, jj] = np.searchsorted(bin_edges[jj][1:], Xt[:, jj], side='right') - 1\n        np.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n>>>>>>> REPLACE"
+  ],
+  "llm_tokens": 21207,
+  "llm_latency": 23.767131805419922,
+  "patch_content": "### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\n        for jj in range(Xt.shape[1]):\n            # Values which are close to a bin edge are susceptible to numeric\n            # instability. Add eps to X so these values are binned correctly\n            # with respect to their decimal truncation. See documentation of\n            # numpy.isclose for an explanation of ``rtol`` and ``atol``.\n            rtol = 1.e-5\n            atol = 1.e-8\n            eps = atol + rtol * np.abs(Xt[:, jj])\n            Xt[:, jj] = np.digitize(Xt[:, jj] + eps, bin_edges[jj][1:])\n        np.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n=======\n        for jj in range(Xt.shape[1]):\n            Xt[:, jj] = np.searchsorted(bin_edges[jj][1:], Xt[:, jj], side='right') - 1\n        np.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. **Function**: `KBinsDiscretizer.transform`\n   2. **Why Slow**: The primary bottleneck lies in the `digitize` operation inside the loop over each feature. This operation involves searching for the bin index for each value, which can be computationally expensive, especially for large datasets.\n   3. **Optimization Type**: Vectorization and efficient data structures. Specifically, using NumPy's vectorized operations and avoiding explicit loops where possible. Additionally, optimizing the binning process itself, such as using more efficient algorithms for determining bin edges.",
+    "optimizer": "Replace the nested loop with a set lookup for bin indices. This reduces the time complexity from \\(O(n^2)\\) to \\(O(n)\\). Edge cases to consider include handling empty bins and ensuring correct bin assignment for boundary values.",
+    "reviewer": "### sklearn/preprocessing/_discretization.py\n<<<<<<< SEARCH\n        for jj in range(Xt.shape[1]):\n            # Values which are close to a bin edge are susceptible to numeric\n            # instability. Add eps to X so these values are binned correctly\n            # with respect to their decimal truncation. See documentation of\n            # numpy.isclose for an explanation of ``rtol`` and ``atol``.\n            rtol = 1.e-5\n            atol = 1.e-8\n            eps = atol + rtol * np.abs(Xt[:, jj])\n            Xt[:, jj] = np.digitize(Xt[:, jj] + eps, bin_edges[jj][1:])\n        np.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n=======\n        for jj in range(Xt.shape[1]):\n            Xt[:, jj] = np.searchsorted(bin_edges[jj][1:], Xt[:, jj], side='right') - 1\n        np.clip(Xt, 0, self.n_bins_ - 1, out=Xt)\n>>>>>>> REPLACE"
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/preprocessing/_discretization.py"
+    ],
+    "error": null
+  }
+}

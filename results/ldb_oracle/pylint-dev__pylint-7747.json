@@ -1,0 +1,38 @@
+{
+  "instance_id": "pylint-dev__pylint-7747",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T11:09:51.963288",
+  "status": "success",
+  "error": null,
+  "repo": "pylint-dev/pylint",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 33859
+  },
+  "llm_response": "### pylint/lint/expand_modules.py\n<<<<<<< SEARCH\ndef _modpath_from_file(filename: str, is_namespace: bool, path: list[str]) -> list[str]:\n    def _is_package_cb(inner_path: str, parts: list[str]) -> bool:\n        return modutils.check_modpath_has_init(inner_path, parts) or is_namespace\n\n    return modutils.modpath_from_file_with_callback(  # type: ignore[no-any-return]\n        filename, path=path, is_package_cb=_is_package_cb\n    )\n=======\ndef _modpath_from_file(filename: str, is_namespace: bool, path: list[str]) -> list[str]:\n    return modutils.modpath_from_file_with_callback(\n        filename, path=path, is_package_cb=lambda inner_path, parts: modutils.check_modpath_has_init(inner_path, parts) or is_namespace\n    )\n>>>>>>> REPLACE\n\n### pylint/lint/pylinter.py\n<<<<<<< SEARCH\ndef _read_stdin() -> str:\n    # See https://github.com/python/typeshed/pull/5623 for rationale behind assertion\n    assert isinstance(sys.stdin, TextIOWrapper)\n    sys.stdin = TextIOWrapper(sys.stdin.detach(), encoding=\"utf-8\")\n    return sys.stdin.read()\n=======\ndef _read_stdin() -> str:\n    return sys.stdin.read()\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### pylint/lint/expand_modules.py\n<<<<<<< SEARCH\ndef _modpath_from_file(filename: str, is_namespace: bool, path: list[str]) -> list[str]:\n    def _is_package_cb(inner_path: str, parts: list[str]) -> bool:\n        return modutils.check_modpath_has_init(inner_path, parts) or is_namespace\n\n    return modutils.modpath_from_file_with_callback(  # type: ignore[no-any-return]\n        filename, path=path, is_package_cb=_is_package_cb\n    )\n=======\ndef _modpath_from_file(filename: str, is_namespace: bool, path: list[str]) -> list[str]:\n    return modutils.modpath_from_file_with_callback(\n        filename, path=path, is_package_cb=lambda inner_path, parts: modutils.check_modpath_has_init(inner_path, parts) or is_namespace\n    )\n>>>>>>> REPLACE\n\n### pylint/lint/pylinter.py\n<<<<<<< SEARCH\ndef _read_stdin() -> str:\n    # See https://github.com/python/typeshed/pull/5623 for rationale behind assertion\n    assert isinstance(sys.stdin, TextIOWrapper)\n    sys.stdin = TextIOWrapper(sys.stdin.detach(), encoding=\"utf-8\")\n    return sys.stdin.read()\n=======\ndef _read_stdin() -> str:\n    return sys.stdin.read()\n>>>>>>> REPLACE",
+      "patch_content": "### pylint/lint/expand_modules.py\n<<<<<<< SEARCH\ndef _modpath_from_file(filename: str, is_namespace: bool, path: list[str]) -> list[str]:\n    def _is_package_cb(inner_path: str, parts: list[str]) -> bool:\n        return modutils.check_modpath_has_init(inner_path, parts) or is_namespace\n\n    return modutils.modpath_from_file_with_callback(  # type: ignore[no-any-return]\n        filename, path=path, is_package_cb=_is_package_cb\n    )\n=======\ndef _modpath_from_file(filename: str, is_namespace: bool, path: list[str]) -> list[str]:\n    return modutils.modpath_from_file_with_callback(\n        filename, path=path, is_package_cb=lambda inner_path, parts: modutils.check_modpath_has_init(inner_path, parts) or is_namespace\n    )\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 8309,
+  "llm_latency": 15.99841856956482,
+  "patch_content": "### pylint/lint/expand_modules.py\n<<<<<<< SEARCH\ndef _modpath_from_file(filename: str, is_namespace: bool, path: list[str]) -> list[str]:\n    def _is_package_cb(inner_path: str, parts: list[str]) -> bool:\n        return modutils.check_modpath_has_init(inner_path, parts) or is_namespace\n\n    return modutils.modpath_from_file_with_callback(  # type: ignore[no-any-return]\n        filename, path=path, is_package_cb=_is_package_cb\n    )\n=======\ndef _modpath_from_file(filename: str, is_namespace: bool, path: list[str]) -> list[str]:\n    return modutils.modpath_from_file_with_callback(\n        filename, path=path, is_package_cb=lambda inner_path, parts: modutils.check_modpath_has_init(inner_path, parts) or is_namespace\n    )\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "pylint/lint/expand_modules.py"
+    ],
+    "error": null
+  }
+}

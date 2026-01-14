@@ -1,0 +1,28 @@
+{
+  "instance_id": "astropy__astropy-14413",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T01:45:12.400560",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34867
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_model_oper` function in `astropy/modeling/core.py` is the bottleneck.\n**DIAGNOSIS**: It uses a loop to create a new `CompoundModel` for each operation, leading to high overhead and potential memory spikes.\n**SOLUTION**: Replace the loop with a dictionary to store pre-defined operations, reducing redundancy and improving performance.\n\n### SECTION 2: PATCH\n\n### astropy/modeling/core.py\n<<<<<<< SEARCH\ndef _model_oper(oper, **kwargs):\n    \"\"\"\n    Returns a function that evaluates a given Python arithmetic operator\n    between two models.  The operator should be given as a string, like ``'+'``\n    or ``'**'``.\n    \"\"\"\n    return lambda left, right: CompoundModel(oper, left, right, **kwargs)\n=======\ndef _model_oper(oper, **kwargs):\n    \"\"\"\n    Returns a function that evaluates a given Python arithmetic operator\n    between two models.  The operator should be given as a string, like ``'+'``\n    or ``'**'``.\n    \"\"\"\n    return lambda left, right: CompoundModel(oper, left, right, **kwargs)\n\n# Pre-defined operations for faster access\n_predefined_ops = {\n    '+': lambda left, right: CompoundModel('+', left, right),\n    '-': lambda left, right: CompoundModel('-', left, right),\n    '*': lambda left, right: CompoundModel('*', left, right),\n    '/': lambda left, right: CompoundModel('/', left, right),\n    '**': lambda left, right: CompoundModel('**', left, right),\n    '|': lambda left, right: CompoundModel('|', left, right),\n    '&': lambda left, right: CompoundModel('&', left, right),\n    'fix_inputs': lambda left, right: CompoundModel('fix_inputs', left, right),\n}\n\ndef _model_oper(oper, **kwargs):\n    \"\"\"\n    Returns a function that evaluates a given Python arithmetic operator\n    between two models.  The operator should be given as a string, like ``'+'``\n    or ``'**'``.\n    \"\"\"\n    return _predefined_ops.get(oper, lambda left, right: CompoundModel(oper, left, right, **kwargs))\n>>>>>>> REPLACE",
+  "llm_tokens": 10707,
+  "llm_latency": 27.476932048797607,
+  "patch_content": "### astropy/modeling/core.py\n<<<<<<< SEARCH\ndef _model_oper(oper, **kwargs):\n    \"\"\"\n    Returns a function that evaluates a given Python arithmetic operator\n    between two models.  The operator should be given as a string, like ``'+'``\n    or ``'**'``.\n    \"\"\"\n    return lambda left, right: CompoundModel(oper, left, right, **kwargs)\n=======\ndef _model_oper(oper, **kwargs):\n    \"\"\"\n    Returns a function that evaluates a given Python arithmetic operator\n    between two models.  The operator should be given as a string, like ``'+'``\n    or ``'**'``.\n    \"\"\"\n    return lambda left, right: CompoundModel(oper, left, right, **kwargs)\n\n# Pre-defined operations for faster access\n_predefined_ops = {\n    '+': lambda left, right: CompoundModel('+', left, right),\n    '-': lambda left, right: CompoundModel('-', left, right),\n    '*': lambda left, right: CompoundModel('*', left, right),\n    '/': lambda left, right: CompoundModel('/', left, right),\n    '**': lambda left, right: CompoundModel('**', left, right),\n    '|': lambda left, right: CompoundModel('|', left, right),\n    '&': lambda left, right: CompoundModel('&', left, right),\n    'fix_inputs': lambda left, right: CompoundModel('fix_inputs', left, right),\n}\n\ndef _model_oper(oper, **kwargs):\n    \"\"\"\n    Returns a function that evaluates a given Python arithmetic operator\n    between two models.  The operator should be given as a string, like ``'+'``\n    or ``'**'``.\n    \"\"\"\n    return _predefined_ops.get(oper, lambda left, right: CompoundModel(oper, left, right, **kwargs))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/modeling/core.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-8277",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:11:59.396771",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 45172
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_is_time_like` function in `xarray/coding/variables.py` is the bottleneck.\n**DIAGNOSIS**: It checks if a string contains specific substrings, which is inefficient for long strings due to repeated substring searches.\n**SOLUTION**: Use regular expressions for faster pattern matching.\n\n### SECTION 2: PATCH\n\n### xarray/coding/variables.py\n<<<<<<< SEARCH\ndef _is_time_like(units):\n    # test for time-like\n    time_strings = [\n        \"since\",\n        \"days\",\n        \"hours\",\n        \"minutes\",\n        \"seconds\",\n        \"milliseconds\",\n        \"microseconds\",\n        \"nanoseconds\",\n    ]\n    return any(tstr in str(units) for tstr in time_strings)\n=======\nimport re\n\ndef _is_time_like(units):\n    # test for time-like using regex\n    time_pattern = re.compile(r'\\bsince\\b|\\bdays\\b|\\bhours\\b|\\bminutes\\b|\\bleconds\\b|\\bmilliseconds\\b|\\bmicroseconds\\b|\\bnanoseconds\\b')\n    return bool(time_pattern.search(str(units)))\n>>>>>>> REPLACE",
+  "llm_tokens": 12373,
+  "llm_latency": 14.755422115325928,
+  "patch_content": "### xarray/coding/variables.py\n<<<<<<< SEARCH\ndef _is_time_like(units):\n    # test for time-like\n    time_strings = [\n        \"since\",\n        \"days\",\n        \"hours\",\n        \"minutes\",\n        \"seconds\",\n        \"milliseconds\",\n        \"microseconds\",\n        \"nanoseconds\",\n    ]\n    return any(tstr in str(units) for tstr in time_strings)\n=======\nimport re\n\ndef _is_time_like(units):\n    # test for time-like using regex\n    time_pattern = re.compile(r'\\bsince\\b|\\bdays\\b|\\bhours\\b|\\bminutes\\b|\\bleconds\\b|\\bmilliseconds\\b|\\bmicroseconds\\b|\\bnanoseconds\\b')\n    return bool(time_pattern.search(str(units)))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/coding/variables.py"
+    ],
+    "error": null
+  }
+}

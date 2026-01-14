@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-9688",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T14:40:48.906447",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49911
+  },
+  "llm_response": "### xarray/core/_typed_ops.py\n<<<<<<< SEARCH\n    def __eq__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_ne)\n=======\n    def __eq__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_ne)\n>>>>>>> REPLACE\n\n### xarray/util/generate_ops.py\n<<<<<<< SEARCH\n    def __eq__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_ne)\n=======\n    def __eq__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_ne)\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/core/_typed_ops.py\n<<<<<<< SEARCH\n    def __eq__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_ne)\n=======\n    def __eq__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_ne)\n>>>>>>> REPLACE\n\n### xarray/util/generate_ops.py\n<<<<<<< SEARCH\n    def __eq__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_ne)\n=======\n    def __eq__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_ne)\n>>>>>>> REPLACE",
+      "patch_content": "### xarray/core/_typed_ops.py\n<<<<<<< SEARCH\n    def __eq__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_ne)\n=======\n    def __eq__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_ne)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 14913,
+  "llm_latency": 17.962915182113647,
+  "patch_content": "### xarray/core/_typed_ops.py\n<<<<<<< SEARCH\n    def __eq__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:  # type:ignore[override]\n        return self._binary_op(other, nputils.array_ne)\n=======\n    def __eq__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_eq)\n\n    def __ne__(self, other: DtCompatible) -> Self:\n        return self._binary_op(other, nputils.array_ne)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/_typed_ops.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "instance_id": "astropy__astropy-13496",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:23:54.599689",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24880
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_flatten_units_collection` function in `core.py` is the bottleneck.\n**DIAGNOSIS**: It uses nested loops and recursion, leading to high memory usage and potential stack overflow issues.\n**SOLUTION**: Replace the recursive approach with an iterative one to reduce memory usage and improve performance.\n\n### SECTION 2: PATCH\n\n### astropy/units/core.py\n<<<<<<< SEARCH\ndef _flatten_units_collection(items):\n    \"\"\"\n    Given a list of sequences, modules or dictionaries of units, or\n    single units, return a flat set of all the units found.\n    \"\"\"\n    if not isinstance(items, list):\n        items = [items]\n\n    result = set()\n    for item in items:\n        if isinstance(item, UnitBase):\n            result.add(item)\n        else:\n            if isinstance(item, dict):\n                units = item.values()\n            elif inspect.ismodule(item):\n                units = vars(item).values()\n            elif isiterable(item):\n                units = item\n            else:\n                continue\n\n            for unit in units:\n                if isinstance(unit, UnitBase):\n                    result.add(unit)\n\n    return result\n=======\ndef _flatten_units_collection(items):\n    \"\"\"\n    Given a list of sequences, modules or dictionaries of units, or\n    single units, return a flat set of all the units found.\n    \"\"\"\n    if not isinstance(items, list):\n        items = [items]\n\n    result = set()\n    stack = list(items)\n\n    while stack:\n        item = stack.pop()\n        if isinstance(item, UnitBase):\n            result.add(item)\n        else:\n            if isinstance(item, dict):\n                units = item.values()\n            elif inspect.ismodule(item):\n                units = vars(item).values()\n            elif isiterable(item):\n                units = item\n            else:\n                continue\n\n            stack.extend(units)\n\n    return result\n>>>>>>> REPLACE",
+  "llm_tokens": 6976,
+  "llm_latency": 22.216946840286255,
+  "patch_content": "### astropy/units/core.py\n<<<<<<< SEARCH\ndef _flatten_units_collection(items):\n    \"\"\"\n    Given a list of sequences, modules or dictionaries of units, or\n    single units, return a flat set of all the units found.\n    \"\"\"\n    if not isinstance(items, list):\n        items = [items]\n\n    result = set()\n    for item in items:\n        if isinstance(item, UnitBase):\n            result.add(item)\n        else:\n            if isinstance(item, dict):\n                units = item.values()\n            elif inspect.ismodule(item):\n                units = vars(item).values()\n            elif isiterable(item):\n                units = item\n            else:\n                continue\n\n            for unit in units:\n                if isinstance(unit, UnitBase):\n                    result.add(unit)\n\n    return result\n=======\ndef _flatten_units_collection(items):\n    \"\"\"\n    Given a list of sequences, modules or dictionaries of units, or\n    single units, return a flat set of all the units found.\n    \"\"\"\n    if not isinstance(items, list):\n        items = [items]\n\n    result = set()\n    stack = list(items)\n\n    while stack:\n        item = stack.pop()\n        if isinstance(item, UnitBase):\n            result.add(item)\n        else:\n            if isinstance(item, dict):\n                units = item.values()\n            elif inspect.ismodule(item):\n                units = vars(item).values()\n            elif isiterable(item):\n                units = item\n            else:\n                continue\n\n            stack.extend(units)\n\n    return result\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/units/core.py"
+    ],
+    "error": null
+  }
+}

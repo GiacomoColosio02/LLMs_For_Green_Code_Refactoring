@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12379",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:49:01.161589",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49881
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `fit` method in `incremental_pca.py` is the bottleneck.\n**DIAGNOSIS**: It performs a full SVD for each batch, leading to high computational and memory usage. Additionally, it recalculates statistics like mean and variance unnecessarily.\n**SOLUTION**: Implement a more efficient approach by updating the SVD iteratively and avoiding redundant calculations.\n\n### SECTION 2: PATCH\n\n### sklearn/decomposition/incremental_pca.py\n<<<<<<< SEARCH\nfor batch in gen_batches(n_samples, self.batch_size_):\n    self.partial_fit(X[batch], check_input=False)\n=======\ndef update_svd(A, U, s, V, n_components):\n    U, s, V = linalg.svd(A, full_matrices=False)\n    U, V = svd_flip(U, V, u_based_decision=False)\n    return U[:, :n_components], s[:n_components], V.T[:, :n_components]\n\nfor batch in gen_batches(n_samples, self.batch_size_):\n    U, s, V = update_svd(X[batch], self.components_, self.singular_values_, self.components_.T, self.n_components_)\n    self.components_ = V.T\n    self.singular_values_ = s\n>>>>>>> REPLACE",
+  "llm_tokens": 14417,
+  "llm_latency": 16.700653791427612,
+  "patch_content": "### sklearn/decomposition/incremental_pca.py\n<<<<<<< SEARCH\nfor batch in gen_batches(n_samples, self.batch_size_):\n    self.partial_fit(X[batch], check_input=False)\n=======\ndef update_svd(A, U, s, V, n_components):\n    U, s, V = linalg.svd(A, full_matrices=False)\n    U, V = svd_flip(U, V, u_based_decision=False)\n    return U[:, :n_components], s[:n_components], V.T[:, :n_components]\n\nfor batch in gen_batches(n_samples, self.batch_size_):\n    U, s, V = update_svd(X[batch], self.components_, self.singular_values_, self.components_.T, self.n_components_)\n    self.components_ = V.T\n    self.singular_values_ = s\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/decomposition/incremental_pca.py"
+    ],
+    "error": null
+  }
+}

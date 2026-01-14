@@ -1,0 +1,26 @@
+{
+  "instance_id": "astropy__astropy-14590",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T10:53:36.402925",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24891
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_combine_masks` function in `astropy/utils/masked/core.py` uses a nested loop to combine masks, leading to O(n\u00b2) complexity. Using NumPy operations can reduce this to O(n).\n\n### astropy/utils/masked/core.py\n<<<<<<< SEARCH\ndef _combine_masks(self, other):\n    combined_mask = np.zeros_like(self.mask, dtype=bool)\n    for i, mask in enumerate([self.mask, other.mask]):\n        combined_mask |= mask\n    return combined_mask\n=======\ndef _combine_masks(self, other):\n    combined_mask = self.mask | other.mask\n    return combined_mask\n>>>>>>> REPLACE",
+  "llm_tokens": 6462,
+  "llm_latency": 8.077350378036499,
+  "patch_content": "### astropy/utils/masked/core.py\n<<<<<<< SEARCH\ndef _combine_masks(self, other):\n    combined_mask = np.zeros_like(self.mask, dtype=bool)\n    for i, mask in enumerate([self.mask, other.mask]):\n        combined_mask |= mask\n    return combined_mask\n=======\ndef _combine_masks(self, other):\n    combined_mask = self.mask | other.mask\n    return combined_mask\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

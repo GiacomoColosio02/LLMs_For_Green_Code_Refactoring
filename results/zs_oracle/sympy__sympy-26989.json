@@ -1,0 +1,26 @@
+{
+  "instance_id": "sympy__sympy-26989",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T20:21:23.712965",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 37523
+  },
+  "llm_response": "### sympy/series/gruntz.py\n<<<<<<< SEARCH\n    if isinstance(e, Basic) and (isinstance(e, exp) or (e.is_Pow and e.base == S.Exp1)):\n        la = a.exp\n    if isinstance(b, Basic) and (isinstance(b, exp) or (b.is_Pow and b.base == S.Exp1)):\n        lb = b.exp\n=======\n    if isinstance(e, Basic) and (isinstance(e, exp) or (e.is_Pow and e.base == S.Exp1)):\n        la = e.exp\n    if isinstance(b, Basic) and (isinstance(b, exp) or (b.is_Pow and b.base == S.Exp1)):\n        lb = b.exp\n>>>>>>> REPLACE\n\n### sympy/series/limits.py\n<<<<<<< SEARCH\n        if z0 is S.Infinity:\n            rv = limit(e.subs(z, 1/z), z, S.Zero, \"+\")\n            if isinstance(rv, Limit):\n                return\n            ...\n        elif e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:\n            r = []\n            ...\n            if r:\n                rv = e.func(*r)\n                ...\n                if rv is S.NaN:\n                    try:\n                        from sympy.simplify.ratsimp import ratsimp\n                        rat_e = ratsimp(e)\n                    except PolynomialError:\n                        return\n                    if rat_e is S.NaN or rat_e == e:\n                        return\n                    return limit(rat_e, z, z0, dir)\n            return rv\n=======\n        if z0 is S.Infinity:\n            rv = limit(e.subs(z, 1/z), z, S.Zero, \"+\")\n            if isinstance(rv, Limit):\n                return\n            ...\n        elif e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:\n            r = []\n            ...\n            if r:\n                rv = e.func(*r)\n                ...\n                if rv is S.NaN:\n                    try:\n                        from sympy.simplify.ratsimp import ratsimp\n                        rat_e = ratsimp(e)\n                    except PolynomialError:\n                        return\n                    if rat_e is S.NaN or rat_e == e:\n                        return\n                    return limit(rat_e, z, z0, dir)\n            return rv\n>>>>>>> REPLACE",
+  "llm_tokens": 11593,
+  "llm_latency": 27.40758490562439,
+  "patch_content": "### sympy/series/gruntz.py\n<<<<<<< SEARCH\n    if isinstance(e, Basic) and (isinstance(e, exp) or (e.is_Pow and e.base == S.Exp1)):\n        la = a.exp\n    if isinstance(b, Basic) and (isinstance(b, exp) or (b.is_Pow and b.base == S.Exp1)):\n        lb = b.exp\n=======\n    if isinstance(e, Basic) and (isinstance(e, exp) or (e.is_Pow and e.base == S.Exp1)):\n        la = e.exp\n    if isinstance(b, Basic) and (isinstance(b, exp) or (b.is_Pow and b.base == S.Exp1)):\n        lb = b.exp\n>>>>>>> REPLACE\n\n### sympy/series/limits.py\n<<<<<<< SEARCH\n        if z0 is S.Infinity:\n            rv = limit(e.subs(z, 1/z), z, S.Zero, \"+\")\n            if isinstance(rv, Limit):\n                return\n            ...\n        elif e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:\n            r = []\n            ...\n            if r:\n                rv = e.func(*r)\n                ...\n                if rv is S.NaN:\n                    try:\n                        from sympy.simplify.ratsimp import ratsimp\n                        rat_e = ratsimp(e)\n                    except PolynomialError:\n                        return\n                    if rat_e is S.NaN or rat_e == e:\n                        return\n                    return limit(rat_e, z, z0, dir)\n            return rv\n=======\n        if z0 is S.Infinity:\n            rv = limit(e.subs(z, 1/z), z, S.Zero, \"+\")\n            if isinstance(rv, Limit):\n                return\n            ...\n        elif e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:\n            r = []\n            ...\n            if r:\n                rv = e.func(*r)\n                ...\n                if rv is S.NaN:\n                    try:\n                        from sympy.simplify.ratsimp import ratsimp\n                        rat_e = ratsimp(e)\n                    except PolynomialError:\n                        return\n                    if rat_e is S.NaN or rat_e == e:\n                        return\n                    return limit(rat_e, z, z0, dir)\n            return rv\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "instance_id": "pylint-dev__pylint-7747",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T02:39:36.090621",
+  "status": "success",
+  "error": null,
+  "repo": "pylint-dev/pylint",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34995
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `register` function in `pylint/lint/pylinter.py` is the bottleneck.\n**DIAGNOSIS**: It registers multiple checkers, leading to redundant computations and increased memory usage.\n**SOLUTION**: Use a set to store registered checkers to avoid redundant registrations and improve lookup times.\n\n### SECTION 2: PATCH\n\n### pylint/lint/pylinter.py\n<<<<<<< SEARCH\ndef register(linter: PyLinter) -> None:\n    linter.register_checker(TypeChecker(linter))\n    linter.register_checker(IterableChecker(linter))\n=======\ndef register(linter: PyLinter) -> None:\n    registered_checkers = set()\n    if TypeChecker not in registered_checkers:\n        linter.register_checker(TypeChecker(linter))\n        registered_checkers.add(TypeChecker)\n    if IterableChecker not in registered_checkers:\n        linter.register_checker(IterableChecker(linter))\n        registered_checkers.add(IterableChecker)\n>>>>>>> REPLACE",
+  "llm_tokens": 10086,
+  "llm_latency": 12.796889781951904,
+  "patch_content": "### pylint/lint/pylinter.py\n<<<<<<< SEARCH\ndef register(linter: PyLinter) -> None:\n    linter.register_checker(TypeChecker(linter))\n    linter.register_checker(IterableChecker(linter))\n=======\ndef register(linter: PyLinter) -> None:\n    registered_checkers = set()\n    if TypeChecker not in registered_checkers:\n        linter.register_checker(TypeChecker(linter))\n        registered_checkers.add(TypeChecker)\n    if IterableChecker not in registered_checkers:\n        linter.register_checker(IterableChecker(linter))\n        registered_checkers.add(IterableChecker)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "pylint/checkers/typecheck.py"
+    ],
+    "error": null
+  }
+}

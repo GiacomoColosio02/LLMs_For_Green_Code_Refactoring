@@ -1,0 +1,28 @@
+{
+  "instance_id": "psf__requests-1891",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:51:15.035476",
+  "status": "success",
+  "error": null,
+  "repo": "psf/requests",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34869
+  },
+  "llm_response": "Let's think step by step.\n\nThe `resolve_redirects` function in `sessions.py` has a loop that checks for redirects, which can be inefficient if there are many redirects. We can optimize this by using a generator to yield responses instead of creating a list of them.\n\n### requests/sessions.py\n<<<<<<< SEARCH\nhistory = [resp for resp in gen] if allow_redirects else []\n=======\nhistory = tuple(gen) if allow_redirects else ()\n>>>>>>> REPLACE",
+  "llm_tokens": 8835,
+  "llm_latency": 6.183927536010742,
+  "patch_content": "### requests/sessions.py\n<<<<<<< SEARCH\nhistory = [resp for resp in gen] if allow_redirects else []\n=======\nhistory = tuple(gen) if allow_redirects else ()\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "requests/sessions.py"
+    ],
+    "error": null
+  }
+}

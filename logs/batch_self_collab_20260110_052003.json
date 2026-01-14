@@ -1,0 +1,514 @@
+{
+  "start_time": "2026-01-10T04:44:04.444237",
+  "dataset": "/home/giacomo/LLMs_For_Green_Code_Refactoring/data/processed/swe_perf_reduced.json",
+  "prompt_type": "self_collab",
+  "strategies": [
+    "realistic"
+  ],
+  "results": {
+    "realistic": {
+      "total": 131,
+      "skipped": 1,
+      "processed": 130,
+      "success": 5,
+      "failed": 123,
+      "patch_failed": 2,
+      "errors": [
+        {
+          "instance_id": "astropy__astropy-13817",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "astropy__astropy-13745",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "astropy__astropy-13734",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "astropy__astropy-13496",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "astropy__astropy-12842",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "matplotlib__matplotlib-28104",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "matplotlib__matplotlib-24250",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "mwaskom__seaborn-2458",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "mwaskom__seaborn-2449",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "mwaskom__seaborn-2389",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "mwaskom__seaborn-2313",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "psf__requests-1891",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "psf__requests-3036",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9977",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9881",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9782",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9766",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9720",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9719",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9688",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9687",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9684",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9666",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9651",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9619",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9586",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9561",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9552",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9520",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9517",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9509",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9482",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9457",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9453",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9451",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9415",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9407",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9393",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9369",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9243",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9116",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9109",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9079",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-9014",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8946",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8737",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8711",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8684",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8668",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8627",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8575",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8527",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8512",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8507",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8415",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-8277",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-7809",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-7578",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-7209",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-7206",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-6834",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-6160",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-6109",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-5845",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pydata__xarray-5571",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pylint-dev__pylint-7747",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pylint-dev__pylint-6181",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "pylint-dev__pylint-5596",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-13253",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-13243",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-13186",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-13174",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-13151",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-13124",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12989",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12931",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12859",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12822",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12760",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12701",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12656",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12625",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12581",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12567",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12543",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12514",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12446",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12379",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12246",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12230",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12211",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12172",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12155",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12117",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-12116",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-11754",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-11674",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-11526",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-11364",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-11179",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sphinx-doc__sphinx-12615",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sphinx-doc__sphinx-12598",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sphinx-doc__sphinx-10807",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sphinx-doc__sphinx-9547",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-14331",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-14278",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-27666",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-27347",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-27085",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-26989",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-26940",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-26935",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-26848",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-26693",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-26546",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-26358",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-26036",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-26004",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-25852",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-25758",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-25591",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-25205",
+          "error": "Connection error."
+        },
+        {
+          "instance_id": "sympy__sympy-24665",
+          "error": "Connection error."
+        }
+      ]
+    }
+  },
+  "end_time": "2026-01-10T05:20:03.092505",
+  "total_duration_seconds": 2158.648267507553
+}

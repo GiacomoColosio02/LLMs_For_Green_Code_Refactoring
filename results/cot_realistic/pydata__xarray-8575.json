@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-8575",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:59:41.730190",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34794
+  },
+  "llm_response": "Let's think step by step.\n\nThe `test_keywargs` function in `test_interp.py` calls `da.interp(x=[0.5, 0.8])` twice, which creates redundant computations. We can cache the result of the first call to avoid unnecessary work.\n\n### xarray/tests/test_interp.py\n<<<<<<< SEARCH\ndef test_keywargs():\n    if not has_scipy:\n        pytest.skip(\"scipy is not installed.\")\n    da = get_example_data(0)\n    assert_equal(da.interp(x=[0.5, 0.8]), da.interp({\"x\": [0.5, 0.8]}))\n=======\n@cache\ndef test_keywargs():\n    if not has_scipy:\n        pytest.skip(\"scipy is not installed.\")\n    da = get_example_data(0)\n    assert_equal(da.interp(x=[0.5, 0.8]), da.interp({\"x\": [0.5, 0.8]}))\n>>>>>>> REPLACE",
+  "llm_tokens": 10709,
+  "llm_latency": 12.428381443023682,
+  "patch_content": "### xarray/tests/test_interp.py\n<<<<<<< SEARCH\ndef test_keywargs():\n    if not has_scipy:\n        pytest.skip(\"scipy is not installed.\")\n    da = get_example_data(0)\n    assert_equal(da.interp(x=[0.5, 0.8]), da.interp({\"x\": [0.5, 0.8]}))\n=======\n@cache\ndef test_keywargs():\n    if not has_scipy:\n        pytest.skip(\"scipy is not installed.\")\n    da = get_example_data(0)\n    assert_equal(da.interp(x=[0.5, 0.8]), da.interp({\"x\": [0.5, 0.8]}))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/tests/test_interp.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "instance_id": "pydata__xarray-9687",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T12:35:16.725807",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49923
+  },
+  "llm_response": "### .github/workflows/ci-additional.yaml\n<<<<<<< SEARCH\n    - name: Run doctests\n        run: |\n          # Raise an error if there are warnings in the doctests, with `-Werror`.\n          # This is a trial; if it presents an problem, feel free to remove.\n          # See https://github.com/pydata/xarray/issues/7164 for more info.\n          #\n          # If dependencies emit warnings we can't do anything about, add ignores to\n          # `xarray/tests/__init__.py`.\n          python -m pytest --doctest-modules xarray --ignore xarray/tests -Werror\n=======\n    - name: Run doctests\n        run: |\n          python -m pytest --doctest-modules xarray --ignore xarray/tests -Werror\n>>>>>>> REPLACE\n\n### xarray/backends/netCDF4_.py\n<<<<<<< SEARCH\n        variable.set_auto_maskandscale(False)\n        # only added in netCDF4-python v1.2.8\n        with suppress(AttributeError):\n            variable.set_auto_chartostring(False)\n        return variable\n=======\n        variable.set_auto_maskandscale(False)\n        return variable\n>>>>>>> REPLACE\n\n### xarray/core/datatree_io.py\n<<<<<<< SEARCH\n        if engine not in [None, *get_args(T_DataTreeNetcdfEngine)]:\n            raise ValueError(\"to_netcdf only supports the netcdf4 and h5netcdf engines\")\n=======\n        if engine not in [None, *get_args(T_DataTreeNetcdfEngine)]:\n            raise ValueError(\"to_netcdf only supports the netcdf4 engine\")\n>>>>>>> REPLACE\n\n### xarray/plot/facetgrid.py\n<<<<<<< SEARCH\n        if kwargs.get(\"cbar_ax\", None) is not None:\n            raise ValueError(\"cbar_ax not supported by FacetGrid.\")\n=======\n        if kwargs.get(\"cbar_ax\", None) is not None:\n            pass\n>>>>>>> REPLACE",
+  "llm_tokens": 13341,
+  "llm_latency": 23.554835557937622,
+  "patch_content": "### .github/workflows/ci-additional.yaml\n<<<<<<< SEARCH\n    - name: Run doctests\n        run: |\n          # Raise an error if there are warnings in the doctests, with `-Werror`.\n          # This is a trial; if it presents an problem, feel free to remove.\n          # See https://github.com/pydata/xarray/issues/7164 for more info.\n          #\n          # If dependencies emit warnings we can't do anything about, add ignores to\n          # `xarray/tests/__init__.py`.\n          python -m pytest --doctest-modules xarray --ignore xarray/tests -Werror\n=======\n    - name: Run doctests\n        run: |\n          python -m pytest --doctest-modules xarray --ignore xarray/tests -Werror\n>>>>>>> REPLACE\n\n### xarray/backends/netCDF4_.py\n<<<<<<< SEARCH\n        variable.set_auto_maskandscale(False)\n        # only added in netCDF4-python v1.2.8\n        with suppress(AttributeError):\n            variable.set_auto_chartostring(False)\n        return variable\n=======\n        variable.set_auto_maskandscale(False)\n        return variable\n>>>>>>> REPLACE\n\n### xarray/core/datatree_io.py\n<<<<<<< SEARCH\n        if engine not in [None, *get_args(T_DataTreeNetcdfEngine)]:\n            raise ValueError(\"to_netcdf only supports the netcdf4 and h5netcdf engines\")\n=======\n        if engine not in [None, *get_args(T_DataTreeNetcdfEngine)]:\n            raise ValueError(\"to_netcdf only supports the netcdf4 engine\")\n>>>>>>> REPLACE\n\n### xarray/plot/facetgrid.py\n<<<<<<< SEARCH\n        if kwargs.get(\"cbar_ax\", None) is not None:\n            raise ValueError(\"cbar_ax not supported by FacetGrid.\")\n=======\n        if kwargs.get(\"cbar_ax\", None) is not None:\n            pass\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 4,
+    "total_blocks": 4,
+    "method": "search_replace",
+    "modified_files": [
+      ".github/workflows/ci-additional.yaml",
+      "xarray/backends/netCDF4_.py",
+      "xarray/core/datatree_io.py",
+      "xarray/plot/facetgrid.py"
+    ],
+    "error": null
+  }
+}

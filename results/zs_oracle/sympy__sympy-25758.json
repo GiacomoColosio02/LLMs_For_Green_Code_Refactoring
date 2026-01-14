@@ -1,0 +1,26 @@
+{
+  "instance_id": "sympy__sympy-25758",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T20:27:41.084090",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49841
+  },
+  "llm_response": "### sympy/solvers/inequalities.py\n<<<<<<< SEARCH\ndef solve_poly_inequality(poly, rel):\n    \"\"\"Solve a polynomial inequality with rational coefficients.\n    ...\n    \"\"\"\n    if not isinstance(poly, Poly):\n        raise ValueError(\n            'For efficiency reasons, `poly` should be a Poly instance')\n    if poly.as_expr().is_number:\n        t = Relational(poly.as_expr(), 0, rel)\n        if t is S.true:\n            return [S.Reals]\n        elif t is S.false:\n            return [S.EmptySet]\n        else:\n            raise NotImplementedError(\n                \"could not determine truth value of %s\" % t)\n    ...\n    return intervals\n=======\ndef solve_poly_inequality(poly, rel):\n    \"\"\"Solve a polynomial inequality with rational coefficients.\n    ...\n    \"\"\"\n    if not isinstance(poly, Poly):\n        raise ValueError('`poly` should be a Poly instance')\n    if poly.as_expr().is_number:\n        t = Relational(poly.as_expr(), 0, rel)\n        if t is S.true:\n            return [S.Reals]\n        elif t is S.false:\n            return [S.EmptySet]\n        else:\n            raise NotImplementedError(\"could not determine truth value of %s\" % t)\n    ...\n    return intervals\n>>>>>>> REPLACE\n\n### sympy/solvers/solvers.py\n<<<<<<< SEARCH\ndef solve(f, *symbols, **flags):\n    r\"\"\"\n    Algebraically solves equations and systems of equations.\n    ...\n    \"\"\"\n    if isinstance(eq, Eq):\n        eq = eq.lhs - eq.rhs  # XXX legacy Eq as Eqn support\n    elif not isinstance(eq, Expr):\n        return\n    ...\n    return eq, cov\n=======\ndef solve(f, *symbols, **flags):\n    r\"\"\"\n    Algebraically solves equations and systems of equations.\n    ...\n    \"\"\"\n    if isinstance(eq, Eq):\n        eq = eq.lhs - eq.rhs\n    elif not isinstance(eq, Expr):\n        return\n    ...\n    return eq, cov\n>>>>>>> REPLACE",
+  "llm_tokens": 14075,
+  "llm_latency": 24.618319511413574,
+  "patch_content": "### sympy/solvers/inequalities.py\n<<<<<<< SEARCH\ndef solve_poly_inequality(poly, rel):\n    \"\"\"Solve a polynomial inequality with rational coefficients.\n    ...\n    \"\"\"\n    if not isinstance(poly, Poly):\n        raise ValueError(\n            'For efficiency reasons, `poly` should be a Poly instance')\n    if poly.as_expr().is_number:\n        t = Relational(poly.as_expr(), 0, rel)\n        if t is S.true:\n            return [S.Reals]\n        elif t is S.false:\n            return [S.EmptySet]\n        else:\n            raise NotImplementedError(\n                \"could not determine truth value of %s\" % t)\n    ...\n    return intervals\n=======\ndef solve_poly_inequality(poly, rel):\n    \"\"\"Solve a polynomial inequality with rational coefficients.\n    ...\n    \"\"\"\n    if not isinstance(poly, Poly):\n        raise ValueError('`poly` should be a Poly instance')\n    if poly.as_expr().is_number:\n        t = Relational(poly.as_expr(), 0, rel)\n        if t is S.true:\n            return [S.Reals]\n        elif t is S.false:\n            return [S.EmptySet]\n        else:\n            raise NotImplementedError(\"could not determine truth value of %s\" % t)\n    ...\n    return intervals\n>>>>>>> REPLACE\n\n### sympy/solvers/solvers.py\n<<<<<<< SEARCH\ndef solve(f, *symbols, **flags):\n    r\"\"\"\n    Algebraically solves equations and systems of equations.\n    ...\n    \"\"\"\n    if isinstance(eq, Eq):\n        eq = eq.lhs - eq.rhs  # XXX legacy Eq as Eqn support\n    elif not isinstance(eq, Expr):\n        return\n    ...\n    return eq, cov\n=======\ndef solve(f, *symbols, **flags):\n    r\"\"\"\n    Algebraically solves equations and systems of equations.\n    ...\n    \"\"\"\n    if isinstance(eq, Eq):\n        eq = eq.lhs - eq.rhs\n    elif not isinstance(eq, Expr):\n        return\n    ...\n    return eq, cov\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

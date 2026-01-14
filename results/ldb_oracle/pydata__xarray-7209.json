@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-7209",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T10:48:32.488663",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49760
+  },
+  "llm_response": "### xarray/core/alignment.py\n<<<<<<< SEARCH\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n=======\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0)) + 1):\n            unchanged_dims.add(dim)\n>>>>>>> REPLACE\n\n### xarray/core/variable.py\n<<<<<<< SEARCH\n        if dim not in dims:\n            dims[dim] = size\n            last_used[dim] = k\n        elif dims[dim] != size:\n            raise ValueError(\n                f\"conflicting sizes for dimension {dim!r}: \"\n                f\"length {size} on {k!r} and length {dims[dim]} on {last_used!r}\"\n            )\n    return dims\nend\n=======\n        if dim not in dims:\n            dims[dim] = size\n            last_used[dim] = k\n        elif dims[dim] != size:\n            raise ValueError(\n                f\"conflicting sizes for dimension {dim!r}: \"\n                f\"length {size} on {k!r} and length {dims[dim]} on {last_used!r}\"\n            )\n    return dims\nend\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/core/alignment.py\n<<<<<<< SEARCH\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n=======\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0)) + 1):\n            unchanged_dims.add(dim)\n>>>>>>> REPLACE\n\n### xarray/core/variable.py\n<<<<<<< SEARCH\n        if dim not in dims:\n            dims[dim] = size\n            last_used[dim] = k\n        elif dims[dim] != size:\n            raise ValueError(\n                f\"conflicting sizes for dimension {dim!r}: \"\n                f\"length {size} on {k!r} and length {dims[dim]} on {last_used!r}\"\n            )\n    return dims\nend\n=======\n        if dim not in dims:\n            dims[dim] = size\n            last_used[dim] = k\n        elif dims[dim] != size:\n            raise ValueError(\n                f\"conflicting sizes for dimension {dim!r}: \"\n                f\"length {size} on {k!r} and length {dims[dim]} on {last_used!r}\"\n            )\n    return dims\nend\n>>>>>>> REPLACE",
+      "patch_content": "### xarray/core/alignment.py\n<<<<<<< SEARCH\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n=======\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0)) + 1):\n            unchanged_dims.add(dim)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 11914,
+  "llm_latency": 17.879416465759277,
+  "patch_content": "### xarray/core/alignment.py\n<<<<<<< SEARCH\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n=======\n        if (indxr < 0).any():\n            masked_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0))):\n            unchanged_dims.add(dim)\n        elif np.array_equal(indxr, np.arange(dim_sizes.get(dim, 0)) + 1):\n            unchanged_dims.add(dim)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/alignment.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-8575",
+  "prompt_type": "ldb",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T23:07:10.968911",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34805
+  },
+  "llm_response": "### xarray/tests/test_backends.py\n<<<<<<< SEARCH\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    return open_dataset(\n        os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n    )\n=======\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    with warnings.catch_warnings(record=True) as w:\n        return open_dataset(\n            os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n        )\n    if w and any(isinstance(w[-1].message, DeprecationWarning) for w in w):\n        warnings.warn(f\"Deprecation warning encountered while opening dataset '{name}'\", stacklevel=2)\n>>>>>>> REPLACE\n\n### xarray/tests/test_computation.py\n<<<<<<< SEARCH\ndef test_apply_identity() -> None:\n    array = np.arange(10)\n    variable = xr.Variable(\"x\", array)\n    data_array = xr.DataArray(variable, [(\"x\", -array)])\n    dataset = xr.Dataset({\"y\": variable}, {\"x\": -array})\n\n    apply_identity = functools.partial(apply_ufunc, identity)\n\n    assert_identical(array, apply_identity(array))\n    assert_identical(variable, apply_identity(variable))\n    assert_identical(data_array, apply_identity(data_array))\n    assert_identical(data_array, apply_identity(data_array.groupby(\"x\")))\n    assert_identical(data_array, apply_identity(data_array.groupby(\"x\", squeeze=False)))\n    assert_identical(dataset, apply_identity(dataset))\n    assert_identical(dataset, apply_identity(dataset.groupby(\"x\")))\n    assert_identical(dataset, apply_identity(dataset.groupby(\"x\", squeeze=False)))\n=======\ndef test_apply_identity() -> None:\n    array = np.arange(10)\n    variable = xr.Variable(\"x\", array)\n    data_array = xr.DataArray(variable, [(\"x\", -array)])\n    dataset = xr.Dataset({\"y\": variable}, {\"x\": -array})\n\n    apply_identity = functools.partial(apply_ufunc, identity, keepdims=True)\n\n    assert_identical(array, apply_identity(array))\n    assert_identical(variable, apply_identity(variable))\n    assert_identical(data_array, apply_identity(data_array))\n    assert_identical(data_array, apply_identity(data_array.groupby(\"x\")))\n    assert_identical(data_array, apply_identity(data_array.groupby(\"x\", squeeze=False)))\n    assert_identical(dataset, apply_identity(dataset))\n    assert_identical(dataset, apply_identity(dataset.groupby(\"x\")))\n    assert_identical(dataset, apply_identity(dataset.groupby(\"x\", squeeze=False)))\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/tests/test_backends.py\n<<<<<<< SEARCH\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    return open_dataset(\n        os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n    )\n=======\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    with warnings.catch_warnings(record=True) as w:\n        return open_dataset(\n            os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n        )\n    if w and any(isinstance(w[-1].message, DeprecationWarning) for w in w):\n        warnings.warn(f\"Deprecation warning encountered while opening dataset '{name}'\", stacklevel=2)\n>>>>>>> REPLACE\n\n### xarray/tests/test_computation.py\n<<<<<<< SEARCH\ndef test_apply_identity() -> None:\n    array = np.arange(10)\n    variable = xr.Variable(\"x\", array)\n    data_array = xr.DataArray(variable, [(\"x\", -array)])\n    dataset = xr.Dataset({\"y\": variable}, {\"x\": -array})\n\n    apply_identity = functools.partial(apply_ufunc, identity)\n\n    assert_identical(array, apply_identity(array))\n    assert_identical(variable, apply_identity(variable))\n    assert_identical(data_array, apply_identity(data_array))\n    assert_identical(data_array, apply_identity(data_array.groupby(\"x\")))\n    assert_identical(data_array, apply_identity(data_array.groupby(\"x\", squeeze=False)))\n    assert_identical(dataset, apply_identity(dataset))\n    assert_identical(dataset, apply_identity(dataset.groupby(\"x\")))\n    assert_identical(dataset, apply_identity(dataset.groupby(\"x\", squeeze=False)))\n=======\ndef test_apply_identity() -> None:\n    array = np.arange(10)\n    variable = xr.Variable(\"x\", array)\n    data_array = xr.DataArray(variable, [(\"x\", -array)])\n    dataset = xr.Dataset({\"y\": variable}, {\"x\": -array})\n\n    apply_identity = functools.partial(apply_ufunc, identity, keepdims=True)\n\n    assert_identical(array, apply_identity(array))\n    assert_identical(variable, apply_identity(variable))\n    assert_identical(data_array, apply_identity(data_array))\n    assert_identical(data_array, apply_identity(data_array.groupby(\"x\")))\n    assert_identical(data_array, apply_identity(data_array.groupby(\"x\", squeeze=False)))\n    assert_identical(dataset, apply_identity(dataset))\n    assert_identical(dataset, apply_identity(dataset.groupby(\"x\")))\n    assert_identical(dataset, apply_identity(dataset.groupby(\"x\", squeeze=False)))\n>>>>>>> REPLACE",
+      "patch_content": "### xarray/tests/test_backends.py\n<<<<<<< SEARCH\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    return open_dataset(\n        os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n    )\n=======\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    with warnings.catch_warnings(record=True) as w:\n        return open_dataset(\n            os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n        )\n    if w and any(isinstance(w[-1].message, DeprecationWarning) for w in w):\n        warnings.warn(f\"Deprecation warning encountered while opening dataset '{name}'\", stacklevel=2)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 10808,
+  "llm_latency": 29.819467067718506,
+  "patch_content": "### xarray/tests/test_backends.py\n<<<<<<< SEARCH\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    return open_dataset(\n        os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n    )\n=======\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    with warnings.catch_warnings(record=True) as w:\n        return open_dataset(\n            os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n        )\n    if w and any(isinstance(w[-1].message, DeprecationWarning) for w in w):\n        warnings.warn(f\"Deprecation warning encountered while opening dataset '{name}'\", stacklevel=2)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/tests/test_backends.py"
+    ],
+    "error": null
+  }
+}

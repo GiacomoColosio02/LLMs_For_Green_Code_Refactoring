@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9014",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T13:05:12.688669",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49863
+  },
+  "llm_response": "### xarray/backends/common.py\n<<<<<<< SEARCH\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs: Any,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n\n    raise NotImplementedError()\n=======\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs: Any,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n    from xarray.backends.api import open_datatree\n    return open_datatree(filename_or_obj, engine=self.engine, **kwargs)\n>>>>>>> REPLACE\n\n### xarray/backends/netCDF4_.py\n<<<<<<< SEARCH\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n    raise NotImplementedError()\n=======\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n    from xarray.backends.api import open_datatree\n    return open_datatree(filename_or_obj, engine=self.engine, **kwargs)\n>>>>>>> REPLACE\n\n### xarray/backends/zarr.py\n<<<<<<< SEARCH\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n    raise NotImplementedError()\n=======\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n    from xarray.backends.api import open_datatree\n    return open_datatree(filename_or_obj, engine=self.engine, **kwargs)\n>>>>>>> REPLACE",
+  "llm_tokens": 12593,
+  "llm_latency": 31.501633405685425,
+  "patch_content": "### xarray/backends/common.py\n<<<<<<< SEARCH\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs: Any,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n\n    raise NotImplementedError()\n=======\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs: Any,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n    from xarray.backends.api import open_datatree\n    return open_datatree(filename_or_obj, engine=self.engine, **kwargs)\n>>>>>>> REPLACE\n\n### xarray/backends/netCDF4_.py\n<<<<<<< SEARCH\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n    raise NotImplementedError()\n=======\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n    from xarray.backends.api import open_datatree\n    return open_datatree(filename_or_obj, engine=self.engine, **kwargs)\n>>>>>>> REPLACE\n\n### xarray/backends/zarr.py\n<<<<<<< SEARCH\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n    raise NotImplementedError()\n=======\ndef open_datatree(\n    self,\n    filename_or_obj: str | os.PathLike[Any] | BufferedIOBase | AbstractDataStore,\n    **kwargs,\n) -> DataTree:\n    \"\"\"\n    Backend open_datatree method used by Xarray in :py:func:`~xarray.open_datatree`.\n    \"\"\"\n    from xarray.backends.api import open_datatree\n    return open_datatree(filename_or_obj, engine=self.engine, **kwargs)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 3,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/backends/common.py"
+    ],
+    "error": null
+  }
+}

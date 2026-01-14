@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12859",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:09:57.598754",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34919
+  },
+  "llm_response": "Let's think step by step.\n\nThe `TruncatedSVD.fit_transform` method in `decomposition/truncated_svd.py` uses a dense representation internally, which is inefficient for large sparse matrices. Using a sparse representation directly can significantly reduce memory usage and speed up computations.\n\n### sklearn/decomposition/truncated_svd.py\n<<<<<<< SEARCH\nX = check_array(X, accept_sparse=['csr', 'csc', 'coo'], dtype=[np.float64, np.float32], order='C', copy=copy)\n=======\nX = check_array(X, accept_sparse=['csr', 'csc', 'coo'], dtype=[np.float64, np.float32], order='C', copy=copy, ensure_2d=False)\n>>>>>>> REPLACE\n\n---\n\nThis change ensures that the input matrix is not converted to a dense array unless necessary, thus preserving the sparsity and improving efficiency.",
+  "llm_tokens": 10311,
+  "llm_latency": 11.203347206115723,
+  "patch_content": "### sklearn/decomposition/truncated_svd.py\n<<<<<<< SEARCH\nX = check_array(X, accept_sparse=['csr', 'csc', 'coo'], dtype=[np.float64, np.float32], order='C', copy=copy)\n=======\nX = check_array(X, accept_sparse=['csr', 'csc', 'coo'], dtype=[np.float64, np.float32], order='C', copy=copy, ensure_2d=False)\n>>>>>>> REPLACE\n\n---\n\nThis change ensures that the input matrix is not converted to a dense array unless necessary, thus preserving the sparsity and improving efficiency.",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

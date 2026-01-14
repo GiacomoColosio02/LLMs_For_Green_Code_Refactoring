@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9517",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:48:13.294849",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24877
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_check_coords_dims` function in `xarray/core/dataarray.py` is the bottleneck.\n**DIAGNOSIS**: It iterates over each dimension and checks if the dimension exists in the coordinates, leading to O(n\u00b2) complexity due to nested loops.\n**SOLUTION**: Use a set for faster membership testing, reducing the complexity to O(n).\n\n### SECTION 2: PATCH\n\n### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    for k, v in coords.items():\n        if any(d not in dim for d in v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        for d, s in v.sizes.items():\n            if s != sizes[d]:\n                raise ValueError(\n                    f\"conflicting sizes for dimension {d!r}: \"\n                    f\"length {sizes[d]} on the data but length {s} on \"\n                    f\"coordinate {k!r}\"\n                )\n=======\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    dim_set = set(dim)\n    for k, v in coords.items():\n        if not dim_set.issuperset(v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        for d, s in v.sizes.items():\n            if s != sizes[d]:\n                raise ValueError(\n                    f\"conflicting sizes for dimension {d!r}: \"\n                    f\"length {sizes[d]} on the data but length {s} on \"\n                    f\"coordinate {k!r}\"\n                )\n>>>>>>> REPLACE",
+  "llm_tokens": 8565,
+  "llm_latency": 23.922507524490356,
+  "patch_content": "### xarray/core/dataarray.py\n<<<<<<< SEARCH\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    for k, v in coords.items():\n        if any(d not in dim for d in v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        for d, s in v.sizes.items():\n            if s != sizes[d]:\n                raise ValueError(\n                    f\"conflicting sizes for dimension {d!r}: \"\n                    f\"length {sizes[d]} on the data but length {s} on \"\n                    f\"coordinate {k!r}\"\n                )\n=======\ndef _check_coords_dims(shape, coords, dim):\n    sizes = dict(zip(dim, shape, strict=True))\n    dim_set = set(dim)\n    for k, v in coords.items():\n        if not dim_set.issuperset(v.dims):\n            raise ValueError(\n                f\"coordinate {k} has dimensions {v.dims}, but these \"\n                \"are not a subset of the DataArray \"\n                f\"dimensions {dim}\"\n            )\n\n        for d, s in v.sizes.items():\n            if s != sizes[d]:\n                raise ValueError(\n                    f\"conflicting sizes for dimension {d!r}: \"\n                    f\"length {sizes[d]} on the data but length {s} on \"\n                    f\"coordinate {k!r}\"\n                )\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/dataarray.py"
+    ],
+    "error": null
+  }
+}

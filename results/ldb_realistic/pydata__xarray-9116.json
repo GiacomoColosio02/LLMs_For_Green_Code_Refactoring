@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-9116",
+  "prompt_type": "ldb",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T22:19:55.248420",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34772
+  },
+  "llm_response": "### xarray/tests/test_backends.py\n<<<<<<< SEARCH\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    return open_dataset(\n        os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n    )\n=======\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    with warnings.catch_warnings(record=True) as w:\n        dataset = open_dataset(\n            os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n        )\n    for warning in w:\n        if \"deprecated\" in str(warning.message):\n            continue\n        warnings.warn(warning.message, category=warning.category)\n    return dataset\n>>>>>>> REPLACE\n\n### xarray/tests/test_duck_array_ops.py\n<<<<<<< SEARCH\ndef test_concatenate_extensio\n# ... [TRUNCATED]\n[end of xarray/tests/test_duck_array_ops.py]",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/tests/test_backends.py\n<<<<<<< SEARCH\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    return open_dataset(\n        os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n    )\n=======\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    with warnings.catch_warnings(record=True) as w:\n        dataset = open_dataset(\n            os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n        )\n    for warning in w:\n        if \"deprecated\" in str(warning.message):\n            continue\n        warnings.warn(warning.message, category=warning.category)\n    return dataset\n>>>>>>> REPLACE\n\n### xarray/tests/test_duck_array_ops.py\n<<<<<<< SEARCH\ndef test_concatenate_extensio\n# ... [TRUNCATED]\n[end of xarray/tests/test_duck_array_ops.py]",
+      "patch_content": "### xarray/tests/test_backends.py\n<<<<<<< SEARCH\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    return open_dataset(\n        os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n    )\n=======\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    with warnings.catch_warnings(record=True) as w:\n        dataset = open_dataset(\n            os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n        )\n    for warning in w:\n        if \"deprecated\" in str(warning.message):\n            continue\n        warnings.warn(warning.message, category=warning.category)\n    return dataset\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 10218,
+  "llm_latency": 11.574455738067627,
+  "patch_content": "### xarray/tests/test_backends.py\n<<<<<<< SEARCH\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    return open_dataset(\n        os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n    )\n=======\ndef open_example_dataset(name, *args, **kwargs) -> Dataset:\n    with warnings.catch_warnings(record=True) as w:\n        dataset = open_dataset(\n            os.path.join(os.path.dirname(__file__), \"data\", name), *args, **kwargs\n        )\n    for warning in w:\n        if \"deprecated\" in str(warning.message):\n            continue\n        warnings.warn(warning.message, category=warning.category)\n    return dataset\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/tests/test_backends.py"
+    ],
+    "error": null
+  }
+}

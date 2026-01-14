@@ -3,18 +3,26 @@
   "prompt_type": "cot",
   "strategy": "oracle",
   "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
-  "timestamp": "2026-01-08T19:50:49.655833",
-  "status": "patch_failed",
-  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n1. **IDENTIFICATION**: The inefficiency is likely found in the `_dense_fit` and `_sparse_fit` methods within the `BaseLibSVM` class in `sklearn/svm/base.py`. These methods handle the fitting process, which involves computing the support vectors and dual coefficients.\n\n2. **DIAGNOSIS**: The current implementation uses dense matrices for computations, which can lead to high memory usage and slower processing times, especially for larger datasets. Additionally, redundant computations are performed multiple times during the fitting process.\n\n3. **HYPOTHESIS**: By optimizing the matrix operations and reducing redundant calculations, we can significantly improve the computational efficiency and execution speed of the SVM fitting process.\n\n### SECTION 2: PATCH\n\n### sklearn/svm/base.py\n<<<<<<< SEARCH\nlibsvm.fit(\n    X, y,\n    svm_type=solver_type, sample_weight=sample_weight,\n    class_weight=self.class_weight_, kernel=kernel, C=self.C,\n    nu=self.nu, probability=self.probability, degree=self.degree,\n    shrinking=self.shrinking, tol=self.tol,\n    cache_size=self.cache_size, coef0=self.coef0,\n    gamma=self._gamma, epsilon=self.epsilon,\n    max_iter=self.max_iter, random_seed=random_seed)\n=======\nlibsvm.fit(\n    X, y,\n    svm_type=solver_type, sample_weight=sample_weight,\n    class_weight=self.class_weight_, kernel=kernel, C=self.C,\n    nu=self.nu, probability=self.probability, degree=self.degree,\n    shrinking=self.shrinking, tol=self.tol,\n    cache_size=self.cache_size, coef0=self.coef0,\n    gamma=self._gamma, epsilon=self.epsilon,\n    max_iter=self.max_iter, random_seed=random_seed,\n    use_fast_path=True)\n>>>>>>> REPLACE",
-  "patch_result": {
-    "success": false,
-    "changes_applied": 0,
-    "total_blocks": 0,
-    "method": "none",
-    "modified_files": []
-  },
+  "timestamp": "2026-01-12T11:09:26.265005",
+  "status": "success",
   "error": null,
   "repo": "scikit-learn/scikit-learn",
-  "llm_tokens": 15062,
-  "llm_latency": 22.706981420516968
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49890
+  },
+  "llm_response": "Let's think step by step.\n\nThe `LabelPropagation` and `LabelSpreading` classes in `label_propagation.py` use dense matrices for computations, leading to high memory usage and slower processing times. By switching to sparse matrices where appropriate, we can reduce memory consumption and speed up calculations.\n\n### sklearn/semi_supervised/label_propagation.py\n<<<<<<< SEARCH\naffinity_matrix = self._get_kernel(self.X_)\nnormalizer = affinity_matrix.sum(axis=0)\nif sparse.isspmatrix(affinity_matrix):\n    affinity_matrix.data /= np.diag(np.array(normalizer))\nelse:\n    affinity_matrix /= normalizer[:, np.newaxis]\nreturn affinity_matrix\n=======\naffinity_matrix = self._get_kernel(self.X_)\nif sparse.isspmatrix(affinity_matrix):\n    normalizer = affinity_matrix.sum(axis=0)\n    affinity_matrix.data /= normalizer\nelse:\n    normalizer = affinity_matrix.sum(axis=0)\n    affinity_matrix /= normalizer[:, np.newaxis]\nreturn affinity_matrix\n>>>>>>> REPLACE",
+  "llm_tokens": 14273,
+  "llm_latency": 13.002452373504639,
+  "patch_content": "### sklearn/semi_supervised/label_propagation.py\n<<<<<<< SEARCH\naffinity_matrix = self._get_kernel(self.X_)\nnormalizer = affinity_matrix.sum(axis=0)\nif sparse.isspmatrix(affinity_matrix):\n    affinity_matrix.data /= np.diag(np.array(normalizer))\nelse:\n    affinity_matrix /= normalizer[:, np.newaxis]\nreturn affinity_matrix\n=======\naffinity_matrix = self._get_kernel(self.X_)\nif sparse.isspmatrix(affinity_matrix):\n    normalizer = affinity_matrix.sum(axis=0)\n    affinity_matrix.data /= normalizer\nelse:\n    normalizer = affinity_matrix.sum(axis=0)\n    affinity_matrix /= normalizer[:, np.newaxis]\nreturn affinity_matrix\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/semi_supervised/label_propagation.py"
+    ],
+    "error": null
+  }
 }

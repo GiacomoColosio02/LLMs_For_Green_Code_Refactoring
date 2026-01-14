@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12567",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:46:08.331089",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 12522
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_object_dtype_isnan` function in `sklearn/utils/fixes.py` is the bottleneck.\n**DIAGNOSIS**: It uses `np.frompyfunc` which creates a Python loop over the array, leading to high overhead and reduced performance.\n**SOLUTION**: Replace `np.frompyfunc` with a vectorized operation using `np.vectorize`.\n\n### SECTION 2: PATCH\n\n### sklearn/utils/fixes.py\n<<<<<<< SEARCH\ndef _object_dtype_isnan(X):\n    return np.frompyfunc(lambda x: x != x, 1, 1)(X).astype(bool)\n=======\ndef _object_dtype_isnan(X):\n    return np.vectorize(lambda x: x != x)(X).astype(bool)\n>>>>>>> REPLACE",
+  "llm_tokens": 4006,
+  "llm_latency": 9.74904990196228,
+  "patch_content": "### sklearn/utils/fixes.py\n<<<<<<< SEARCH\ndef _object_dtype_isnan(X):\n    return np.frompyfunc(lambda x: x != x, 1, 1)(X).astype(bool)\n=======\ndef _object_dtype_isnan(X):\n    return np.vectorize(lambda x: x != x)(X).astype(bool)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/utils/fixes.py"
+    ],
+    "error": null
+  }
+}

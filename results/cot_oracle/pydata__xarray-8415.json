@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-8415",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:06:15.466614",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49872
+  },
+  "llm_response": "Let's think step by step.\n\nThe `map_blocks` function in `parallel.py` uses `infer_template` which runs the function on mocked-up data to determine properties of the returned object. This is inefficient and unnecessary if the function does not change the size of existing dimensions. By removing `infer_template`, we can avoid this overhead.\n\n### xarray/core/parallel.py\n<<<<<<< SEARCH\ndef map_blocks(\n    func: Callable[..., T_Xarray],\n    obj: DataArray | Dataset,\n    args: Sequence[Any] = (),\n    kwargs: Mapping[str, Any] | None = None,\n    template: DataArray | Dataset | None = None,\n) -> T_Xarray:\n    \"\"\"Apply a function to each block of a DataArray or Dataset.\n    ...\n    \"\"\"\n    if template is None:\n        # infer template by providing zero-shaped arrays\n        template = infer_template(func, aligned[0], *args, **kwargs)\n        ...\n    else:\n        ...\n    ...\n    return result  # type: ignore[return-value]\n=======\ndef map_blocks(\n    func: Callable[..., T_Xarray],\n    obj: DataArray | Dataset,\n    args: Sequence[Any] = (),\n    kwargs: Mapping[str, Any] | None = None,\n    template: DataArray | Dataset | None = None,\n) -> T_Xarray:\n    \"\"\"Apply a function to each block of a DataArray or Dataset.\n    ...\n    \"\"\"\n    if template is None:\n        # Remove infer_template to avoid unnecessary computation\n        ...\n    else:\n        ...\n    ...\n    return result  # type: ignore[return-value]\n>>>>>>> REPLACE",
+  "llm_tokens": 12490,
+  "llm_latency": 19.467358112335205,
+  "patch_content": "### xarray/core/parallel.py\n<<<<<<< SEARCH\ndef map_blocks(\n    func: Callable[..., T_Xarray],\n    obj: DataArray | Dataset,\n    args: Sequence[Any] = (),\n    kwargs: Mapping[str, Any] | None = None,\n    template: DataArray | Dataset | None = None,\n) -> T_Xarray:\n    \"\"\"Apply a function to each block of a DataArray or Dataset.\n    ...\n    \"\"\"\n    if template is None:\n        # infer template by providing zero-shaped arrays\n        template = infer_template(func, aligned[0], *args, **kwargs)\n        ...\n    else:\n        ...\n    ...\n    return result  # type: ignore[return-value]\n=======\ndef map_blocks(\n    func: Callable[..., T_Xarray],\n    obj: DataArray | Dataset,\n    args: Sequence[Any] = (),\n    kwargs: Mapping[str, Any] | None = None,\n    template: DataArray | Dataset | None = None,\n) -> T_Xarray:\n    \"\"\"Apply a function to each block of a DataArray or Dataset.\n    ...\n    \"\"\"\n    if template is None:\n        # Remove infer_template to avoid unnecessary computation\n        ...\n    else:\n        ...\n    ...\n    return result  # type: ignore[return-value]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

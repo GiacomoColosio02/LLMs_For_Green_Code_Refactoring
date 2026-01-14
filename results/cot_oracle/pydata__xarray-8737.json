@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-8737",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:03:20.650434",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49694
+  },
+  "llm_response": "Let's think step by step.\n\nThe `PandasMultiIndex.unstack` method in `xarray/core/indexes.py` uses a nested loop to process the index levels, leading to O(n\u00b2) complexity. This is inefficient for large datasets. We can optimize this by using vectorized operations provided by pandas, which are generally faster due to internal optimizations.\n\n### xarray/core/indexes.py\n<<<<<<< SEARCH\ndef unstack(self) -> tuple[dict[Hashable, Index], pd.MultiIndex]:\n    indexes = {}\n    for level in range(len(self.levels)):\n        index = self._create_index(level)\n        indexes[level] = index\n    return indexes, self._multi_index\n=======\ndef unstack(self) -> tuple[dict[Hashable, Index], pd.MultiIndex]:\n    levels = self.levels\n    index_arrays = [level.values for level in levels]\n    multi_index = pd.MultiIndex.from_arrays(index_arrays, names=[level.name for level in levels])\n    indexes = {i: self._create_index(i) for i in range(len(levels))}\n    return indexes, multi_index\n>>>>>>> REPLACE",
+  "llm_tokens": 13042,
+  "llm_latency": 14.010843515396118,
+  "patch_content": "### xarray/core/indexes.py\n<<<<<<< SEARCH\ndef unstack(self) -> tuple[dict[Hashable, Index], pd.MultiIndex]:\n    indexes = {}\n    for level in range(len(self.levels)):\n        index = self._create_index(level)\n        indexes[level] = index\n    return indexes, self._multi_index\n=======\ndef unstack(self) -> tuple[dict[Hashable, Index], pd.MultiIndex]:\n    levels = self.levels\n    index_arrays = [level.values for level in levels]\n    multi_index = pd.MultiIndex.from_arrays(index_arrays, names=[level.name for level in levels])\n    indexes = {i: self._create_index(i) for i in range(len(levels))}\n    return indexes, multi_index\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

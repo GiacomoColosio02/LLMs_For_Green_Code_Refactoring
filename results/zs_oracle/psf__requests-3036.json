@@ -1,0 +1,28 @@
+{
+  "instance_id": "psf__requests-3036",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T12:27:26.032614",
+  "status": "success",
+  "error": null,
+  "repo": "psf/requests",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 46682
+  },
+  "llm_response": "### requests/utils.py\n<<<<<<< SEARCH\ndef super_len(o):\n    total_length = 0\n    current_position = 0\n\n    if hasattr(o, '__len__'):\n        total_length = len(o)\n\n    elif hasattr(o, 'len'):\n        total_length = o.len\n\n    elif hasattr(o, 'getvalue'):\n        # e.g. BytesIO, cStringIO.StringIO\n        total_length = len(o.getvalue())\n\n    elif hasattr(o, 'fileno'):\n        try:\n            fileno = o.fileno()\n        except io.UnsupportedOperation:\n            pass\n        else:\n            total_length = os.fstat(fileno).st_size\n\n            # Having used fstat to determine the file length, we need to\n            # confirm that this file was opened up in binary mode.\n            if 'b' not in o.mode:\n                warnings.warn((\n                    \"Requests has determined the content-length for this \"\n                    \"request using the binary size of the file: however, the \"\n                    \"file has been opened in text mode (i.e. without the 'b' \"\n                    \"flag in the mode). This may lead to an incorrect \"\n                    \"content-length. In Requests 3.0, support will be removed \"\n                    \"for files in text mode.\"),\n                    FileModeWarning\n                )\n\n    if hasattr(o, 'tell'):\n        current_position = o.tell()\n\n    return max(0, total_length - current_position)\n=======\ndef super_len(o):\n    if hasattr(o, '__len__'):\n        return len(o)\n    elif hasattr(o, 'len'):\n        return o.len\n    elif hasattr(o, 'getvalue'):\n        return len(o.getvalue())\n    elif hasattr(o, 'fileno'):\n        try:\n            fileno = o.fileno()\n        except io.UnsupportedOperation:\n            pass\n        else:\n            return os.fstat(fileno).st_size\n    elif hasattr(o, 'tell'):\n        return max(0, o.tell() - o.seek(0, io.SEEK_END))\n    return 0\n>>>>>>> REPLACE",
+  "llm_tokens": 13427,
+  "llm_latency": 24.548720121383667,
+  "patch_content": "### requests/utils.py\n<<<<<<< SEARCH\ndef super_len(o):\n    total_length = 0\n    current_position = 0\n\n    if hasattr(o, '__len__'):\n        total_length = len(o)\n\n    elif hasattr(o, 'len'):\n        total_length = o.len\n\n    elif hasattr(o, 'getvalue'):\n        # e.g. BytesIO, cStringIO.StringIO\n        total_length = len(o.getvalue())\n\n    elif hasattr(o, 'fileno'):\n        try:\n            fileno = o.fileno()\n        except io.UnsupportedOperation:\n            pass\n        else:\n            total_length = os.fstat(fileno).st_size\n\n            # Having used fstat to determine the file length, we need to\n            # confirm that this file was opened up in binary mode.\n            if 'b' not in o.mode:\n                warnings.warn((\n                    \"Requests has determined the content-length for this \"\n                    \"request using the binary size of the file: however, the \"\n                    \"file has been opened in text mode (i.e. without the 'b' \"\n                    \"flag in the mode). This may lead to an incorrect \"\n                    \"content-length. In Requests 3.0, support will be removed \"\n                    \"for files in text mode.\"),\n                    FileModeWarning\n                )\n\n    if hasattr(o, 'tell'):\n        current_position = o.tell()\n\n    return max(0, total_length - current_position)\n=======\ndef super_len(o):\n    if hasattr(o, '__len__'):\n        return len(o)\n    elif hasattr(o, 'len'):\n        return o.len\n    elif hasattr(o, 'getvalue'):\n        return len(o.getvalue())\n    elif hasattr(o, 'fileno'):\n        try:\n            fileno = o.fileno()\n        except io.UnsupportedOperation:\n            pass\n        else:\n            return os.fstat(fileno).st_size\n    elif hasattr(o, 'tell'):\n        return max(0, o.tell() - o.seek(0, io.SEEK_END))\n    return 0\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "requests/utils.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "instance_id": "astropy__astropy-13745",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T21:19:27.049492",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24855
+  },
+  "llm_response": "### path/to/file.py\n<<<<<<< SEARCH\n        if angles.unit is u.deg:\n            limit = 90\n        elif angles.unit is u.rad:\n            limit = 0.5 * np.pi\n        else:\n            limit = u.degree.to(angles.unit, 90.0)\n=======\n        limit = 90 if angles.unit is u.deg else 0.5 * np.pi\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### path/to/file.py\n<<<<<<< SEARCH\n        if angles.unit is u.deg:\n            limit = 90\n        elif angles.unit is u.rad:\n            limit = 0.5 * np.pi\n        else:\n            limit = u.degree.to(angles.unit, 90.0)\n=======\n        limit = 90 if angles.unit is u.deg else 0.5 * np.pi\n>>>>>>> REPLACE",
+      "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n        if angles.unit is u.deg:\n            limit = 90\n        elif angles.unit is u.rad:\n            limit = 0.5 * np.pi\n        else:\n            limit = u.degree.to(angles.unit, 90.0)\n=======\n        limit = 90 if angles.unit is u.deg else 0.5 * np.pi\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 6478,
+  "llm_latency": 5.425264120101929,
+  "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n        if angles.unit is u.deg:\n            limit = 90\n        elif angles.unit is u.rad:\n            limit = 0.5 * np.pi\n        else:\n            limit = u.degree.to(angles.unit, 90.0)\n=======\n        limit = 90 if angles.unit is u.deg else 0.5 * np.pi\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/coordinates/angles.py"
+    ],
+    "error": null
+  }
+}

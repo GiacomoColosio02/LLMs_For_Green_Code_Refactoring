@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12822",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T14:31:31.305052",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24879
+  },
+  "llm_response": "### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n=======\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n            ngrams = set()\n            for n in range(min_n, max_n + 1):\n                for i in range(len(tokens) - n + 1):\n                    ngram = ' '.join(tokens[i:i + n])\n                    if ngram not in ngrams:\n                        ngrams.add(ngram)\n                        tokens.extend(ngram.split())\n>>>>>>> REPLACE",
+  "all_responses": [
+    "1. `_word_ngrams` method in `sklearn/feature_extraction/text.py`\n2. It involves nested loops and redundant computations, leading to O(n\u00b2) complexity.\n3. Memoization or caching intermediate results could significantly improve performance.",
+    "Replace the nested loop with a set lookup for storing previously computed n-grams. This reduces the time complexity from O(n\u00b2) to approximately O(n). Edge cases to consider include handling empty strings and ensuring that the set is properly initialized before use.",
+    "### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n=======\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n            ngrams = set()\n            for n in range(min_n, max_n + 1):\n                for i in range(len(tokens) - n + 1):\n                    ngram = ' '.join(tokens[i:i + n])\n                    if ngram not in ngrams:\n                        ngrams.add(ngram)\n                        tokens.extend(ngram.split())\n>>>>>>> REPLACE"
+  ],
+  "llm_tokens": 11760,
+  "llm_latency": 13.828458547592163,
+  "patch_content": "### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n=======\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n            ngrams = set()\n            for n in range(min_n, max_n + 1):\n                for i in range(len(tokens) - n + 1):\n                    ngram = ' '.join(tokens[i:i + n])\n                    if ngram not in ngrams:\n                        ngrams.add(ngram)\n                        tokens.extend(ngram.split())\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. `_word_ngrams` method in `sklearn/feature_extraction/text.py`\n2. It involves nested loops and redundant computations, leading to O(n\u00b2) complexity.\n3. Memoization or caching intermediate results could significantly improve performance.",
+    "optimizer": "Replace the nested loop with a set lookup for storing previously computed n-grams. This reduces the time complexity from O(n\u00b2) to approximately O(n). Edge cases to consider include handling empty strings and ensuring that the set is properly initialized before use.",
+    "reviewer": "### sklearn/feature_extraction/text.py\n<<<<<<< SEARCH\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n=======\n        if stop_words is not None:\n            tokens = [w for w in tokens if w not in stop_words]\n            ngrams = set()\n            for n in range(min_n, max_n + 1):\n                for i in range(len(tokens) - n + 1):\n                    ngram = ' '.join(tokens[i:i + n])\n                    if ngram not in ngrams:\n                        ngrams.add(ngram)\n                        tokens.extend(ngram.split())\n>>>>>>> REPLACE"
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/feature_extraction/text.py"
+    ],
+    "error": null
+  }
+}

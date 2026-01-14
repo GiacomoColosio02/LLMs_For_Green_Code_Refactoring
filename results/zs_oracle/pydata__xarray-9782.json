@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9782",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T12:29:04.431005",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 32091
+  },
+  "llm_response": "### xarray/tutorial.py\n<<<<<<< SEARCH\n    ds = _open_dataset(filepath, engine=engine, **kws)\n    if not cache:\n        ds = ds.load()\n        pathlib.Path(filepath).unlink()\n=======\n    ds = _open_dataset(filepath, engine=engine, **kws).load() if cache else _open_dataset(filepath, engine=engine, **kws)\n>>>>>>> REPLACE",
+  "llm_tokens": 9878,
+  "llm_latency": 5.5124351978302,
+  "patch_content": "### xarray/tutorial.py\n<<<<<<< SEARCH\n    ds = _open_dataset(filepath, engine=engine, **kws)\n    if not cache:\n        ds = ds.load()\n        pathlib.Path(filepath).unlink()\n=======\n    ds = _open_dataset(filepath, engine=engine, **kws).load() if cache else _open_dataset(filepath, engine=engine, **kws)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/tutorial.py"
+    ],
+    "error": null
+  }
+}

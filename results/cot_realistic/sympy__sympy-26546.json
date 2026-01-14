@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-26546",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T03:31:18.093131",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34885
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_make_find_query` function in `basic.py` is the bottleneck.\n**DIAGNOSIS**: It repeatedly calls `sympify` within a loop, leading to redundant computations and increased memory usage.\n**SOLUTION**: Cache the result of `sympify` to avoid repeated calculations.\n\n### SECTION 2: PATCH\n\n### sympy/core/basic.py\n<<<<<<< SEARCH\ndef _make_find_query(query):\n    \"\"\"Convert the argument of Basic.find() into a callable\"\"\"\n    try:\n        query = _sympify(query)\n    except SympifyError:\n        pass\n    if isinstance(query, type):\n        return lambda expr: isinstance(expr, query)\n    elif isinstance(query, Basic):\n        return lambda expr: expr.match(query) is not None\n    return query\n=======\nfrom sympy.core.cache import cacheit\n\n@cacheit\ndef _make_find_query(query):\n    \"\"\"Convert the argument of Basic.find() into a callable\"\"\"\n    try:\n        query = _sympify(query)\n    except SympifyError:\n        pass\n    if isinstance(query, type):\n        return lambda expr: isinstance(expr, query)\n    elif isinstance(query, Basic):\n        return lambda expr: expr.match(query) is not None\n    return query\n>>>>>>> REPLACE",
+  "llm_tokens": 11057,
+  "llm_latency": 16.47664523124695,
+  "patch_content": "### sympy/core/basic.py\n<<<<<<< SEARCH\ndef _make_find_query(query):\n    \"\"\"Convert the argument of Basic.find() into a callable\"\"\"\n    try:\n        query = _sympify(query)\n    except SympifyError:\n        pass\n    if isinstance(query, type):\n        return lambda expr: isinstance(expr, query)\n    elif isinstance(query, Basic):\n        return lambda expr: expr.match(query) is not None\n    return query\n=======\nfrom sympy.core.cache import cacheit\n\n@cacheit\ndef _make_find_query(query):\n    \"\"\"Convert the argument of Basic.find() into a callable\"\"\"\n    try:\n        query = _sympify(query)\n    except SympifyError:\n        pass\n    if isinstance(query, type):\n        return lambda expr: isinstance(expr, query)\n    elif isinstance(query, Basic):\n        return lambda expr: expr.match(query) is not None\n    return query\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/core/basic.py"
+    ],
+    "error": null
+  }
+}

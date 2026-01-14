@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13174",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T11:15:29.887094",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 38753
+  },
+  "llm_response": "### sklearn/ensemble/weight_boosting.py\n<<<<<<< SEARCH\n        if sample_weight is None:\n            # Initialize weights to 1 / n_samples\n            sample_weight = np.empty(X.shape[0], dtype=np.float64)\n            sample_weight[:] = 1. / X.shape[0]\n        else:\n            sample_weight = check_array(sample_weight, ensure_2d=False)\n            # Normalize existing weights\n            sample_weight = sample_weight / sample_weight.sum(dtype=np.float64)\n\n            # Check that the sample weights sum is positive\n            if sample_weight.sum() <= 0:\n                raise ValueError(\n                    \"Attempting to fit with a non-positive \"\n                    \"weighted number of samples.\")\n=======\n        if sample_weight is None:\n            sample_weight = np.ones(X.shape[0], dtype=np.float64) / X.shape[0]\n        else:\n            sample_weight = check_array(sample_weight, ensure_2d=False)\n            sample_weight /= sample_weight.sum(dtype=np.float64)\n            if sample_weight.sum() <= 0:\n                raise ValueError(\"Attempting to fit with a non-positive weighted number of samples.\")\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sklearn/ensemble/weight_boosting.py\n<<<<<<< SEARCH\n        if sample_weight is None:\n            # Initialize weights to 1 / n_samples\n            sample_weight = np.empty(X.shape[0], dtype=np.float64)\n            sample_weight[:] = 1. / X.shape[0]\n        else:\n            sample_weight = check_array(sample_weight, ensure_2d=False)\n            # Normalize existing weights\n            sample_weight = sample_weight / sample_weight.sum(dtype=np.float64)\n\n            # Check that the sample weights sum is positive\n            if sample_weight.sum() <= 0:\n                raise ValueError(\n                    \"Attempting to fit with a non-positive \"\n                    \"weighted number of samples.\")\n=======\n        if sample_weight is None:\n            sample_weight = np.ones(X.shape[0], dtype=np.float64) / X.shape[0]\n        else:\n            sample_weight = check_array(sample_weight, ensure_2d=False)\n            sample_weight /= sample_weight.sum(dtype=np.float64)\n            if sample_weight.sum() <= 0:\n                raise ValueError(\"Attempting to fit with a non-positive weighted number of samples.\")\n>>>>>>> REPLACE",
+      "patch_content": "### sklearn/ensemble/weight_boosting.py\n<<<<<<< SEARCH\n        if sample_weight is None:\n            # Initialize weights to 1 / n_samples\n            sample_weight = np.empty(X.shape[0], dtype=np.float64)\n            sample_weight[:] = 1. / X.shape[0]\n        else:\n            sample_weight = check_array(sample_weight, ensure_2d=False)\n            # Normalize existing weights\n            sample_weight = sample_weight / sample_weight.sum(dtype=np.float64)\n\n            # Check that the sample weights sum is positive\n            if sample_weight.sum() <= 0:\n                raise ValueError(\n                    \"Attempting to fit with a non-positive \"\n                    \"weighted number of samples.\")\n=======\n        if sample_weight is None:\n            sample_weight = np.ones(X.shape[0], dtype=np.float64) / X.shape[0]\n        else:\n            sample_weight = check_array(sample_weight, ensure_2d=False)\n            sample_weight /= sample_weight.sum(dtype=np.float64)\n            if sample_weight.sum() <= 0:\n                raise ValueError(\"Attempting to fit with a non-positive weighted number of samples.\")\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 9934,
+  "llm_latency": 13.866910219192505,
+  "patch_content": "### sklearn/ensemble/weight_boosting.py\n<<<<<<< SEARCH\n        if sample_weight is None:\n            # Initialize weights to 1 / n_samples\n            sample_weight = np.empty(X.shape[0], dtype=np.float64)\n            sample_weight[:] = 1. / X.shape[0]\n        else:\n            sample_weight = check_array(sample_weight, ensure_2d=False)\n            # Normalize existing weights\n            sample_weight = sample_weight / sample_weight.sum(dtype=np.float64)\n\n            # Check that the sample weights sum is positive\n            if sample_weight.sum() <= 0:\n                raise ValueError(\n                    \"Attempting to fit with a non-positive \"\n                    \"weighted number of samples.\")\n=======\n        if sample_weight is None:\n            sample_weight = np.ones(X.shape[0], dtype=np.float64) / X.shape[0]\n        else:\n            sample_weight = check_array(sample_weight, ensure_2d=False)\n            sample_weight /= sample_weight.sum(dtype=np.float64)\n            if sample_weight.sum() <= 0:\n                raise ValueError(\"Attempting to fit with a non-positive weighted number of samples.\")\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/ensemble/weight_boosting.py"
+    ],
+    "error": null
+  }
+}

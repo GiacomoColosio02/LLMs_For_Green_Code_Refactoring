@@ -1,0 +1,38 @@
+{
+  "instance_id": "pydata__xarray-7809",
+  "prompt_type": "ldb",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T23:22:22.003626",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34967
+  },
+  "llm_response": "### xarray/tests/test_groupby.py\n<<<<<<< SEARCH\ndef test_groupby_da_datetime() -> None:\n    # test groupby with a DataArray of dtype datetime for GH1132\n    # create test data\n    times = pd.date_range(\"2000-01-01\", periods=4)\n    foo = xr.DataArray([1, 2, 3, 4], coords=dict(time=times), dims=\"time\")\n    # create test index\n    dd = times.to_pydatetime()\n    reference_dates = [dd[0], dd[2]]\n    labels = reference_dates[0:1] * 2 + reference_dates[1:2] * 2\n    ind = xr.DataArray(\n        labels, coords=dict(time=times), dims=\"time\", name=\"reference_date\"\n    )\n    g = foo.groupby(ind)\n    actual = g.sum(dim=\"time\")\n    expected = xr.DataArray(\n        [3, 7], coords=dict(reference_date=reference_dates), dims=\"reference_date\"\n    )\n    assert_equal(expected, actual)\n=======\ndef test_groupby_da_datetime() -> None:\n    # test groupby with a DataArray of dtype datetime for GH1132\n    # create test data\n    times = pd.date_range(\"2000-01-01\", periods=4)\n    foo = xr.DataArray([1, 2, 3, 4], coords=dict(time=times), dims=\"time\")\n    # create test index\n    dd = times.to_pydatetime()\n    reference_dates = [dd[0], dd[2]]\n    labels = reference_dates[0:1] * 2 + reference_dates[1:2] * 2\n    ind = xr.DataArray(labels, coords=dict(time=times), dims=\"time\", name=\"reference_date\")\n    g = foo.groupby(ind)\n    actual = g.sum(dim=\"time\")\n    expected = xr.DataArray([3, 7], coords=dict(reference_date=reference_dates), dims=\"reference_date\")\n    assert_equal(expected, actual)\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### xarray/tests/test_groupby.py\n<<<<<<< SEARCH\ndef test_groupby_da_datetime() -> None:\n    # test groupby with a DataArray of dtype datetime for GH1132\n    # create test data\n    times = pd.date_range(\"2000-01-01\", periods=4)\n    foo = xr.DataArray([1, 2, 3, 4], coords=dict(time=times), dims=\"time\")\n    # create test index\n    dd = times.to_pydatetime()\n    reference_dates = [dd[0], dd[2]]\n    labels = reference_dates[0:1] * 2 + reference_dates[1:2] * 2\n    ind = xr.DataArray(\n        labels, coords=dict(time=times), dims=\"time\", name=\"reference_date\"\n    )\n    g = foo.groupby(ind)\n    actual = g.sum(dim=\"time\")\n    expected = xr.DataArray(\n        [3, 7], coords=dict(reference_date=reference_dates), dims=\"reference_date\"\n    )\n    assert_equal(expected, actual)\n=======\ndef test_groupby_da_datetime() -> None:\n    # test groupby with a DataArray of dtype datetime for GH1132\n    # create test data\n    times = pd.date_range(\"2000-01-01\", periods=4)\n    foo = xr.DataArray([1, 2, 3, 4], coords=dict(time=times), dims=\"time\")\n    # create test index\n    dd = times.to_pydatetime()\n    reference_dates = [dd[0], dd[2]]\n    labels = reference_dates[0:1] * 2 + reference_dates[1:2] * 2\n    ind = xr.DataArray(labels, coords=dict(time=times), dims=\"time\", name=\"reference_date\")\n    g = foo.groupby(ind)\n    actual = g.sum(dim=\"time\")\n    expected = xr.DataArray([3, 7], coords=dict(reference_date=reference_dates), dims=\"reference_date\")\n    assert_equal(expected, actual)\n>>>>>>> REPLACE",
+      "patch_content": "### xarray/tests/test_groupby.py\n<<<<<<< SEARCH\ndef test_groupby_da_datetime() -> None:\n    # test groupby with a DataArray of dtype datetime for GH1132\n    # create test data\n    times = pd.date_range(\"2000-01-01\", periods=4)\n    foo = xr.DataArray([1, 2, 3, 4], coords=dict(time=times), dims=\"time\")\n    # create test index\n    dd = times.to_pydatetime()\n    reference_dates = [dd[0], dd[2]]\n    labels = reference_dates[0:1] * 2 + reference_dates[1:2] * 2\n    ind = xr.DataArray(\n        labels, coords=dict(time=times), dims=\"time\", name=\"reference_date\"\n    )\n    g = foo.groupby(ind)\n    actual = g.sum(dim=\"time\")\n    expected = xr.DataArray(\n        [3, 7], coords=dict(reference_date=reference_dates), dims=\"reference_date\"\n    )\n    assert_equal(expected, actual)\n=======\ndef test_groupby_da_datetime() -> None:\n    # test groupby with a DataArray of dtype datetime for GH1132\n    # create test data\n    times = pd.date_range(\"2000-01-01\", periods=4)\n    foo = xr.DataArray([1, 2, 3, 4], coords=dict(time=times), dims=\"time\")\n    # create test index\n    dd = times.to_pydatetime()\n    reference_dates = [dd[0], dd[2]]\n    labels = reference_dates[0:1] * 2 + reference_dates[1:2] * 2\n    ind = xr.DataArray(labels, coords=dict(time=times), dims=\"time\", name=\"reference_date\")\n    g = foo.groupby(ind)\n    actual = g.sum(dim=\"time\")\n    expected = xr.DataArray([3, 7], coords=dict(reference_date=reference_dates), dims=\"reference_date\")\n    assert_equal(expected, actual)\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 10829,
+  "llm_latency": 25.11300277709961,
+  "patch_content": "### xarray/tests/test_groupby.py\n<<<<<<< SEARCH\ndef test_groupby_da_datetime() -> None:\n    # test groupby with a DataArray of dtype datetime for GH1132\n    # create test data\n    times = pd.date_range(\"2000-01-01\", periods=4)\n    foo = xr.DataArray([1, 2, 3, 4], coords=dict(time=times), dims=\"time\")\n    # create test index\n    dd = times.to_pydatetime()\n    reference_dates = [dd[0], dd[2]]\n    labels = reference_dates[0:1] * 2 + reference_dates[1:2] * 2\n    ind = xr.DataArray(\n        labels, coords=dict(time=times), dims=\"time\", name=\"reference_date\"\n    )\n    g = foo.groupby(ind)\n    actual = g.sum(dim=\"time\")\n    expected = xr.DataArray(\n        [3, 7], coords=dict(reference_date=reference_dates), dims=\"reference_date\"\n    )\n    assert_equal(expected, actual)\n=======\ndef test_groupby_da_datetime() -> None:\n    # test groupby with a DataArray of dtype datetime for GH1132\n    # create test data\n    times = pd.date_range(\"2000-01-01\", periods=4)\n    foo = xr.DataArray([1, 2, 3, 4], coords=dict(time=times), dims=\"time\")\n    # create test index\n    dd = times.to_pydatetime()\n    reference_dates = [dd[0], dd[2]]\n    labels = reference_dates[0:1] * 2 + reference_dates[1:2] * 2\n    ind = xr.DataArray(labels, coords=dict(time=times), dims=\"time\", name=\"reference_date\")\n    g = foo.groupby(ind)\n    actual = g.sum(dim=\"time\")\n    expected = xr.DataArray([3, 7], coords=dict(reference_date=reference_dates), dims=\"reference_date\")\n    assert_equal(expected, actual)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/tests/test_groupby.py"
+    ],
+    "error": null
+  }
+}

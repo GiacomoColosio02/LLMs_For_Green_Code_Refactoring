@@ -1,0 +1,26 @@
+{
+  "instance_id": "sympy__sympy-24665",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T20:29:00.363698",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24901
+  },
+  "llm_response": "### sympy/polys/polytools.py\n<<<<<<< SEARCH\ndef _symbolic_factor_list(p, domain):\n    factors = []\n    for factor, exp in p.factor_list():\n        factors.extend([factor] * exp)\n    return factors\n=======\ndef _symbolic_factor_list(p, domain):\n    return [factor for factor, exp in p.factor_list() for _ in range(exp)]\n>>>>>>> REPLACE",
+  "llm_tokens": 7137,
+  "llm_latency": 5.24821925163269,
+  "patch_content": "### sympy/polys/polytools.py\n<<<<<<< SEARCH\ndef _symbolic_factor_list(p, domain):\n    factors = []\n    for factor, exp in p.factor_list():\n        factors.extend([factor] * exp)\n    return factors\n=======\ndef _symbolic_factor_list(p, domain):\n    return [factor for factor, exp in p.factor_list() for _ in range(exp)]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

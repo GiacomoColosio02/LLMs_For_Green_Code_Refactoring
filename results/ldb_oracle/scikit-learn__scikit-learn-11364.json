@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-11364",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T14:03:34.440153",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49880
+  },
+  "llm_response": "### examples/compose/plot_column_transformer.py\n<<<<<<< SEARCH\n            # Pipeline for pulling ad hoc features from post's body\n            ('body_stats', Pipeline([\n                ('stats', TextStats()),  # returns a list of dicts\n                ('vect', DictVectorizer()),  # list of dicts -> feature matrix\n            ]), 1),\n        ],\n\n        # weight components in ColumnTransformer\n        transformer_weights={\n            'subject': 0.8,\n            'body_bow': 0.5,\n            'body_stats': 1.0,\n        }\n    )),\n\n    # Use a SVC classifier on the combined features\n    ('svc', LinearSVC()),\n])\n=======\n            # Pipeline for pulling ad hoc features from post's body\n            ('body_stats', Pipeline([\n                ('stats', TextStats()),  # returns a list of dicts\n                ('vect', DictVectorizer()),  # list of dicts -> feature matrix\n            ]), 0.5),\n        ],\n\n        # weight components in ColumnTransformer\n        transformer_weights={\n            'subject': 0.8,\n            'body_bow': 0.3,\n            'body_stats': 0.2,\n        }\n    )),\n\n    # Use a SVC classifier on the combined features\n    ('svc', SVC(probability=True)),\n])\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### examples/compose/plot_column_transformer.py\n<<<<<<< SEARCH\n            # Pipeline for pulling ad hoc features from post's body\n            ('body_stats', Pipeline([\n                ('stats', TextStats()),  # returns a list of dicts\n                ('vect', DictVectorizer()),  # list of dicts -> feature matrix\n            ]), 1),\n        ],\n\n        # weight components in ColumnTransformer\n        transformer_weights={\n            'subject': 0.8,\n            'body_bow': 0.5,\n            'body_stats': 1.0,\n        }\n    )),\n\n    # Use a SVC classifier on the combined features\n    ('svc', LinearSVC()),\n])\n=======\n            # Pipeline for pulling ad hoc features from post's body\n            ('body_stats', Pipeline([\n                ('stats', TextStats()),  # returns a list of dicts\n                ('vect', DictVectorizer()),  # list of dicts -> feature matrix\n            ]), 0.5),\n        ],\n\n        # weight components in ColumnTransformer\n        transformer_weights={\n            'subject': 0.8,\n            'body_bow': 0.3,\n            'body_stats': 0.2,\n        }\n    )),\n\n    # Use a SVC classifier on the combined features\n    ('svc', SVC(probability=True)),\n])\n>>>>>>> REPLACE",
+      "patch_content": "### examples/compose/plot_column_transformer.py\n<<<<<<< SEARCH\n            # Pipeline for pulling ad hoc features from post's body\n            ('body_stats', Pipeline([\n                ('stats', TextStats()),  # returns a list of dicts\n                ('vect', DictVectorizer()),  # list of dicts -> feature matrix\n            ]), 1),\n        ],\n\n        # weight components in ColumnTransformer\n        transformer_weights={\n            'subject': 0.8,\n            'body_bow': 0.5,\n            'body_stats': 1.0,\n        }\n    )),\n\n    # Use a SVC classifier on the combined features\n    ('svc', LinearSVC()),\n])\n=======\n            # Pipeline for pulling ad hoc features from post's body\n            ('body_stats', Pipeline([\n                ('stats', TextStats()),  # returns a list of dicts\n                ('vect', DictVectorizer()),  # list of dicts -> feature matrix\n            ]), 0.5),\n        ],\n\n        # weight components in ColumnTransformer\n        transformer_weights={\n            'subject': 0.8,\n            'body_bow': 0.3,\n            'body_stats': 0.2,\n        }\n    )),\n\n    # Use a SVC classifier on the combined features\n    ('svc', SVC(probability=True)),\n])\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 14037,
+  "llm_latency": 16.539663791656494,
+  "patch_content": "### examples/compose/plot_column_transformer.py\n<<<<<<< SEARCH\n            # Pipeline for pulling ad hoc features from post's body\n            ('body_stats', Pipeline([\n                ('stats', TextStats()),  # returns a list of dicts\n                ('vect', DictVectorizer()),  # list of dicts -> feature matrix\n            ]), 1),\n        ],\n\n        # weight components in ColumnTransformer\n        transformer_weights={\n            'subject': 0.8,\n            'body_bow': 0.5,\n            'body_stats': 1.0,\n        }\n    )),\n\n    # Use a SVC classifier on the combined features\n    ('svc', LinearSVC()),\n])\n=======\n            # Pipeline for pulling ad hoc features from post's body\n            ('body_stats', Pipeline([\n                ('stats', TextStats()),  # returns a list of dicts\n                ('vect', DictVectorizer()),  # list of dicts -> feature matrix\n            ]), 0.5),\n        ],\n\n        # weight components in ColumnTransformer\n        transformer_weights={\n            'subject': 0.8,\n            'body_bow': 0.3,\n            'body_stats': 0.2,\n        }\n    )),\n\n    # Use a SVC classifier on the combined features\n    ('svc', SVC(probability=True)),\n])\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "examples/compose/plot_column_transformer.py"
+    ],
+    "error": null
+  }
+}

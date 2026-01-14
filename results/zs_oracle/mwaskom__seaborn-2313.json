@@ -1,0 +1,28 @@
+{
+  "instance_id": "mwaskom__seaborn-2313",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T12:25:32.136157",
+  "status": "success",
+  "error": null,
+  "repo": "mwaskom/seaborn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 34463
+  },
+  "llm_response": "### seaborn/matrix.py\n<<<<<<< SEARCH\ndef _matrix_mask(data, mask):\n    \"\"\"Ensure that data and mask are compatabile and add missing values.\n\n    Values will be plotted for cells where ``mask`` is ``False``.\n\n    ``data`` is expected to be a DataFrame; ``mask`` can be an array or\n    a DataFrame.\n\n    \"\"\"\n    if mask is None:\n        mask = np.zeros(data.shape, bool)\n\n    if isinstance(mask, np.ndarray):\n        # For array masks, ensure that shape matches data then convert\n        if mask.shape != data.shape:\n            raise ValueError(\"Mask must have the same shape as data.\")\n\n        mask = pd.DataFrame(mask,\n                            index=data.index,\n                            columns=data.columns,\n                            dtype=bool)\n\n    elif isinstance(mask, pd.DataFrame):\n        # For DataFrame masks, ensure that semantic labels match data\n        if not mask.index.equals(data.index) \\\n           and mask.columns.equals(data.columns):\n            err = \"Mask must have the same index and columns as data.\"\n            raise ValueError(err)\n\n    # Add any cells with missing data to the mask\n    # This works around an issue where `plt.pcolormesh` doesn't represent\n    # missing data properly\n    mask = mask | pd.isnull(data)\n\n    return mask\n=======\ndef _matrix_mask(data, mask):\n    \"\"\"Ensure that data and mask are compatible and add missing values.\n\n    Values will be plotted for cells where ``mask`` is ``False``.\n\n    ``data`` is expected to be a DataFrame; ``mask`` can be an array or\n    a DataFrame.\n\n    \"\"\"\n    if mask is None:\n        mask = np.zeros_like(data, dtype=bool)\n\n    if isinstance(mask, np.ndarray):\n        if mask.shape != data.shape:\n            raise ValueError(\"Mask must have the same shape as data.\")\n        mask = pd.DataFrame(mask, index=data.index, columns=data.columns, dtype=bool)\n\n    elif isinstance(mask, pd.DataFrame):\n        if not mask.index.equals(data.index) or not mask.columns.equals(data.columns):\n            raise ValueError(\"Mask must have the same index and columns as data.\")\n        mask = mask.combine_first(pd.isnull(data))\n\n    return mask\n>>>>>>> REPLACE",
+  "llm_tokens": 9443,
+  "llm_latency": 25.596620798110962,
+  "patch_content": "### seaborn/matrix.py\n<<<<<<< SEARCH\ndef _matrix_mask(data, mask):\n    \"\"\"Ensure that data and mask are compatabile and add missing values.\n\n    Values will be plotted for cells where ``mask`` is ``False``.\n\n    ``data`` is expected to be a DataFrame; ``mask`` can be an array or\n    a DataFrame.\n\n    \"\"\"\n    if mask is None:\n        mask = np.zeros(data.shape, bool)\n\n    if isinstance(mask, np.ndarray):\n        # For array masks, ensure that shape matches data then convert\n        if mask.shape != data.shape:\n            raise ValueError(\"Mask must have the same shape as data.\")\n\n        mask = pd.DataFrame(mask,\n                            index=data.index,\n                            columns=data.columns,\n                            dtype=bool)\n\n    elif isinstance(mask, pd.DataFrame):\n        # For DataFrame masks, ensure that semantic labels match data\n        if not mask.index.equals(data.index) \\\n           and mask.columns.equals(data.columns):\n            err = \"Mask must have the same index and columns as data.\"\n            raise ValueError(err)\n\n    # Add any cells with missing data to the mask\n    # This works around an issue where `plt.pcolormesh` doesn't represent\n    # missing data properly\n    mask = mask | pd.isnull(data)\n\n    return mask\n=======\ndef _matrix_mask(data, mask):\n    \"\"\"Ensure that data and mask are compatible and add missing values.\n\n    Values will be plotted for cells where ``mask`` is ``False``.\n\n    ``data`` is expected to be a DataFrame; ``mask`` can be an array or\n    a DataFrame.\n\n    \"\"\"\n    if mask is None:\n        mask = np.zeros_like(data, dtype=bool)\n\n    if isinstance(mask, np.ndarray):\n        if mask.shape != data.shape:\n            raise ValueError(\"Mask must have the same shape as data.\")\n        mask = pd.DataFrame(mask, index=data.index, columns=data.columns, dtype=bool)\n\n    elif isinstance(mask, pd.DataFrame):\n        if not mask.index.equals(data.index) or not mask.columns.equals(data.columns):\n            raise ValueError(\"Mask must have the same index and columns as data.\")\n        mask = mask.combine_first(pd.isnull(data))\n\n    return mask\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "seaborn/matrix.py"
+    ],
+    "error": null
+  }
+}

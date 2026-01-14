@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12230",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:15:50.509176",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34952
+  },
+  "llm_response": "Let's think step by step.\n\nThe `log_marginal_likelihood` function in `gaussian_process/gpr.py` involves multiple calls to `pairwise_kernels`, which is computationally expensive. Optimizing this function will significantly improve performance.\n\n### sklearn/gaussian_process/gpr.py\n<<<<<<< SEARCH\ndef log_marginal_likelihood(self, theta, eval_gradient=False):\n    \"\"\"Log Marginal Likelihood (LML) of GPR model.\"\"\"\n    if self.kernel is None:\n        raise ValueError(\"No kernel was set.\")\n    if self.kernel.theta != theta:\n        self.kernel.set_params(theta=theta)\n    K = self.kernel(self.X_train)\n    L = cholesky(K, lower=True)\n    detK = 2 * np.sum(np.log(np.diag(L)))\n    alpha = solve_triangular(L.T, solve_triangular(L, self.y_train, lower=True), transposed=True)\n    neg_log_like = 0.5 * np.dot(self.y_train, alpha) + 0.5 * detK + 0.5 * X.shape[0] * np.log(2 * np.pi)\n    if eval_gradient:\n        Kth = self.kernel(self.X_train, eval_gradient=True)\n        dL_dK = solve_triangular(L.T, solve_triangular(L, Kth, lower=True), transposed=True)\n        dK_dtheta = Kth[..., 1:]\n        dL_dtheta = np.zeros_like(dK_dtheta)\n        for i in range(len(dK_dtheta)):\n            dL_dtheta[i] += np.trace(solve_triangular(L.T, dL_dK[i], lower=True))\n        return -neg_log_like, -dL_dtheta.ravel()\n    return -neg_log_like\n=======\ndef log_marginal_likelihood(self, theta, eval_gradient=False):\n    \"\"\"Log Marginal Likelihood (LML) of GPR model.\"\"\"\n    if self.kernel is None:\n        raise ValueError(\"No kernel was set.\")\n    if self.kernel.theta != theta:\n        self.kernel.set_params(theta=theta)\n    K = self.kernel(self.X_train)\n    L = cholesky(K, lower=True)\n    detK = 2 * np.sum(np.log(np.diag(L)))\n    alpha = solve_triangular(L.T, solve_triangular(L, self.y_train, lower=True), transposed=True)\n    neg_log_like = 0.5 * np.dot(self.y_train, alpha) + 0.5 * detK + 0.5 * X.shape[0] * np.log(2 * np.pi)\n    if eval_gradient:\n        Kth = self.kernel(self.X_train, eval_gradient=True)\n        dL_dK = solve_triangular(L.T, solve_triangular(L, Kth, lower=True), transposed=True)\n        dK_dtheta = Kth[..., 1:]\n        dL_dtheta = np.zeros_like(dK_dtheta)\n        for i in range(len(dK_dtheta)):\n            dL_dtheta[i] += np.trace(solve_triangular(L.T, dL_dK[i], lower=True))\n        return -neg_log_like, -dL_dtheta.ravel()\n    return -neg_log_like\n>>>>>>> REPLACE",
+  "llm_tokens": 10115,
+  "llm_latency": 36.901973247528076,
+  "patch_content": "### sklearn/gaussian_process/gpr.py\n<<<<<<< SEARCH\ndef log_marginal_likelihood(self, theta, eval_gradient=False):\n    \"\"\"Log Marginal Likelihood (LML) of GPR model.\"\"\"\n    if self.kernel is None:\n        raise ValueError(\"No kernel was set.\")\n    if self.kernel.theta != theta:\n        self.kernel.set_params(theta=theta)\n    K = self.kernel(self.X_train)\n    L = cholesky(K, lower=True)\n    detK = 2 * np.sum(np.log(np.diag(L)))\n    alpha = solve_triangular(L.T, solve_triangular(L, self.y_train, lower=True), transposed=True)\n    neg_log_like = 0.5 * np.dot(self.y_train, alpha) + 0.5 * detK + 0.5 * X.shape[0] * np.log(2 * np.pi)\n    if eval_gradient:\n        Kth = self.kernel(self.X_train, eval_gradient=True)\n        dL_dK = solve_triangular(L.T, solve_triangular(L, Kth, lower=True), transposed=True)\n        dK_dtheta = Kth[..., 1:]\n        dL_dtheta = np.zeros_like(dK_dtheta)\n        for i in range(len(dK_dtheta)):\n            dL_dtheta[i] += np.trace(solve_triangular(L.T, dL_dK[i], lower=True))\n        return -neg_log_like, -dL_dtheta.ravel()\n    return -neg_log_like\n=======\ndef log_marginal_likelihood(self, theta, eval_gradient=False):\n    \"\"\"Log Marginal Likelihood (LML) of GPR model.\"\"\"\n    if self.kernel is None:\n        raise ValueError(\"No kernel was set.\")\n    if self.kernel.theta != theta:\n        self.kernel.set_params(theta=theta)\n    K = self.kernel(self.X_train)\n    L = cholesky(K, lower=True)\n    detK = 2 * np.sum(np.log(np.diag(L)))\n    alpha = solve_triangular(L.T, solve_triangular(L, self.y_train, lower=True), transposed=True)\n    neg_log_like = 0.5 * np.dot(self.y_train, alpha) + 0.5 * detK + 0.5 * X.shape[0] * np.log(2 * np.pi)\n    if eval_gradient:\n        Kth = self.kernel(self.X_train, eval_gradient=True)\n        dL_dK = solve_triangular(L.T, solve_triangular(L, Kth, lower=True), transposed=True)\n        dK_dtheta = Kth[..., 1:]\n        dL_dtheta = np.zeros_like(dK_dtheta)\n        for i in range(len(dK_dtheta)):\n            dL_dtheta[i] += np.trace(solve_triangular(L.T, dL_dK[i], lower=True))\n        return -neg_log_like, -dL_dtheta.ravel()\n    return -neg_log_like\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

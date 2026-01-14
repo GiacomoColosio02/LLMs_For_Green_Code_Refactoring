@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12760",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:37:22.905763",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 13297
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `davies_bouldin_score` function in `sklearn/metrics/cluster/unsupervised.py` is the bottleneck.\n**DIAGNOSIS**: It calculates the centroid distances using `pairwise_distances`, which can be computationally expensive for large datasets. Additionally, there are redundant computations in the calculation of `score`.\n**SOLUTION**: Optimize the centroid distance calculation by avoiding redundant computations and using efficient matrix operations.\n\n### SECTION 2: PATCH\n\n### sklearn/metrics/cluster/unsupervised.py\n<<<<<<< SEARCH\n    centroid_distances = pairwise_distances(centroids)\n    if np.allclose(intra_dists, 0) or np.allclose(centroid_distances, 0):\n        return 0.0\n    score = (intra_dists[:, None] + intra_dists) / centroid_distances\n    score[score == np.inf] = np.nan\n    return np.mean(np.nanmax(score, axis=1))\n=======\n    centroid_distances = np.dot(centroids, centroids.T)\n    if np.allclose(intra_dists, 0) or np.allclose(centroid_distances.diagonal(), 0):\n        return 0.0\n    score = (intra_dists[:, None] + intra_dists) / np.sqrt(centroid_distances)\n    score[np.isinf(score)] = np.nan\n    return np.mean(np.nanmax(score, axis=1))\n>>>>>>> REPLACE",
+  "llm_tokens": 4397,
+  "llm_latency": 17.309276580810547,
+  "patch_content": "### sklearn/metrics/cluster/unsupervised.py\n<<<<<<< SEARCH\n    centroid_distances = pairwise_distances(centroids)\n    if np.allclose(intra_dists, 0) or np.allclose(centroid_distances, 0):\n        return 0.0\n    score = (intra_dists[:, None] + intra_dists) / centroid_distances\n    score[score == np.inf] = np.nan\n    return np.mean(np.nanmax(score, axis=1))\n=======\n    centroid_distances = np.dot(centroids, centroids.T)\n    if np.allclose(intra_dists, 0) or np.allclose(centroid_distances.diagonal(), 0):\n        return 0.0\n    score = (intra_dists[:, None] + intra_dists) / np.sqrt(centroid_distances)\n    score[np.isinf(score)] = np.nan\n    return np.mean(np.nanmax(score, axis=1))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/metrics/cluster/unsupervised.py"
+    ],
+    "error": null
+  }
+}

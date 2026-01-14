@@ -1,0 +1,50 @@
+{
+  "instance_id": "sympy__sympy-24665",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T20:42:16.722123",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24901
+  },
+  "llm_response": "```diff\n### sympy/polys/polytools.py\n@@ -123,7 +123,7 @@ def _symbolic_factor_list(p, *gens, **args):\n     \"\"\"Symbolically factorize a polynomial.\"\"\"\n     opt = options.build_options(gens, args)\n     p = Poly(p, *gens, **opt)\n-    factors = []\n+    factors = []\n     for factor, exp in p.factor_list()[1]:\n         factors.extend([factor] * exp)\n     return factors\n```",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sympy/polys/polytools.py\n<<<<<<< SEARCH\ndef _symbolic_factor_list(p, *gens, **args):\n    \"\"\"Symbolically factorize a polynomial.\"\"\"\n    opt = options.build_options(gens, args)\n    p = Poly(p, *gens, **opt)\n    factors = []\n    for factor, exp in p.factor_list()[1]:\n        factors.extend([factor] * exp)\n    return factors\n=======\ndef _symbolic_factor_list(p, *gens, **args):\n    \"\"\"Symbolically factorize a polynomial.\"\"\"\n    opt = options.build_options(gens, args)\n    p = Poly(p, *gens, **opt)\n    factors = []\n    for factor, exp in p.factor_list()[1]:\n        factors.extend([factor] * exp)\n    return factors\n>>>>>>> REPLACE",
+      "patch_content": "### sympy/polys/polytools.py\n<<<<<<< SEARCH\ndef _symbolic_factor_list(p, *gens, **args):\n    \"\"\"Symbolically factorize a polynomial.\"\"\"\n    opt = options.build_options(gens, args)\n    p = Poly(p, *gens, **opt)\n    factors = []\n    for factor, exp in p.factor_list()[1]:\n        factors.extend([factor] * exp)\n    return factors\n=======\ndef _symbolic_factor_list(p, *gens, **args):\n    \"\"\"Symbolically factorize a polynomial.\"\"\"\n    opt = options.build_options(gens, args)\n    p = Poly(p, *gens, **opt)\n    factors = []\n    for factor, exp in p.factor_list()[1]:\n        factors.extend([factor] * exp)\n    return factors\n>>>>>>> REPLACE",
+      "success": false,
+      "error": "Could not apply patch with any method"
+    },
+    {
+      "iteration": 2,
+      "response": "```diff\n### sympy/polys/polytools.py\n<<<<<<< SEARCH\ndef _symbolic_factor_list(p, *gens, **args):\n    \"\"\"Symbolically factorize a polynomial.\"\"\"\n    opt = options.build_options(gens, args)\n    p = Poly(p, *gens, **opt)\n    factors = []\n    for factor, exp in p.factor_list()[1]:\n        factors.extend([factor] * exp)\n    return factors\n=======\ndef _symbolic_factor_list(p, *gens, **args):\n    \"\"\"Symbolically factorize a polynomial.\"\"\"\n    opt = options.build_options(gens, args)\n    p = Poly(p, *gens, **opt)\n    factors = []\n    for factor, exp in p.factor_list()[1]:\n        factors.extend([factor] * exp)\n    return factors\n>>>>>>> REPLACE\n```",
+      "patch_content": "### sympy/polys/polytools.py\n<<<<<<< SEARCH\ndef _symbolic_factor_list(p, *gens, **args):\n    \"\"\"Symbolically factorize a polynomial.\"\"\"\n    opt = options.build_options(gens, args)\n    p = Poly(p, *gens, **opt)\n    factors = []\n    for factor, exp in p.factor_list()[1]:\n        factors.extend([factor] * exp)\n    return factors\n=======\ndef _symbolic_factor_list(p, *gens, **args):\n    \"\"\"Symbolically factorize a polynomial.\"\"\"\n    opt = options.build_options(gens, args)\n    p = Poly(p, *gens, **opt)\n    factors = []\n    for factor, exp in p.factor_list()[1]:\n        factors.extend([factor] * exp)\n    return factors\n>>>>>>> REPLACE",
+      "success": false,
+      "error": "Could not apply patch with any method"
+    },
+    {
+      "iteration": 3,
+      "response": "```diff\n### sympy/polys/polytools.py\n@@ -123,7 +123,7 @@ def _symbolic_factor_list(p, *gens, **args):\n     \"\"\"Symbolically factorize a polynomial.\"\"\"\n     opt = options.build_options(gens, args)\n     p = Poly(p, *gens, **opt)\n-    factors = []\n+    factors = []\n     for factor, exp in p.factor_list()[1]:\n         factors.extend([factor] * exp)\n     return factors\n```",
+      "patch_content": "### sympy/polys/polytools.py\n@@ -123,7 +123,7 @@ def _symbolic_factor_list(p, *gens, **args):\n     \"\"\"Symbolically factorize a polynomial.\"\"\"\n     opt = options.build_options(gens, args)\n     p = Poly(p, *gens, **opt)\n-    factors = []\n+    factors = []\n     for factor, exp in p.factor_list()[1]:\n         factors.extend([factor] * exp)\n     return factors",
+      "success": false,
+      "error": "Could not apply patch with any method"
+    }
+  ],
+  "num_iterations": 3,
+  "llm_tokens": 20142,
+  "llm_latency": 26.446285724639893,
+  "patch_content": "### sympy/polys/polytools.py\n@@ -123,7 +123,7 @@ def _symbolic_factor_list(p, *gens, **args):\n     \"\"\"Symbolically factorize a polynomial.\"\"\"\n     opt = options.build_options(gens, args)\n     p = Poly(p, *gens, **opt)\n-    factors = []\n+    factors = []\n     for factor, exp in p.factor_list()[1]:\n         factors.extend([factor] * exp)\n     return factors",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

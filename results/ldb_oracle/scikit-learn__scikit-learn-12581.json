@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12581",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T11:33:51.254893",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24879
+  },
+  "llm_response": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef _iter_test_indices(self, X, y=None, groups=None):\n    for combination in combinations(range(_num_samples(X)), self.p):\n        yield np.array(combination)\n=======\ndef _iter_test_indices(self, X, y=None, groups=None):\n    n_samples = _num_samples(X)\n    indices = np.arange(n_samples)\n    np.random.shuffle(indices)\n    for i in range(0, n_samples, self.p):\n        yield indices[i:i+self.p]\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef _iter_test_indices(self, X, y=None, groups=None):\n    for combination in combinations(range(_num_samples(X)), self.p):\n        yield np.array(combination)\n=======\ndef _iter_test_indices(self, X, y=None, groups=None):\n    n_samples = _num_samples(X)\n    indices = np.arange(n_samples)\n    np.random.shuffle(indices)\n    for i in range(0, n_samples, self.p):\n        yield indices[i:i+self.p]\n>>>>>>> REPLACE",
+      "patch_content": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef _iter_test_indices(self, X, y=None, groups=None):\n    for combination in combinations(range(_num_samples(X)), self.p):\n        yield np.array(combination)\n=======\ndef _iter_test_indices(self, X, y=None, groups=None):\n    n_samples = _num_samples(X)\n    indices = np.arange(n_samples)\n    np.random.shuffle(indices)\n    for i in range(0, n_samples, self.p):\n        yield indices[i:i+self.p]\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 6341,
+  "llm_latency": 6.656396389007568,
+  "patch_content": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef _iter_test_indices(self, X, y=None, groups=None):\n    for combination in combinations(range(_num_samples(X)), self.p):\n        yield np.array(combination)\n=======\ndef _iter_test_indices(self, X, y=None, groups=None):\n    n_samples = _num_samples(X)\n    indices = np.arange(n_samples)\n    np.random.shuffle(indices)\n    for i in range(0, n_samples, self.p):\n        yield indices[i:i+self.p]\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/model_selection/_split.py"
+    ],
+    "error": null
+  }
+}

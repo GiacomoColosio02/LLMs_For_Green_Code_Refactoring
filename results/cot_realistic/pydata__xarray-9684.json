@@ -1,0 +1,26 @@
+{
+  "instance_id": "pydata__xarray-9684",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:54:49.168648",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34813
+  },
+  "llm_response": "Let's think step by step.\n\nThe `time_repr` method in `repr.py` creates many large `DataArray` instances and calls `repr()` on them, which can be very expensive due to the overhead of creating and processing these objects.\n\nWe will optimize this by pre-computing the results of `repr()` calls and storing them, avoiding repeated computations.\n\n### xarray/tests/test_backends_datatree.py\n<<<<<<< SEARCH\ndef test_chunks_equal(actual: DataTree, expected: DataTree, enforce_dask: bool = False) -> None:\n    __tracebackhide__ = True\n\n    from xarray.namedarray.pycompat import array_type\n\n    dask_array_type = array_type(\"dask\")\n\n    comparison = {\n        (path, name): (\n            (\n                not enforce_dask\n                or isinstance(node1.variables[name].data, dask_array_type)\n            )\n            and node1.variables[name].chunksizes == node2.variables[name].chunksizes\n        )\n        for path, (node1, node2) in xr.group_subtrees(actual, expected)\n        for name in node1.variables.keys()\n    }\n\n    assert all(comparison.values()), diff_chunks(comparison, actual, expected)\n=======\ndef test_chunks_equal(actual: DataTree, expected: DataTree, enforce_dask: bool = False) -> None:\n    __tracebackhide__ = True\n\n    from xarray.namedarray.pycompat import array_type\n\n    dask_array_type = array_type(\"dask\")\n\n    comparison = {\n        (path, name): (\n            (\n                not enforce_dask\n                or isinstance(node1.variables[name].data, dask_array_type)\n            )\n            and node1.variables[name].chunksizes == node2.variables[name].chunksizes\n        )\n        for path, (node1, node2) in xr.group_subtrees(actual, expected)\n        for name in node1.variables.keys()\n    }\n\n    # Pre-compute the results of repr() calls\n    computed_reprs = {}\n    for path, (node1, node2) in xr.group_subtrees(actual, expected):\n        for name in node1.variables.keys():\n            key = (path, name)\n            if key not in computed_reprs:\n                computed_reprs[key] = (repr(node1.variables[name]), repr(node2.variables[name]))\n\n    # Use the pre-computed results\n    assert all(comparison.values()) and all(computed_reprs[(path, name)] == (repr(node1.variables[name]), repr(node2.variables[name])) for path, (node1, node2) in xr.group_subtrees(actual, expected) for name in node1.variables.keys())\n>>>>>>> REPLACE\n\n---",
+  "llm_tokens": 10457,
+  "llm_latency": 31.109819412231445,
+  "patch_content": "### xarray/tests/test_backends_datatree.py\n<<<<<<< SEARCH\ndef test_chunks_equal(actual: DataTree, expected: DataTree, enforce_dask: bool = False) -> None:\n    __tracebackhide__ = True\n\n    from xarray.namedarray.pycompat import array_type\n\n    dask_array_type = array_type(\"dask\")\n\n    comparison = {\n        (path, name): (\n            (\n                not enforce_dask\n                or isinstance(node1.variables[name].data, dask_array_type)\n            )\n            and node1.variables[name].chunksizes == node2.variables[name].chunksizes\n        )\n        for path, (node1, node2) in xr.group_subtrees(actual, expected)\n        for name in node1.variables.keys()\n    }\n\n    assert all(comparison.values()), diff_chunks(comparison, actual, expected)\n=======\ndef test_chunks_equal(actual: DataTree, expected: DataTree, enforce_dask: bool = False) -> None:\n    __tracebackhide__ = True\n\n    from xarray.namedarray.pycompat import array_type\n\n    dask_array_type = array_type(\"dask\")\n\n    comparison = {\n        (path, name): (\n            (\n                not enforce_dask\n                or isinstance(node1.variables[name].data, dask_array_type)\n            )\n            and node1.variables[name].chunksizes == node2.variables[name].chunksizes\n        )\n        for path, (node1, node2) in xr.group_subtrees(actual, expected)\n        for name in node1.variables.keys()\n    }\n\n    # Pre-compute the results of repr() calls\n    computed_reprs = {}\n    for path, (node1, node2) in xr.group_subtrees(actual, expected):\n        for name in node1.variables.keys():\n            key = (path, name)\n            if key not in computed_reprs:\n                computed_reprs[key] = (repr(node1.variables[name]), repr(node2.variables[name]))\n\n    # Use the pre-computed results\n    assert all(comparison.values()) and all(computed_reprs[(path, name)] == (repr(node1.variables[name]), repr(node2.variables[name])) for path, (node1, node2) in xr.group_subtrees(actual, expected) for name in node1.variables.keys())\n>>>>>>> REPLACE\n\n---",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

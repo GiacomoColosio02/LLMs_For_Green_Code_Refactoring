@@ -1,0 +1,28 @@
+{
+  "instance_id": "matplotlib__matplotlib-24250",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:26:18.718932",
+  "status": "success",
+  "error": null,
+  "repo": "matplotlib/matplotlib",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24876
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `__init__` method in `Figure` class in `lib/matplotlib/figure.py` is the bottleneck.\n**DIAGNOSIS**: It initializes several lists and dictionaries, which can lead to high memory usage and redundant computations.\n**SOLUTION**: Optimize the initialization by pre-allocating the necessary space and avoiding unnecessary initializations.\n\n### SECTION 2: PATCH\n\n### lib/matplotlib/figure.py\n<<<<<<< SEARCH\ndef __init__(self, **kwargs):\n    super().__init__()\n    # remove the non-figure artist _axes property\n    # as it makes no sense for a figure to be _in_ an Axes\n    # this is used by the property methods in the artist base class\n    # which are over-ridden in this class\n    del self._axes\n\n    self._suptitle = None\n    self._supxlabel = None\n    self._supylabel = None\n\n    # groupers to keep track of x and y labels we want to align.\n    # see self.align_xlabels and self.align_ylabels and\n    # axis._get_tick_boxes_siblings\n    self._align_label_groups = {\"x\": cbook.Grouper(), \"y\": cbook.Grouper()}\n\n    self.figure = self\n    self._localaxes = []  # track all axes\n    self.artists = []\n    self.lines = []\n    self.patches = []\n    self.texts = []\n    self.images = []\n    self.legends = []\n    self.subfigs = []\n    self.stale = True\n    self.suppressComposite = None\n    self.set(**kwargs)\n=======\ndef __init__(self, **kwargs):\n    super().__init__()\n    # Initialize lists and dictionaries with pre-allocated space\n    self._suptitle = None\n    self._supxlabel = None\n    self._supylabel = None\n    self._align_label_groups = {\"x\": cbook.Grouper(), \"y\": cbook.Grouper()}\n    self.figure = self\n    self._localaxes = [None] * 10  # Pre-allocate space for up to 10 axes\n    self.artists = [None] * 100  # Pre-allocate space for up to 100 artists\n    self.lines = [None] * 100  # Pre-allocate space for up to 100 lines\n    self.patches = [None] * 100  # Pre-allocate space for up to 100 patches\n    self.texts = [None] * 100  # Pre-allocate space for up to 100 texts\n    self.images = [None] * 10  # Pre-allocate space for up to 10 images\n    self.legends = [None] * 10  # Pre-allocate space for up to 10 legends\n    self.subfigs = [None] * 10  # Pre-allocate space for up to 10 subfigures\n    self.stale = True\n    self.suppressComposite = None\n    self.set(**kwargs)\n>>>>>>> REPLACE",
+  "llm_tokens": 7108,
+  "llm_latency": 37.426604986190796,
+  "patch_content": "### lib/matplotlib/figure.py\n<<<<<<< SEARCH\ndef __init__(self, **kwargs):\n    super().__init__()\n    # remove the non-figure artist _axes property\n    # as it makes no sense for a figure to be _in_ an Axes\n    # this is used by the property methods in the artist base class\n    # which are over-ridden in this class\n    del self._axes\n\n    self._suptitle = None\n    self._supxlabel = None\n    self._supylabel = None\n\n    # groupers to keep track of x and y labels we want to align.\n    # see self.align_xlabels and self.align_ylabels and\n    # axis._get_tick_boxes_siblings\n    self._align_label_groups = {\"x\": cbook.Grouper(), \"y\": cbook.Grouper()}\n\n    self.figure = self\n    self._localaxes = []  # track all axes\n    self.artists = []\n    self.lines = []\n    self.patches = []\n    self.texts = []\n    self.images = []\n    self.legends = []\n    self.subfigs = []\n    self.stale = True\n    self.suppressComposite = None\n    self.set(**kwargs)\n=======\ndef __init__(self, **kwargs):\n    super().__init__()\n    # Initialize lists and dictionaries with pre-allocated space\n    self._suptitle = None\n    self._supxlabel = None\n    self._supylabel = None\n    self._align_label_groups = {\"x\": cbook.Grouper(), \"y\": cbook.Grouper()}\n    self.figure = self\n    self._localaxes = [None] * 10  # Pre-allocate space for up to 10 axes\n    self.artists = [None] * 100  # Pre-allocate space for up to 100 artists\n    self.lines = [None] * 100  # Pre-allocate space for up to 100 lines\n    self.patches = [None] * 100  # Pre-allocate space for up to 100 patches\n    self.texts = [None] * 100  # Pre-allocate space for up to 100 texts\n    self.images = [None] * 10  # Pre-allocate space for up to 10 images\n    self.legends = [None] * 10  # Pre-allocate space for up to 10 legends\n    self.subfigs = [None] * 10  # Pre-allocate space for up to 10 subfigures\n    self.stale = True\n    self.suppressComposite = None\n    self.set(**kwargs)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "lib/matplotlib/figure.py"
+    ],
+    "error": null
+  }
+}

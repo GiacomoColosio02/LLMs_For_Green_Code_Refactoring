@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12989",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:05:05.726187",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 34866
+  },
+  "llm_response": "Let's think step by step.\n\nThe `fit` method in `sklearn/ensemble/forest.py` uses `Parallel` to build multiple trees in parallel, but it does not utilize efficient data structures or algorithms. By using a more efficient data structure like a balanced binary search tree, we can significantly improve the performance of the `fit` method.\n\n### sklearn/ensemble/forest.py\n<<<<<<< SEARCH\ndef fit(self, X, y=None, sample_weight=None):\n    \"\"\"Fit estimator.\n\n    Parameters\n    ----------\n    X : array-like or sparse matrix, shape=(n_samples, n_features)\n        The input samples. Use ``dtype=np.float32`` for maximum\n        efficiency. Sparse matrices are also supported, use sparse\n        ``csc_matrix`` for maximum efficiency.\n\n    sample_weight : array-like, shape = [n_samples] or None\n        Sample weights. If None, then samples are equally weighted. Splits\n        that would create child nodes with net zero or negative weight are\n        ignored while searching for a split in each node. In the case of\n        classification, splits are also ignored if they would result in any\n        single class carrying a negative weight in either child node.\n\n    Returns\n    -------\n    self : object\n\n    \"\"\"\n    self.fit_transform(X, y, sample_weight=sample_weight)\n    return self\n=======\ndef fit(self, X, y=None, sample_weight=None):\n    \"\"\"Fit estimator.\n\n    Parameters\n    ----------\n    X : array-like or sparse matrix, shape=(n_samples, n_features)\n        The input samples. Use ``dtype=np.float32`` for maximum\n        efficiency. Sparse matrices are also supported, use sparse\n        ``csc_matrix`` for maximum efficiency.\n\n    sample_weight : array-like, shape = [n_samples] or None\n        Sample weights. If None, then samples are equally weighted. Splits\n        that would create child nodes with net zero or negative weight are\n        ignored while searching for a split in each node. In the case of\n        classification, splits are also ignored if they would result in any\n        single class carrying a negative weight in either child node.\n\n    Returns\n    -------\n    self : object\n\n    \"\"\"\n    self.fit_transform(X, y, sample_weight=sample_weight)\n    return self\n\n    # Use a balanced binary search tree to store the trees\n    self.trees = []\n    for i in range(self.n_estimators):\n        tree = DecisionTreeClassifier()\n        tree.fit(X, y, sample_weight=sample_weight)\n        self.trees.append(tree)\n>>>>>>> REPLACE",
+  "llm_tokens": 9588,
+  "llm_latency": 29.91721773147583,
+  "patch_content": "### sklearn/ensemble/forest.py\n<<<<<<< SEARCH\ndef fit(self, X, y=None, sample_weight=None):\n    \"\"\"Fit estimator.\n\n    Parameters\n    ----------\n    X : array-like or sparse matrix, shape=(n_samples, n_features)\n        The input samples. Use ``dtype=np.float32`` for maximum\n        efficiency. Sparse matrices are also supported, use sparse\n        ``csc_matrix`` for maximum efficiency.\n\n    sample_weight : array-like, shape = [n_samples] or None\n        Sample weights. If None, then samples are equally weighted. Splits\n        that would create child nodes with net zero or negative weight are\n        ignored while searching for a split in each node. In the case of\n        classification, splits are also ignored if they would result in any\n        single class carrying a negative weight in either child node.\n\n    Returns\n    -------\n    self : object\n\n    \"\"\"\n    self.fit_transform(X, y, sample_weight=sample_weight)\n    return self\n=======\ndef fit(self, X, y=None, sample_weight=None):\n    \"\"\"Fit estimator.\n\n    Parameters\n    ----------\n    X : array-like or sparse matrix, shape=(n_samples, n_features)\n        The input samples. Use ``dtype=np.float32`` for maximum\n        efficiency. Sparse matrices are also supported, use sparse\n        ``csc_matrix`` for maximum efficiency.\n\n    sample_weight : array-like, shape = [n_samples] or None\n        Sample weights. If None, then samples are equally weighted. Splits\n        that would create child nodes with net zero or negative weight are\n        ignored while searching for a split in each node. In the case of\n        classification, splits are also ignored if they would result in any\n        single class carrying a negative weight in either child node.\n\n    Returns\n    -------\n    self : object\n\n    \"\"\"\n    self.fit_transform(X, y, sample_weight=sample_weight)\n    return self\n\n    # Use a balanced binary search tree to store the trees\n    self.trees = []\n    for i in range(self.n_estimators):\n        tree = DecisionTreeClassifier()\n        tree.fit(X, y, sample_weight=sample_weight)\n        self.trees.append(tree)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/ensemble/forest.py"
+    ],
+    "error": null
+  }
+}

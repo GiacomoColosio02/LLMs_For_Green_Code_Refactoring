@@ -1,0 +1,38 @@
+{
+  "instance_id": "astropy__astropy-16065",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T21:04:40.049941",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 5572
+  },
+  "llm_response": "### astropy/utils/diff.py\n<<<<<<< SEARCH\ndef diff_values(a, b, rtol=0.0, atol=0.0):\n    \"\"\"\n    Diff two scalar values. If both values are floats, they are compared to\n    within the given absolute and relative tolerance.\n\n    Parameters\n    ----------\n    a, b : int, float, str\n        Scalar values to compare.\n\n    rtol, atol : float\n        Relative and absolute tolerances as accepted by\n        :func:`numpy.allclose`.\n\n    Returns\n    -------\n    is_different : bool\n        `True` if they are different, else `False`.\n\n    \"\"\"\n    if isinstance(a, float) and isinstance(b, float):\n        if np.isnan(a) and np.isnan(b):\n            return False\n        return not np.allclose(a, b, rtol=rtol, atol=atol)\n    else:\n        return a != b\n=======\ndef diff_values(a, b, rtol=0.0, atol=0.0):\n    \"\"\"\n    Diff two scalar values. If both values are floats, they are compared to\n    within the given absolute and relative tolerance.\n\n    Parameters\n    ----------\n    a, b : int, float, str\n        Scalar values to compare.\n\n    rtol, atol : float\n        Relative and absolute tolerances as accepted by\n        :func:`numpy.allclose`.\n\n    Returns\n    -------\n    is_different : bool\n        `True` if they are different, else `False`.\n\n    \"\"\"\n    if isinstance(a, float) and isinstance(b, float):\n        if np.isnan(a) and np.isnan(b):\n            return False\n        return not np.isclose(a, b, rtol=rtol, atol=atol)\n    else:\n        return a != b\n>>>>>>> REPLACE\n\nThis patch replaces `np.allclose` with `np.isclose`, which is generally faster for comparing floating-point numbers. This change should improve the execution speed of the `diff_values` function without altering its functionality.",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### astropy/utils/diff.py\n<<<<<<< SEARCH\ndef diff_values(a, b, rtol=0.0, atol=0.0):\n    \"\"\"\n    Diff two scalar values. If both values are floats, they are compared to\n    within the given absolute and relative tolerance.\n\n    Parameters\n    ----------\n    a, b : int, float, str\n        Scalar values to compare.\n\n    rtol, atol : float\n        Relative and absolute tolerances as accepted by\n        :func:`numpy.allclose`.\n\n    Returns\n    -------\n    is_different : bool\n        `True` if they are different, else `False`.\n\n    \"\"\"\n    if isinstance(a, float) and isinstance(b, float):\n        if np.isnan(a) and np.isnan(b):\n            return False\n        return not np.allclose(a, b, rtol=rtol, atol=atol)\n    else:\n        return a != b\n=======\ndef diff_values(a, b, rtol=0.0, atol=0.0):\n    \"\"\"\n    Diff two scalar values. If both values are floats, they are compared to\n    within the given absolute and relative tolerance.\n\n    Parameters\n    ----------\n    a, b : int, float, str\n        Scalar values to compare.\n\n    rtol, atol : float\n        Relative and absolute tolerances as accepted by\n        :func:`numpy.allclose`.\n\n    Returns\n    -------\n    is_different : bool\n        `True` if they are different, else `False`.\n\n    \"\"\"\n    if isinstance(a, float) and isinstance(b, float):\n        if np.isnan(a) and np.isnan(b):\n            return False\n        return not np.isclose(a, b, rtol=rtol, atol=atol)\n    else:\n        return a != b\n>>>>>>> REPLACE\n\nThis patch replaces `np.allclose` with `np.isclose`, which is generally faster for comparing floating-point numbers. This change should improve the execution speed of the `diff_values` function without altering its functionality.",
+      "patch_content": "### astropy/utils/diff.py\n<<<<<<< SEARCH\ndef diff_values(a, b, rtol=0.0, atol=0.0):\n    \"\"\"\n    Diff two scalar values. If both values are floats, they are compared to\n    within the given absolute and relative tolerance.\n\n    Parameters\n    ----------\n    a, b : int, float, str\n        Scalar values to compare.\n\n    rtol, atol : float\n        Relative and absolute tolerances as accepted by\n        :func:`numpy.allclose`.\n\n    Returns\n    -------\n    is_different : bool\n        `True` if they are different, else `False`.\n\n    \"\"\"\n    if isinstance(a, float) and isinstance(b, float):\n        if np.isnan(a) and np.isnan(b):\n            return False\n        return not np.allclose(a, b, rtol=rtol, atol=atol)\n    else:\n        return a != b\n=======\ndef diff_values(a, b, rtol=0.0, atol=0.0):\n    \"\"\"\n    Diff two scalar values. If both values are floats, they are compared to\n    within the given absolute and relative tolerance.\n\n    Parameters\n    ----------\n    a, b : int, float, str\n        Scalar values to compare.\n\n    rtol, atol : float\n        Relative and absolute tolerances as accepted by\n        :func:`numpy.allclose`.\n\n    Returns\n    -------\n    is_different : bool\n        `True` if they are different, else `False`.\n\n    \"\"\"\n    if isinstance(a, float) and isinstance(b, float):\n        if np.isnan(a) and np.isnan(b):\n            return False\n        return not np.isclose(a, b, rtol=rtol, atol=atol)\n    else:\n        return a != b\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 2184,
+  "llm_latency": 22.633413314819336,
+  "patch_content": "### astropy/utils/diff.py\n<<<<<<< SEARCH\ndef diff_values(a, b, rtol=0.0, atol=0.0):\n    \"\"\"\n    Diff two scalar values. If both values are floats, they are compared to\n    within the given absolute and relative tolerance.\n\n    Parameters\n    ----------\n    a, b : int, float, str\n        Scalar values to compare.\n\n    rtol, atol : float\n        Relative and absolute tolerances as accepted by\n        :func:`numpy.allclose`.\n\n    Returns\n    -------\n    is_different : bool\n        `True` if they are different, else `False`.\n\n    \"\"\"\n    if isinstance(a, float) and isinstance(b, float):\n        if np.isnan(a) and np.isnan(b):\n            return False\n        return not np.allclose(a, b, rtol=rtol, atol=atol)\n    else:\n        return a != b\n=======\ndef diff_values(a, b, rtol=0.0, atol=0.0):\n    \"\"\"\n    Diff two scalar values. If both values are floats, they are compared to\n    within the given absolute and relative tolerance.\n\n    Parameters\n    ----------\n    a, b : int, float, str\n        Scalar values to compare.\n\n    rtol, atol : float\n        Relative and absolute tolerances as accepted by\n        :func:`numpy.allclose`.\n\n    Returns\n    -------\n    is_different : bool\n        `True` if they are different, else `False`.\n\n    \"\"\"\n    if isinstance(a, float) and isinstance(b, float):\n        if np.isnan(a) and np.isnan(b):\n            return False\n        return not np.isclose(a, b, rtol=rtol, atol=atol)\n    else:\n        return a != b\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/utils/diff.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "instance_id": "astropy__astropy-15228",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T21:10:16.183838",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24899
+  },
+  "llm_response": "### path/to/file.py\n<<<<<<< SEARCH\n@function_helper(helps={np.tril, np.triu})\ndef invariant_m_helper(m, *args, **kwargs):\n    return (m.view(np.ndarray),) + args, kwargs, m.unit, None\n=======\n@function_helper(helps={np.tril, np.triu})\ndef invariant_m_helper(m, *args, **kwargs):\n    return (m.view(np.ndarray),) + args, kwargs, m.unit, None\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### path/to/file.py\n<<<<<<< SEARCH\n@function_helper(helps={np.tril, np.triu})\ndef invariant_m_helper(m, *args, **kwargs):\n    return (m.view(np.ndarray),) + args, kwargs, m.unit, None\n=======\n@function_helper(helps={np.tril, np.triu})\ndef invariant_m_helper(m, *args, **kwargs):\n    return (m.view(np.ndarray),) + args, kwargs, m.unit, None\n>>>>>>> REPLACE",
+      "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n@function_helper(helps={np.tril, np.triu})\ndef invariant_m_helper(m, *args, **kwargs):\n    return (m.view(np.ndarray),) + args, kwargs, m.unit, None\n=======\n@function_helper(helps={np.tril, np.triu})\ndef invariant_m_helper(m, *args, **kwargs):\n    return (m.view(np.ndarray),) + args, kwargs, m.unit, None\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 6783,
+  "llm_latency": 6.3176398277282715,
+  "patch_content": "### path/to/file.py\n<<<<<<< SEARCH\n@function_helper(helps={np.tril, np.triu})\ndef invariant_m_helper(m, *args, **kwargs):\n    return (m.view(np.ndarray),) + args, kwargs, m.unit, None\n=======\n@function_helper(helps={np.tril, np.triu})\ndef invariant_m_helper(m, *args, **kwargs):\n    return (m.view(np.ndarray),) + args, kwargs, m.unit, None\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/units/quantity_helper/function_helpers.py"
+    ],
+    "error": null
+  }
+}

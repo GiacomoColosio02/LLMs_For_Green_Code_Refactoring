@@ -1,0 +1,29 @@
+{
+  "instance_id": "pydata__xarray-5845",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T13:32:52.985665",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 5,
+    "total_chars": 21375
+  },
+  "llm_response": "### ci/min_deps_check.py\n<<<<<<< SEARCH\n    for row in contents[\"dependencies\"]:\n        if isinstance(row, dict) and list(row) == [\"pip\"]:\n            continue\n        pkg, eq, version = row.partition(\"=\")\n        if pkg.rstrip(\"<>\") in IGNORE_DEPS:\n            continue\n        if pkg.endswith(\"<\") or pkg.endswith(\">\") or eq != \"=\":\n            error(\"package should be pinned with exact version: \" + row)\n            continue\n=======\n    for row in contents[\"dependencies\"]:\n        if isinstance(row, dict) and list(row) == [\"pip\"]:\n            continue\n        pkg, eq, version = row.strip().partition(\"=\")\n        if pkg.strip().rstrip(\"<>\") in IGNORE_DEPS:\n            continue\n        if pkg.strip().endswith(\"<\") or pkg.strip().endswith(\">\") or eq != \"=\":\n            error(f\"package should be pinned with exact version: {row}\")\n            continue\n>>>>>>> REPLACE\n\n### xarray/backends/plugins.py\n<<<<<<< SEARCH\n    for name, backend in backend_entrypoints.items():\n        if backend.open_dataset_parameters is None:\n            open_dataset = backend.open_dataset\n            backend.open_dataset_parameters = detect_parameters(open_dataset)\n=======\n    for name, backend in backend_entrypoints.items():\n        if backend.open_dataset_parameters is None:\n            backend.open_dataset_parameters = detect_parameters(backend.open_dataset)\n>>>>>>> REPLACE",
+  "llm_tokens": 6675,
+  "llm_latency": 15.818647384643555,
+  "patch_content": "### ci/min_deps_check.py\n<<<<<<< SEARCH\n    for row in contents[\"dependencies\"]:\n        if isinstance(row, dict) and list(row) == [\"pip\"]:\n            continue\n        pkg, eq, version = row.partition(\"=\")\n        if pkg.rstrip(\"<>\") in IGNORE_DEPS:\n            continue\n        if pkg.endswith(\"<\") or pkg.endswith(\">\") or eq != \"=\":\n            error(\"package should be pinned with exact version: \" + row)\n            continue\n=======\n    for row in contents[\"dependencies\"]:\n        if isinstance(row, dict) and list(row) == [\"pip\"]:\n            continue\n        pkg, eq, version = row.strip().partition(\"=\")\n        if pkg.strip().rstrip(\"<>\") in IGNORE_DEPS:\n            continue\n        if pkg.strip().endswith(\"<\") or pkg.strip().endswith(\">\") or eq != \"=\":\n            error(f\"package should be pinned with exact version: {row}\")\n            continue\n>>>>>>> REPLACE\n\n### xarray/backends/plugins.py\n<<<<<<< SEARCH\n    for name, backend in backend_entrypoints.items():\n        if backend.open_dataset_parameters is None:\n            open_dataset = backend.open_dataset\n            backend.open_dataset_parameters = detect_parameters(open_dataset)\n=======\n    for name, backend in backend_entrypoints.items():\n        if backend.open_dataset_parameters is None:\n            backend.open_dataset_parameters = detect_parameters(backend.open_dataset)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 2,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "ci/min_deps_check.py",
+      "xarray/backends/plugins.py"
+    ],
+    "error": null
+  }
+}

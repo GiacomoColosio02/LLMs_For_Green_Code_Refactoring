@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12581",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:12:53.638961",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34988
+  },
+  "llm_response": "Let's think step by step.\n\nThe `fastica` function in `decomposition/fastica_.py` uses a naive approach to compute the gradients, leading to high computational complexity. Optimizing the gradient computation will significantly speed up the process.\n\n### sklearn/decomposition/fastica_.py\n<<<<<<< SEARCH\ndef _logcosh(x, fun_args=None):\n    alpha = fun_args.get('alpha', 1.0)  # comment it out?\n\n    x *= alpha\n    gx = np.tanh(x, x)  # apply the tanh inplace\n    g_x = np.empty(x.shape[0])\n    # XXX compute in chunks to avoid extra allocation\n    for i, gx_i in enumerate(gx):  # please don't vectorize.\n        g_x[i] = (alpha * (1 - gx_i ** 2)).mean()\n    return gx, g_x\n=======\ndef _logcosh(x, fun_args=None):\n    alpha = fun_args.get('alpha', 1.0)\n\n    x *= alpha\n    gx = np.tanh(x)\n    g_x = alpha * (1 - gx ** 2)\n    return gx, g_x.mean()\n>>>>>>> REPLACE",
+  "llm_tokens": 10745,
+  "llm_latency": 14.647492408752441,
+  "patch_content": "### sklearn/decomposition/fastica_.py\n<<<<<<< SEARCH\ndef _logcosh(x, fun_args=None):\n    alpha = fun_args.get('alpha', 1.0)  # comment it out?\n\n    x *= alpha\n    gx = np.tanh(x, x)  # apply the tanh inplace\n    g_x = np.empty(x.shape[0])\n    # XXX compute in chunks to avoid extra allocation\n    for i, gx_i in enumerate(gx):  # please don't vectorize.\n        g_x[i] = (alpha * (1 - gx_i ** 2)).mean()\n    return gx, g_x\n=======\ndef _logcosh(x, fun_args=None):\n    alpha = fun_args.get('alpha', 1.0)\n\n    x *= alpha\n    gx = np.tanh(x)\n    g_x = alpha * (1 - gx ** 2)\n    return gx, g_x.mean()\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/decomposition/fastica_.py"
+    ],
+    "error": null
+  }
+}

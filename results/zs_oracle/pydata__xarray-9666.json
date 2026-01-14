@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-9666",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T12:36:40.284126",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49770
+  },
+  "llm_response": "### xarray/backends/netCDF4_.py\n<<<<<<< SEARCH\ndef _iter_nc_groups(ds, parent=NodePath(\"/\")):\n    parent_nodepath = NodePath(parent)\n    yield str(parent_nodepath)\n    for path, group in ds.groups():\n        gpath = parent_nodepath / path\n        yield str(gpath)\n        yield from _iter_nc_groups(group, parent=str(gpath))\n=======\ndef _iter_nc_groups(ds, parent=\"/\"):\n    for path, group in ds.groups():\n        yield path\n        yield from _iter_nc_groups(group, parent=path)\n>>>>>>> REPLACE\n\n### xarray/backends/zarr.py\n<<<<<<< SEARCH\ndef _iter_zarr_groups(root: ZarrGroup, parent: str = \"/\") -> Iterable[str]:\n    parent_nodepath = NodePath(parent)\n    yield str(parent_nodepath)\n    for path, group in root.groups():\n        gpath = parent_nodepath / path\n        yield str(gpath)\n        yield from _iter_zarr_groups(group, parent=str(gpath))\n=======\ndef _iter_zarr_groups(root, parent=\"/\"):\n    for path, group in root.groups():\n        yield path\n        yield from _iter_zarr_groups(group, parent=path)\n>>>>>>> REPLACE",
+  "llm_tokens": 12228,
+  "llm_latency": 15.161098003387451,
+  "patch_content": "### xarray/backends/netCDF4_.py\n<<<<<<< SEARCH\ndef _iter_nc_groups(ds, parent=NodePath(\"/\")):\n    parent_nodepath = NodePath(parent)\n    yield str(parent_nodepath)\n    for path, group in ds.groups():\n        gpath = parent_nodepath / path\n        yield str(gpath)\n        yield from _iter_nc_groups(group, parent=str(gpath))\n=======\ndef _iter_nc_groups(ds, parent=\"/\"):\n    for path, group in ds.groups():\n        yield path\n        yield from _iter_nc_groups(group, parent=path)\n>>>>>>> REPLACE\n\n### xarray/backends/zarr.py\n<<<<<<< SEARCH\ndef _iter_zarr_groups(root: ZarrGroup, parent: str = \"/\") -> Iterable[str]:\n    parent_nodepath = NodePath(parent)\n    yield str(parent_nodepath)\n    for path, group in root.groups():\n        gpath = parent_nodepath / path\n        yield str(gpath)\n        yield from _iter_zarr_groups(group, parent=str(gpath))\n=======\ndef _iter_zarr_groups(root, parent=\"/\"):\n    for path, group in root.groups():\n        yield path\n        yield from _iter_zarr_groups(group, parent=path)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/backends/zarr.py"
+    ],
+    "error": null
+  }
+}

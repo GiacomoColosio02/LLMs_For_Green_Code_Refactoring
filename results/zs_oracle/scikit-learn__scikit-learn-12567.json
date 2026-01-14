@@ -1,0 +1,28 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12567",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T14:01:47.900007",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 12522
+  },
+  "llm_response": "### sklearn/utils/fixes.py\n<<<<<<< SEARCH\ndef _object_dtype_isnan(X):\n    return X != X\n=======\ndef _object_dtype_isnan(X):\n    return np.any(np.isnan(X), axis=-1)\n>>>>>>> REPLACE",
+  "llm_tokens": 3946,
+  "llm_latency": 3.033632755279541,
+  "patch_content": "### sklearn/utils/fixes.py\n<<<<<<< SEARCH\ndef _object_dtype_isnan(X):\n    return X != X\n=======\ndef _object_dtype_isnan(X):\n    return np.any(np.isnan(X), axis=-1)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/utils/fixes.py"
+    ],
+    "error": null
+  }
+}

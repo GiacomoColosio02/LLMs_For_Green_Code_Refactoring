@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-27347",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T14:46:15.080298",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 19288
+  },
+  "llm_response": "### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    a = self.a\n    return (a**2 * k * (1 - a)**(k - 1))\n=======\ndef pdf(self, k):\n    a = self.a\n    return a**2 * k * (1 - a)**(k - 1)\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    a1, a2 = self.a1, self.a2\n    term1 = exp(-(a1 + a2))\n    j = Dummy(\"j\", integer=True)\n    num = a1**(k - 2*j) * a2**j\n    den = factorial(k - 2*j) * factorial(j)\n    return term1 * Sum(num/den, (j, 0, k//2)).doit()\n=======\ndef pdf(self, k):\n    a1, a2 = self.a1, self.a2\n    term1 = exp(-(a1 + a2))\n    j = Dummy(\"j\", integer=True)\n    num = a1**(k - 2*j) * a2**j\n    den = factorial(k - 2*j) * factorial(j)\n    return term1 * Sum(num/den, (j, 0, k//2)).doit()\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    p = self.p\n    return (-1) * p**k / (k * log(1 - p))\n=======\ndef pdf(self, k):\n    p = self.p\n    return (-1) * p**k / (k * log(1 - p))\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    r = self.r\n    p = self.p\n\n    return binomial(k + r - 1, k) * (1 - p)**r * p**k\n=======\ndef pdf(self, k):\n    r = self.r\n    p = self.p\n\n    return binomial(k + r - 1, k) * (1 - p)**r * p**k\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    return self.lamda**k / factorial(k) * exp(-self.lamda)\n=======\ndef pdf(self, k):\n    return self.lamda**k / factorial(k) * exp(-self.lamda)\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    (mu1, mu2) = (self.mu1, self.mu2)\n    term1 = exp(-(mu1 + mu2)) * (mu1 / mu2) ** (k / 2)\n    term2 = besseli(k, 2 * sqrt(mu1 * mu2))\n    return term1 * term2\n=======\ndef pdf(self, k):\n    (mu1, mu2) = (self.mu1, self.mu2)\n    term1 = exp(-(mu1 + mu2)) * (mu1 / mu2) ** (k / 2)\n    term2 = besseli(k, 2 * sqrt(mu1 * mu2))\n    return term1 * term2\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    rho = self.rho\n    return rho * beta(k, rho + 1)\n=======\ndef pdf(self, k):\n    rho = self.rho\n    return rho * beta(k, rho + 1)\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    s = self.s\n    return 1 / (k**s * zeta(s))\n=======\ndef pdf(self, k):\n    s = self.s\n    return 1 / (k**s * zeta(s))\n>>>>>>> REPLACE",
+  "llm_tokens": 7092,
+  "llm_latency": 46.30946707725525,
+  "patch_content": "### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    a = self.a\n    return (a**2 * k * (1 - a)**(k - 1))\n=======\ndef pdf(self, k):\n    a = self.a\n    return a**2 * k * (1 - a)**(k - 1)\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    a1, a2 = self.a1, self.a2\n    term1 = exp(-(a1 + a2))\n    j = Dummy(\"j\", integer=True)\n    num = a1**(k - 2*j) * a2**j\n    den = factorial(k - 2*j) * factorial(j)\n    return term1 * Sum(num/den, (j, 0, k//2)).doit()\n=======\ndef pdf(self, k):\n    a1, a2 = self.a1, self.a2\n    term1 = exp(-(a1 + a2))\n    j = Dummy(\"j\", integer=True)\n    num = a1**(k - 2*j) * a2**j\n    den = factorial(k - 2*j) * factorial(j)\n    return term1 * Sum(num/den, (j, 0, k//2)).doit()\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    p = self.p\n    return (-1) * p**k / (k * log(1 - p))\n=======\ndef pdf(self, k):\n    p = self.p\n    return (-1) * p**k / (k * log(1 - p))\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    r = self.r\n    p = self.p\n\n    return binomial(k + r - 1, k) * (1 - p)**r * p**k\n=======\ndef pdf(self, k):\n    r = self.r\n    p = self.p\n\n    return binomial(k + r - 1, k) * (1 - p)**r * p**k\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    return self.lamda**k / factorial(k) * exp(-self.lamda)\n=======\ndef pdf(self, k):\n    return self.lamda**k / factorial(k) * exp(-self.lamda)\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    (mu1, mu2) = (self.mu1, self.mu2)\n    term1 = exp(-(mu1 + mu2)) * (mu1 / mu2) ** (k / 2)\n    term2 = besseli(k, 2 * sqrt(mu1 * mu2))\n    return term1 * term2\n=======\ndef pdf(self, k):\n    (mu1, mu2) = (self.mu1, self.mu2)\n    term1 = exp(-(mu1 + mu2)) * (mu1 / mu2) ** (k / 2)\n    term2 = besseli(k, 2 * sqrt(mu1 * mu2))\n    return term1 * term2\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    rho = self.rho\n    return rho * beta(k, rho + 1)\n=======\ndef pdf(self, k):\n    rho = self.rho\n    return rho * beta(k, rho + 1)\n>>>>>>> REPLACE\n\n### sympy/stats/drv_types.py\n<<<<<<< SEARCH\ndef pdf(self, k):\n    s = self.s\n    return 1 / (k**s * zeta(s))\n=======\ndef pdf(self, k):\n    s = self.s\n    return 1 / (k**s * zeta(s))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 8,
+    "total_blocks": 8,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/stats/drv_types.py"
+    ],
+    "error": null
+  }
+}

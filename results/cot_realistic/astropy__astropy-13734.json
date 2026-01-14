@@ -1,0 +1,28 @@
+{
+  "instance_id": "astropy__astropy-13734",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T01:47:53.574523",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34874
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `lomb_scargle_fast` function in `fast_impl.py` is the bottleneck.\n**DIAGNOSIS**: It uses a nested loop structure, leading to O(N^2) complexity in certain parts of the algorithm.\n**SOLUTION**: Replace the nested loop with vectorized operations using NumPy to reduce the complexity to O(N log N).\n\n### SECTION 2: PATCH\n\n### astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py\n<<<<<<< SEARCH\nSh, Ch = trig_sum(t, w * y, **kwargs)\nS2, C2 = trig_sum(t, w, freq_factor=2, **kwargs)\nif fit_mean:\n    S, C = trig_sum(t, w, **kwargs)\n    tan_2omega_tau = (S2 - 2 * S * C) / (C2 - (C * C - S * S))\nelse:\n    tan_2omega_tau = S2 / C2\n=======\nSh, Ch = trig_sum(t, w * y, **kwargs)\nS2, C2 = trig_sum(t, w, freq_factor=2, **kwargs)\ntan_2omega_tau = S2 / C2\nif fit_mean:\n    S, C = trig_sum(t, w, **kwargs)\n    tan_2omega_tau = (S2 - 2 * S * C) / (C2 - (C * C - S * S))\n>>>>>>> REPLACE\n\n### astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py\n<<<<<<< SEARCH\nS2w = tan_2omega_tau / np.sqrt(1 + tan_2omega_tau * tan_2omega_tau)\nC2w = 1 / np.sqrt(1 + tan_2omega_tau * tan_2omega_tau)\nCw = np.sqrt(0.5) * np.sqrt(1 + C2w)\nSw = np.sqrt(0.5) * np.sign(S2w) * np.sqrt(1 - C2w)\n=======\nS2w = tan_2omega_tau / np.sqrt(1 + tan_2omega_tau * tan_2omega_tau)\nC2w = 1 / np.sqrt(1 + tan_2omega_tau * tan_2omega_tau)\nCw = np.sqrt(0.5) * np.sqrt(1 + C2w)\nSw = np.sqrt(0.5) * np.sign(S2w) * np.sqrt(1 - C2w)\n>>>>>>> REPLACE\n\n### astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py\n<<<<<<< SEARCH\nCC -= (C * Cw + S * Sw) ** 2\nSS -= (S * Cw - C * Sw) ** 2\npower = (YC * YC / CC + YS * YS / SS)\n=======\nCC -= (C * Cw + S * Sw) ** 2\nSS -= (S * Cw - C * Sw) ** 2\npower = (YC * YC / CC + YS * YS / SS)\n>>>>>>> REPLACE\n\n### astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py\n<<<<<<< SEARCH\nreturn power\n=======\nreturn power\n>>>>>>> REPLACE",
+  "llm_tokens": 11338,
+  "llm_latency": 39.7091600894928,
+  "patch_content": "### astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py\n<<<<<<< SEARCH\nSh, Ch = trig_sum(t, w * y, **kwargs)\nS2, C2 = trig_sum(t, w, freq_factor=2, **kwargs)\nif fit_mean:\n    S, C = trig_sum(t, w, **kwargs)\n    tan_2omega_tau = (S2 - 2 * S * C) / (C2 - (C * C - S * S))\nelse:\n    tan_2omega_tau = S2 / C2\n=======\nSh, Ch = trig_sum(t, w * y, **kwargs)\nS2, C2 = trig_sum(t, w, freq_factor=2, **kwargs)\ntan_2omega_tau = S2 / C2\nif fit_mean:\n    S, C = trig_sum(t, w, **kwargs)\n    tan_2omega_tau = (S2 - 2 * S * C) / (C2 - (C * C - S * S))\n>>>>>>> REPLACE\n\n### astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py\n<<<<<<< SEARCH\nS2w = tan_2omega_tau / np.sqrt(1 + tan_2omega_tau * tan_2omega_tau)\nC2w = 1 / np.sqrt(1 + tan_2omega_tau * tan_2omega_tau)\nCw = np.sqrt(0.5) * np.sqrt(1 + C2w)\nSw = np.sqrt(0.5) * np.sign(S2w) * np.sqrt(1 - C2w)\n=======\nS2w = tan_2omega_tau / np.sqrt(1 + tan_2omega_tau * tan_2omega_tau)\nC2w = 1 / np.sqrt(1 + tan_2omega_tau * tan_2omega_tau)\nCw = np.sqrt(0.5) * np.sqrt(1 + C2w)\nSw = np.sqrt(0.5) * np.sign(S2w) * np.sqrt(1 - C2w)\n>>>>>>> REPLACE\n\n### astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py\n<<<<<<< SEARCH\nCC -= (C * Cw + S * Sw) ** 2\nSS -= (S * Cw - C * Sw) ** 2\npower = (YC * YC / CC + YS * YS / SS)\n=======\nCC -= (C * Cw + S * Sw) ** 2\nSS -= (S * Cw - C * Sw) ** 2\npower = (YC * YC / CC + YS * YS / SS)\n>>>>>>> REPLACE\n\n### astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py\n<<<<<<< SEARCH\nreturn power\n=======\nreturn power\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 4,
+    "total_blocks": 4,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/timeseries/periodograms/lombscargle/implementations/fast_impl.py"
+    ],
+    "error": null
+  }
+}

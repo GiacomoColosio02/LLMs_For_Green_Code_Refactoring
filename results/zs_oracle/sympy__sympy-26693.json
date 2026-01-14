@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-26693",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T14:51:44.934946",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24902
+  },
+  "llm_response": "### sympy/functions/elementary/exponential.py\n<<<<<<< SEARCH\ndef taylor_term(n, x, *previous_terms):\n    \"\"\"\n    Calculates the next term in the Taylor series expansion.\n    \"\"\"\n    if n < 0:\n        return S.Zero\n    if n == 0:\n        return S.One\n    x = sympify(x)\n    if previous_terms:\n        p = previous_terms[-1]\n        if p is not None:\n            return p * x / n\n    return x**n/factorial(n)\n=======\nfrom sympy.utilities.iterables import prefixes\n\ndef taylor_term(n, x, *previous_terms):\n    \"\"\"\n    Calculates the next term in the Taylor series expansion.\n    \"\"\"\n    if n < 0:\n        return S.Zero\n    if n == 0:\n        return S.One\n    x = sympify(x)\n    if previous_terms:\n        p = previous_terms[-1]\n        if p is not None:\n            return p * x / n\n    return sum(x**i/factorial(i) for i in prefixes(range(n+1)))\n>>>>>>> REPLACE",
+  "llm_tokens": 7593,
+  "llm_latency": 13.217020273208618,
+  "patch_content": "### sympy/functions/elementary/exponential.py\n<<<<<<< SEARCH\ndef taylor_term(n, x, *previous_terms):\n    \"\"\"\n    Calculates the next term in the Taylor series expansion.\n    \"\"\"\n    if n < 0:\n        return S.Zero\n    if n == 0:\n        return S.One\n    x = sympify(x)\n    if previous_terms:\n        p = previous_terms[-1]\n        if p is not None:\n            return p * x / n\n    return x**n/factorial(n)\n=======\nfrom sympy.utilities.iterables import prefixes\n\ndef taylor_term(n, x, *previous_terms):\n    \"\"\"\n    Calculates the next term in the Taylor series expansion.\n    \"\"\"\n    if n < 0:\n        return S.Zero\n    if n == 0:\n        return S.One\n    x = sympify(x)\n    if previous_terms:\n        p = previous_terms[-1]\n        if p is not None:\n            return p * x / n\n    return sum(x**i/factorial(i) for i in prefixes(range(n+1)))\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/functions/elementary/exponential.py"
+    ],
+    "error": null
+  }
+}

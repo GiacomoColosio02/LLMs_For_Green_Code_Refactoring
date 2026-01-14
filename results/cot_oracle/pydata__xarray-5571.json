@@ -1,0 +1,28 @@
+{
+  "instance_id": "pydata__xarray-5571",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T00:19:01.354912",
+  "status": "success",
+  "error": null,
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 4,
+    "total_chars": 49911
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_dask_or_eager_func` function in `duck_array_ops.py` is the bottleneck.\n**DIAGNOSIS**: It uses a conditional check inside a loop, leading to redundant computations and increased memory usage.\n**SOLUTION**: Cache the result of the conditional check to avoid repeated evaluations.\n\n### SECTION 2: PATCH\n\n### xarray/core/duck_array_ops.py\n<<<<<<< SEARCH\ndef _dask_or_eager_func(\n    name,\n    eager_module=np,\n    dask_module=dask_array,\n    list_of_args=False,\n    array_args=slice(1),\n    requires_dask=None,\n):\n    \"\"\"Create a function that dispatches to dask for dask array inputs.\"\"\"\n    if dask_module is not None:\n\n        def f(*args, **kwargs):\n            if list_of_args:\n                dispatch_args = args[0]\n            else:\n                dispatch_args = args[array_args]\n            if any(is_duck_dask_array(a) for a in dispatch_args):\n                try:\n                    wrapped = getattr(dask_module, name)\n                except AttributeError as e:\n                    raise AttributeError(f\"{e}: requires dask >={requires_dask}\")\n            else:\n                wrapped = getattr(eager_module, name)\n            return wrapped(*args, **kwargs)\n\n    else:\n\n        def f(*args, **kwargs):\n            return getattr(eager_module, name)(*args, **kwargs)\n\n    return f\n=======\n@functools.lru_cache(maxsize=None)\ndef _dask_or_eager_func(\n    name,\n    eager_module=np,\n    dask_module=dask_array,\n    list_of_args=False,\n    array_args=slice(1),\n    requires_dask=None,\n):\n    \"\"\"Create a function that dispatches to dask for dask array inputs.\"\"\"\n    if dask_module is not None:\n\n        def f(*args, **kwargs):\n            if list_of_args:\n                dispatch_args = args[0]\n            else:\n                dispatch_args = args[array_args]\n            if any(is_duck_dask_array(a) for a in dispatch_args):\n                try:\n                    wrapped = getattr(dask_module, name)\n                except AttributeError as e:\n                    raise AttributeError(f\"{e}: requires dask >={requires_dask}\")\n            else:\n                wrapped = getattr(eager_module, name)\n            return wrapped(*args, **kwargs)\n\n    else:\n\n        def f(*args, **kwargs):\n            return getattr(eager_module, name)(*args, **kwargs)\n\n    return f\n>>>>>>> REPLACE",
+  "llm_tokens": 15134,
+  "llm_latency": 31.034618377685547,
+  "patch_content": "### xarray/core/duck_array_ops.py\n<<<<<<< SEARCH\ndef _dask_or_eager_func(\n    name,\n    eager_module=np,\n    dask_module=dask_array,\n    list_of_args=False,\n    array_args=slice(1),\n    requires_dask=None,\n):\n    \"\"\"Create a function that dispatches to dask for dask array inputs.\"\"\"\n    if dask_module is not None:\n\n        def f(*args, **kwargs):\n            if list_of_args:\n                dispatch_args = args[0]\n            else:\n                dispatch_args = args[array_args]\n            if any(is_duck_dask_array(a) for a in dispatch_args):\n                try:\n                    wrapped = getattr(dask_module, name)\n                except AttributeError as e:\n                    raise AttributeError(f\"{e}: requires dask >={requires_dask}\")\n            else:\n                wrapped = getattr(eager_module, name)\n            return wrapped(*args, **kwargs)\n\n    else:\n\n        def f(*args, **kwargs):\n            return getattr(eager_module, name)(*args, **kwargs)\n\n    return f\n=======\n@functools.lru_cache(maxsize=None)\ndef _dask_or_eager_func(\n    name,\n    eager_module=np,\n    dask_module=dask_array,\n    list_of_args=False,\n    array_args=slice(1),\n    requires_dask=None,\n):\n    \"\"\"Create a function that dispatches to dask for dask array inputs.\"\"\"\n    if dask_module is not None:\n\n        def f(*args, **kwargs):\n            if list_of_args:\n                dispatch_args = args[0]\n            else:\n                dispatch_args = args[array_args]\n            if any(is_duck_dask_array(a) for a in dispatch_args):\n                try:\n                    wrapped = getattr(dask_module, name)\n                except AttributeError as e:\n                    raise AttributeError(f\"{e}: requires dask >={requires_dask}\")\n            else:\n                wrapped = getattr(eager_module, name)\n            return wrapped(*args, **kwargs)\n\n    else:\n\n        def f(*args, **kwargs):\n            return getattr(eager_module, name)(*args, **kwargs)\n\n    return f\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "xarray/core/duck_array_ops.py"
+    ],
+    "error": null
+  }
+}

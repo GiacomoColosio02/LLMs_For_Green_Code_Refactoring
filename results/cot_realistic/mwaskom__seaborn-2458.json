@@ -1,0 +1,28 @@
+{
+  "instance_id": "mwaskom__seaborn-2458",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T01:54:10.490299",
+  "status": "success",
+  "error": null,
+  "repo": "mwaskom/seaborn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34851
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_CategoricalPlotterNew.position_candidates` function in `seaborn/categorical.py` is the bottleneck.\n**DIAGNOSIS**: It uses a nested loop to find non-overlapping positions, resulting in O(n\u00b2) complexity.\n**SOLUTION**: Replace the nested loop with a more efficient algorithm, such as sorting and binary search, to reduce complexity to O(n log n).\n\n### SECTION 2: PATCH\n\n### seaborn/categorical.py\n<<<<<<< SEARCH\ndef position_candidates(self, xyr_i, neighbors):\n    \"\"\"Return a list of coordinates that might be valid by adjusting x.\"\"\"\n    candidates = [xyr_i]\n    x_i, y_i, r_i = xyr_i\n    left_first = True\n    for x_j, y_j, r_j in neighbors:\n        dy = y_i - y_j\n        dx = np.sqrt(max((r_i + r_j) ** 2 - dy ** 2, 0)) * 1.05\n        cl, cr = (x_j - dx, y_i, r_i), (x_j + dx, y_i, r_i)\n        if left_first:\n            new_candidates = [cl, cr]\n        else:\n            new_candidates = [cr, cl]\n        candidates.extend(new_candidates)\n        left_first = not left_first\n    return np.array(candidates)\n=======\ndef position_candidates(self, xyr_i, neighbors):\n    \"\"\"Return a list of coordinates that might be valid by adjusting x.\"\"\"\n    candidates = [xyr_i]\n    x_i, y_i, r_i = xyr_i\n    sorted_neighbors = sorted(neighbors, key=lambda x: x[0])\n    for x_j, y_j, r_j in sorted_neighbors:\n        dy = y_i - y_j\n        dx = np.sqrt(max((r_i + r_j) ** 2 - dy ** 2, 0)) * 1.05\n        cl, cr = (x_j - dx, y_i, r_i), (x_j + dx, y_i, r_i)\n        if not any(abs(cl[0] - x[0]) < 2 * r_i for x in candidates):\n            candidates.append(cl)\n        if not any(abs(cr[0] - x[0]) < 2 * r_i for x in candidates):\n            candidates.append(cr)\n    return np.array(candidates)\n>>>>>>> REPLACE",
+  "llm_tokens": 10523,
+  "llm_latency": 29.286471605300903,
+  "patch_content": "### seaborn/categorical.py\n<<<<<<< SEARCH\ndef position_candidates(self, xyr_i, neighbors):\n    \"\"\"Return a list of coordinates that might be valid by adjusting x.\"\"\"\n    candidates = [xyr_i]\n    x_i, y_i, r_i = xyr_i\n    left_first = True\n    for x_j, y_j, r_j in neighbors:\n        dy = y_i - y_j\n        dx = np.sqrt(max((r_i + r_j) ** 2 - dy ** 2, 0)) * 1.05\n        cl, cr = (x_j - dx, y_i, r_i), (x_j + dx, y_i, r_i)\n        if left_first:\n            new_candidates = [cl, cr]\n        else:\n            new_candidates = [cr, cl]\n        candidates.extend(new_candidates)\n        left_first = not left_first\n    return np.array(candidates)\n=======\ndef position_candidates(self, xyr_i, neighbors):\n    \"\"\"Return a list of coordinates that might be valid by adjusting x.\"\"\"\n    candidates = [xyr_i]\n    x_i, y_i, r_i = xyr_i\n    sorted_neighbors = sorted(neighbors, key=lambda x: x[0])\n    for x_j, y_j, r_j in sorted_neighbors:\n        dy = y_i - y_j\n        dx = np.sqrt(max((r_i + r_j) ** 2 - dy ** 2, 0)) * 1.05\n        cl, cr = (x_j - dx, y_i, r_i), (x_j + dx, y_i, r_i)\n        if not any(abs(cl[0] - x[0]) < 2 * r_i for x in candidates):\n            candidates.append(cl)\n        if not any(abs(cr[0] - x[0]) < 2 * r_i for x in candidates):\n            candidates.append(cr)\n    return np.array(candidates)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "seaborn/categorical.py"
+    ],
+    "error": null
+  }
+}

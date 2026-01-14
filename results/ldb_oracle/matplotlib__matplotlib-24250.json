@@ -1,0 +1,50 @@
+{
+  "instance_id": "matplotlib__matplotlib-24250",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T19:12:10.147268",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "matplotlib/matplotlib",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24876
+  },
+  "llm_response": "### lib/matplotlib/figure.py\n```python\n### lib/matplotlib/figure.py\n<<<<<<< SEARCH\n        if left is None:\n            self.left = left\n        if right is None:\n            self.right = right\n        if bottom is None:\n            self.bottom = bottom\n        if top is None:\n            self.top = top\n        if wspace is None:\n            self.wspace = wspace\n        if hspace is None:\n            self.hspace = hspace\n=======\n        self.left = left if left is not None else self.left\n        self.right = right if right is not None else self.right\n        self.bottom = bottom if bottom is not None else self.bottom\n        self.top = top if top is not None else self.top\n        self.wspace = wspace if wspace is not None else self.wspace\n        self.hspace = hspace if hspace is not None else self.hspace\n>>>>>>> REPLACE\n```",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### lib/matplotlib/figure.py\n<<<<<<< SEARCH\n        if left is None:\n            self.left = left\n        if right is None:\n            self.right = right\n        if bottom is None:\n            self.bottom = bottom\n        if top is None:\n            self.top = top\n        if wspace is None:\n            self.wspace = wspace\n        if hspace is None:\n            self.hspace = hspace\n=======\n        self.left = left if left is not None else self.left\n        self.right = right if right is not None else self.right\n        self.bottom = bottom if bottom is not None else self.bottom\n        self.top = top if top is not None else self.top\n        self.wspace = wspace if wspace is not None else self.wspace\n        self.hspace = hspace if hspace is not None else self.hspace\n>>>>>>> REPLACE",
+      "patch_content": "### lib/matplotlib/figure.py\n<<<<<<< SEARCH\n        if left is None:\n            self.left = left\n        if right is None:\n            self.right = right\n        if bottom is None:\n            self.bottom = bottom\n        if top is None:\n            self.top = top\n        if wspace is None:\n            self.wspace = wspace\n        if hspace is None:\n            self.hspace = hspace\n=======\n        self.left = left if left is not None else self.left\n        self.right = right if right is not None else self.right\n        self.bottom = bottom if bottom is not None else self.bottom\n        self.top = top if top is not None else self.top\n        self.wspace = wspace if wspace is not None else self.wspace\n        self.hspace = hspace if hspace is not None else self.hspace\n>>>>>>> REPLACE",
+      "success": false,
+      "error": "Could not apply patch with any method"
+    },
+    {
+      "iteration": 2,
+      "response": "### lib/matplotlib/figure.py\n```python\n### lib/matplotlib/figure.py\n<<<<<<< SEARCH\n        if left is None:\n            self.left = left\n        if right is None:\n            self.right = right\n        if bottom is None:\n            self.bottom = bottom\n        if top is None:\n            self.top = top\n        if wspace is None:\n            self.wspace = wspace\n        if hspace is None:\n            self.hspace = hspace\n=======\n        self.left = left if left is not None else self.left\n        self.right = right if right is not None else self.right\n        self.bottom = bottom if bottom is not None else self.bottom\n        self.top = top if top is not None else self.top\n        self.wspace = wspace if wspace is not None else self.wspace\n        self.hspace = hspace if hspace is not None else self.hspace\n>>>>>>> REPLACE\n```",
+      "patch_content": "### lib/matplotlib/figure.py\n<<<<<<< SEARCH\n        if left is None:\n            self.left = left\n        if right is None:\n            self.right = right\n        if bottom is None:\n            self.bottom = bottom\n        if top is None:\n            self.top = top\n        if wspace is None:\n            self.wspace = wspace\n        if hspace is None:\n            self.hspace = hspace\n=======\n        self.left = left if left is not None else self.left\n        self.right = right if right is not None else self.right\n        self.bottom = bottom if bottom is not None else self.bottom\n        self.top = top if top is not None else self.top\n        self.wspace = wspace if wspace is not None else self.wspace\n        self.hspace = hspace if hspace is not None else self.hspace\n>>>>>>> REPLACE",
+      "success": false,
+      "error": "Could not apply patch with any method"
+    },
+    {
+      "iteration": 3,
+      "response": "### lib/matplotlib/figure.py\n```python\n### lib/matplotlib/figure.py\n<<<<<<< SEARCH\n        if left is None:\n            self.left = left\n        if right is None:\n            self.right = right\n        if bottom is None:\n            self.bottom = bottom\n        if top is None:\n            self.top = top\n        if wspace is None:\n            self.wspace = wspace\n        if hspace is None:\n            self.hspace = hspace\n=======\n        self.left = left if left is not None else self.left\n        self.right = right if right is not None else self.right\n        self.bottom = bottom if bottom is not None else self.bottom\n        self.top = top if top is not None else self.top\n        self.wspace = wspace if wspace is not None else self.wspace\n        self.hspace = hspace if hspace is not None else self.hspace\n>>>>>>> REPLACE\n```",
+      "patch_content": "### lib/matplotlib/figure.py\n<<<<<<< SEARCH\n        if left is None:\n            self.left = left\n        if right is None:\n            self.right = right\n        if bottom is None:\n            self.bottom = bottom\n        if top is None:\n            self.top = top\n        if wspace is None:\n            self.wspace = wspace\n        if hspace is None:\n            self.hspace = hspace\n=======\n        self.left = left if left is not None else self.left\n        self.right = right if right is not None else self.right\n        self.bottom = bottom if bottom is not None else self.bottom\n        self.top = top if top is not None else self.top\n        self.wspace = wspace if wspace is not None else self.wspace\n        self.hspace = hspace if hspace is not None else self.hspace\n>>>>>>> REPLACE",
+      "success": false,
+      "error": "Could not apply patch with any method"
+    }
+  ],
+  "num_iterations": 3,
+  "llm_tokens": 18634,
+  "llm_latency": 33.18984007835388,
+  "patch_content": "### lib/matplotlib/figure.py\n<<<<<<< SEARCH\n        if left is None:\n            self.left = left\n        if right is None:\n            self.right = right\n        if bottom is None:\n            self.bottom = bottom\n        if top is None:\n            self.top = top\n        if wspace is None:\n            self.wspace = wspace\n        if hspace is None:\n            self.hspace = hspace\n=======\n        self.left = left if left is not None else self.left\n        self.right = right if right is not None else self.right\n        self.bottom = bottom if bottom is not None else self.bottom\n        self.top = top if top is not None else self.top\n        self.wspace = wspace if wspace is not None else self.wspace\n        self.hspace = hspace if hspace is not None else self.hspace\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

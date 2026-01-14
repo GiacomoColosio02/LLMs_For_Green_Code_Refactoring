@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13124",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T11:11:06.239237",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 37856
+  },
+  "llm_response": "Let's think step by step.\n\nThe `StratifiedKFold._make_test_folds` function uses a nested loop to create test folds, leading to O(n\u00b2) complexity. Using NumPy operations can reduce this to O(n).\n\n### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef _make_test_folds(self, n, y):\n    test_folds = np.empty(n, dtype=int)\n    for i in range(self.n_splits):\n        permuted_indices = np.random.permutation(n)\n        test_folds[permuted_indices[i::self.n_splits]] = i\n    return test_folds\n=======\ndef _make_test_folds(self, n, y):\n    test_folds = np.empty(n, dtype=int)\n    permutation = np.random.permutation(n)\n    for i in range(self.n_splits):\n        test_folds[permutation[i::self.n_splits]] = i\n    return test_folds\n>>>>>>> REPLACE",
+  "llm_tokens": 10195,
+  "llm_latency": 11.681313753128052,
+  "patch_content": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\ndef _make_test_folds(self, n, y):\n    test_folds = np.empty(n, dtype=int)\n    for i in range(self.n_splits):\n        permuted_indices = np.random.permutation(n)\n        test_folds[permuted_indices[i::self.n_splits]] = i\n    return test_folds\n=======\ndef _make_test_folds(self, n, y):\n    test_folds = np.empty(n, dtype=int)\n    permutation = np.random.permutation(n)\n    for i in range(self.n_splits):\n        test_folds[permutation[i::self.n_splits]] = i\n    return test_folds\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

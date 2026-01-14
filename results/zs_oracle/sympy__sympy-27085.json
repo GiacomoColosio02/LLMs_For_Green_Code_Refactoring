@@ -1,0 +1,28 @@
+{
+  "instance_id": "sympy__sympy-27085",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T14:47:22.217772",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24914
+  },
+  "llm_response": "### sympy/polys/matrices/ddm.py\n<<<<<<< SEARCH\ndef __init__(self, rowslist, shape, domain):\n    if not (isinstance(rowslist, list) and all(type(row) is list for row in rowslist)):\n        raise DMBadInputError(\"rowslist must be a list of lists\")\n    m, n = shape\n    if len(rowslist) != m or any(len(row) != n for row in rowslist):\n        raise DMBadInputError(\"Inconsistent row-list/shape\")\n\n    super().__init__(rowslist)\n    self.shape = (m, n)\n    self.rows = m\n    self.cols = n\n    self.domain = domain\n=======\ndef __init__(self, rowslist, shape, domain):\n    if not isinstance(rowslist, list) or not all(isinstance(row, list) for row in rowslist):\n        raise DMBadInputError(\"rowslist must be a list of lists\")\n    m, n = shape\n    if len(rowslist) != m or any(len(row) != n for row in rowslist):\n        raise DMBadInputError(\"Inconsistent row-list/shape\")\n\n    super().__init__(rowslist)\n    self.shape = (m, n)\n    self.rows = m\n    self.cols = n\n    self.domain = domain\n>>>>>>> REPLACE",
+  "llm_tokens": 8294,
+  "llm_latency": 16.11778450012207,
+  "patch_content": "### sympy/polys/matrices/ddm.py\n<<<<<<< SEARCH\ndef __init__(self, rowslist, shape, domain):\n    if not (isinstance(rowslist, list) and all(type(row) is list for row in rowslist)):\n        raise DMBadInputError(\"rowslist must be a list of lists\")\n    m, n = shape\n    if len(rowslist) != m or any(len(row) != n for row in rowslist):\n        raise DMBadInputError(\"Inconsistent row-list/shape\")\n\n    super().__init__(rowslist)\n    self.shape = (m, n)\n    self.rows = m\n    self.cols = n\n    self.domain = domain\n=======\ndef __init__(self, rowslist, shape, domain):\n    if not isinstance(rowslist, list) or not all(isinstance(row, list) for row in rowslist):\n        raise DMBadInputError(\"rowslist must be a list of lists\")\n    m, n = shape\n    if len(rowslist) != m or any(len(row) != n for row in rowslist):\n        raise DMBadInputError(\"Inconsistent row-list/shape\")\n\n    super().__init__(rowslist)\n    self.shape = (m, n)\n    self.rows = m\n    self.cols = n\n    self.domain = domain\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/polys/matrices/ddm.py"
+    ],
+    "error": null
+  }
+}

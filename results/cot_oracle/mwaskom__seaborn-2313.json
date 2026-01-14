@@ -1,0 +1,28 @@
+{
+  "instance_id": "mwaskom__seaborn-2313",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T23:29:40.022830",
+  "status": "success",
+  "error": null,
+  "repo": "mwaskom/seaborn",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 34463
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `_matrix_mask` function in `seaborn/matrix.py` is the bottleneck.\n**DIAGNOSIS**: It creates a DataFrame from a NumPy array, which involves copying the data, leading to high memory usage and slower processing times.\n**SOLUTION**: Directly work with NumPy arrays to avoid unnecessary data copies.\n\n### SECTION 2: PATCH\n\n### seaborn/matrix.py\n<<<<<<< SEARCH\nif isinstance(mask, np.ndarray):\n    # For array masks, ensure that shape matches data then convert\n    if mask.shape != data.shape:\n        raise ValueError(\"Mask must have the same shape as data.\")\n\n    mask = pd.DataFrame(mask,\n                        index=data.index,\n                        columns=data.columns,\n                        dtype=bool)\n=======\nif isinstance(mask, np.ndarray):\n    # For array masks, ensure that shape matches data\n    if mask.shape != data.shape:\n        raise ValueError(\"Mask must have the same shape as data.\")\n    mask = np.ascontiguousarray(mask, dtype=bool)\n>>>>>>> REPLACE\n\nThis patch ensures that the mask is converted to a contiguous NumPy array with boolean dtype, avoiding the creation of an intermediate DataFrame.",
+  "llm_tokens": 9177,
+  "llm_latency": 14.63145661354065,
+  "patch_content": "### seaborn/matrix.py\n<<<<<<< SEARCH\nif isinstance(mask, np.ndarray):\n    # For array masks, ensure that shape matches data then convert\n    if mask.shape != data.shape:\n        raise ValueError(\"Mask must have the same shape as data.\")\n\n    mask = pd.DataFrame(mask,\n                        index=data.index,\n                        columns=data.columns,\n                        dtype=bool)\n=======\nif isinstance(mask, np.ndarray):\n    # For array masks, ensure that shape matches data\n    if mask.shape != data.shape:\n        raise ValueError(\"Mask must have the same shape as data.\")\n    mask = np.ascontiguousarray(mask, dtype=bool)\n>>>>>>> REPLACE\n\nThis patch ensures that the mask is converted to a contiguous NumPy array with boolean dtype, avoiding the creation of an intermediate DataFrame.",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "seaborn/matrix.py"
+    ],
+    "error": null
+  }
+}

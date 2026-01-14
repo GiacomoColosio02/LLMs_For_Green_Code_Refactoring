@@ -1,0 +1,28 @@
+{
+  "instance_id": "astropy__astropy-15710",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T01:42:53.240169",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34945
+  },
+  "llm_response": "### SECTION 1: ANALYSIS\n\nLet's think step by step.\n\n**IDENTIFICATION**: The `fitsopen` function in `hdulist.py` is the bottleneck.\n**DIAGNOSIS**: It performs a lot of redundant operations, particularly in handling file resizing and memory mapping, leading to high memory usage and slower execution.\n**SOLUTION**: Optimize the file resizing logic and reduce unnecessary memory mappings.\n\n### SECTION 2: PATCH\n\n### astropy/io/fits/hdu/hdulist.py\n<<<<<<< SEARCH\ndef _wasresized(self, verbose=False):\n    \"\"\"\n    Determine if any changes to the HDUList will require a file resize\n    when flushing the file.\n\n    Side effect of setting the objects _resize attribute.\n    \"\"\"\n    if not self._resize:\n        # determine if any of the HDU is resized\n        for hdu in self:\n            # Header:\n            nbytes = len(str(hdu._header))\n            if nbytes != (hdu._data_offset - hdu._header_offset):\n                self._resize = True\n                self._truncate = False\n                if verbose:\n                    print(\"One or more header is resized.\")\n                break\n\n            # Data:\n            if not hdu._has_data:\n                continue\n\n            nbytes = hdu.size\n            nbytes = nbytes + _pad_length(nbytes)\n            if nbytes != hdu._data_size:\n                self._resize = True\n                self._truncate = False\n                if verbose:\n                    print(\"One or more data area is resized.\")\n                break\n\n        if self._truncate:\n            try:\n                self._file.truncate(hdu._data_offset + hdu._data_size)\n            except OSError:\n                self._resize = True\n            self._truncate = False\n\n    return self._resize\n=======\ndef _wasresized(self, verbose=False):\n    \"\"\"\n    Determine if any changes to the HDUList will require a file resize\n    when flushing the file.\n\n    Side effect of setting the objects _resize attribute.\n    \"\"\"\n    if not self._resize:\n        # Determine if any of the HDU is resized\n        for hdu in self:\n            if hdu._header_modified or hdu._data_modified:\n                self._resize = True\n                self._truncate = False\n                if verbose:\n                    print(\"One or more header or data area is resized.\")\n                break\n\n    return self._resize\n>>>>>>> REPLACE",
+  "llm_tokens": 10124,
+  "llm_latency": 28.087624073028564,
+  "patch_content": "### astropy/io/fits/hdu/hdulist.py\n<<<<<<< SEARCH\ndef _wasresized(self, verbose=False):\n    \"\"\"\n    Determine if any changes to the HDUList will require a file resize\n    when flushing the file.\n\n    Side effect of setting the objects _resize attribute.\n    \"\"\"\n    if not self._resize:\n        # determine if any of the HDU is resized\n        for hdu in self:\n            # Header:\n            nbytes = len(str(hdu._header))\n            if nbytes != (hdu._data_offset - hdu._header_offset):\n                self._resize = True\n                self._truncate = False\n                if verbose:\n                    print(\"One or more header is resized.\")\n                break\n\n            # Data:\n            if not hdu._has_data:\n                continue\n\n            nbytes = hdu.size\n            nbytes = nbytes + _pad_length(nbytes)\n            if nbytes != hdu._data_size:\n                self._resize = True\n                self._truncate = False\n                if verbose:\n                    print(\"One or more data area is resized.\")\n                break\n\n        if self._truncate:\n            try:\n                self._file.truncate(hdu._data_offset + hdu._data_size)\n            except OSError:\n                self._resize = True\n            self._truncate = False\n\n    return self._resize\n=======\ndef _wasresized(self, verbose=False):\n    \"\"\"\n    Determine if any changes to the HDUList will require a file resize\n    when flushing the file.\n\n    Side effect of setting the objects _resize attribute.\n    \"\"\"\n    if not self._resize:\n        # Determine if any of the HDU is resized\n        for hdu in self:\n            if hdu._header_modified or hdu._data_modified:\n                self._resize = True\n                self._truncate = False\n                if verbose:\n                    print(\"One or more header or data area is resized.\")\n                break\n\n    return self._resize\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/io/fits/hdu/hdulist.py"
+    ],
+    "error": null
+  }
+}

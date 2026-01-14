@@ -1,0 +1,29 @@
+{
+  "instance_id": "sphinx-doc__sphinx-12598",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-11T13:48:21.924449",
+  "status": "success",
+  "error": null,
+  "repo": "sphinx-doc/sphinx",
+  "context_stats": {
+    "num_files": 3,
+    "total_chars": 49872
+  },
+  "llm_response": "### sphinx/ext/todo.py\n<<<<<<< SEARCH\ndef visit_todo_node(self: HTML5Translator, node: todo_node) -> None:\n    if self.config.todo_include_todos:\n        self.visit_admonition(node)\n    else:\n        raise nodes.SkipNode\n=======\ndef visit_todo_node(self: HTML5Translator, node: todo_node) -> None:\n    if self.config.todo_include_todos:\n        self.visit_admonition(node)\n    else:\n        raise nodes.SkipNode\n>>>>>>> REPLACE\n\n### sphinx/writers/latex.py\n<<<<<<< SEARCH\ndef visit_math_reference(self, node: Element) -> None:\n    label = f\"equation:{node['docname']}:{node['target']}\"\n    eqref_format = self.config.math_eqref_format\n    if eqref_format:\n        try:\n            ref = r'\\ref{%s}' % label\n            self.body.append(eqref_format.format(number=ref))\n        except KeyError as exc:\n            logger.warning(__('Invalid math_eqref_format: %r'), exc,\n                           location=node)\n            self.body.append(r'\\eqref{%s}' % label)\n    else:\n        self.body.append(r'\\eqref{%s}' % label)\n=======\ndef visit_math_reference(self, node: Element) -> None:\n    label = f\"equation:{node['docname']}:{node['target']}\"\n    eqref_format = self.config.math_eqref_format\n    if eqref_format:\n        try:\n            ref = r'\\ref{%s}' % label\n            self.body.append(eqref_format.format(number=ref))\n        except KeyError as exc:\n            logger.warning(__('Invalid math_eqref_format: %r'), exc,\n                           location=node)\n            self.body.append(r'\\eqref{%s}' % label)\n    else:\n        self.body.append(r'\\eqref{%s}' % label)\n>>>>>>> REPLACE",
+  "llm_tokens": 13880,
+  "llm_latency": 22.53165030479431,
+  "patch_content": "### sphinx/ext/todo.py\n<<<<<<< SEARCH\ndef visit_todo_node(self: HTML5Translator, node: todo_node) -> None:\n    if self.config.todo_include_todos:\n        self.visit_admonition(node)\n    else:\n        raise nodes.SkipNode\n=======\ndef visit_todo_node(self: HTML5Translator, node: todo_node) -> None:\n    if self.config.todo_include_todos:\n        self.visit_admonition(node)\n    else:\n        raise nodes.SkipNode\n>>>>>>> REPLACE\n\n### sphinx/writers/latex.py\n<<<<<<< SEARCH\ndef visit_math_reference(self, node: Element) -> None:\n    label = f\"equation:{node['docname']}:{node['target']}\"\n    eqref_format = self.config.math_eqref_format\n    if eqref_format:\n        try:\n            ref = r'\\ref{%s}' % label\n            self.body.append(eqref_format.format(number=ref))\n        except KeyError as exc:\n            logger.warning(__('Invalid math_eqref_format: %r'), exc,\n                           location=node)\n            self.body.append(r'\\eqref{%s}' % label)\n    else:\n        self.body.append(r'\\eqref{%s}' % label)\n=======\ndef visit_math_reference(self, node: Element) -> None:\n    label = f\"equation:{node['docname']}:{node['target']}\"\n    eqref_format = self.config.math_eqref_format\n    if eqref_format:\n        try:\n            ref = r'\\ref{%s}' % label\n            self.body.append(eqref_format.format(number=ref))\n        except KeyError as exc:\n            logger.warning(__('Invalid math_eqref_format: %r'), exc,\n                           location=node)\n            self.body.append(r'\\eqref{%s}' % label)\n    else:\n        self.body.append(r'\\eqref{%s}' % label)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 2,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "sphinx/ext/todo.py",
+      "sphinx/writers/latex.py"
+    ],
+    "error": null
+  }
+}

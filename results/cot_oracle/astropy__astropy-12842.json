@@ -1,0 +1,26 @@
+{
+  "instance_id": "astropy__astropy-12842",
+  "prompt_type": "cot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T10:54:03.833268",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 49744
+  },
+  "llm_response": "Let's think step by step.\n\nThe `_check_leapsec` function in `core.py` calls `update_leap_seconds` every time it is called, which can be expensive. We can cache the result to avoid repeated calculations.\n\n### astropy/time/core.py\n<<<<<<< SEARCH\ndef _check_leapsec():\n    global _LEAP_SECONDS_CHECK\n    if _LEAP_SECONDS_CHECK != _LeapSecondsCheck.DONE:\n        from astropy.utils import iers\n        with _LEAP_SECONDS_LOCK:\n            if _LEAP_SECONDS_CHECK == _LeapSecondsCheck.NOT_STARTED:\n                _LEAP_SECONDS_CHECK = _LeapSecondsCheck.RUNNING\n                update_leap_seconds()\n                _LEAP_SECONDS_CHECK = _LeapSecondsCheck.DONE\n=======\n@lru_cache(maxsize=None)\ndef _check_leapsec():\n    global _LEAP_SECONDS_CHECK\n    if _LEAP_SECONDS_CHECK != _LeapSecondsCheck.DONE:\n        from astropy.utils import iers\n        with _LEAP_SECONDS_LOCK:\n            if _LEAP_SECONDS_CHECK == _LeapSecondsCheck.NOT_STARTED:\n                _LEAP_SECONDS_CHECK = _LeapSecondsCheck.RUNNING\n                update_leap_seconds()\n                _LEAP_SECONDS_CHECK = _LeapSecondsCheck.DONE\n>>>>>>> REPLACE\n\n---",
+  "llm_tokens": 13145,
+  "llm_latency": 15.872579574584961,
+  "patch_content": "### astropy/time/core.py\n<<<<<<< SEARCH\ndef _check_leapsec():\n    global _LEAP_SECONDS_CHECK\n    if _LEAP_SECONDS_CHECK != _LeapSecondsCheck.DONE:\n        from astropy.utils import iers\n        with _LEAP_SECONDS_LOCK:\n            if _LEAP_SECONDS_CHECK == _LeapSecondsCheck.NOT_STARTED:\n                _LEAP_SECONDS_CHECK = _LeapSecondsCheck.RUNNING\n                update_leap_seconds()\n                _LEAP_SECONDS_CHECK = _LeapSecondsCheck.DONE\n=======\n@lru_cache(maxsize=None)\ndef _check_leapsec():\n    global _LEAP_SECONDS_CHECK\n    if _LEAP_SECONDS_CHECK != _LeapSecondsCheck.DONE:\n        from astropy.utils import iers\n        with _LEAP_SECONDS_LOCK:\n            if _LEAP_SECONDS_CHECK == _LeapSecondsCheck.NOT_STARTED:\n                _LEAP_SECONDS_CHECK = _LeapSecondsCheck.RUNNING\n                update_leap_seconds()\n                _LEAP_SECONDS_CHECK = _LeapSecondsCheck.DONE\n>>>>>>> REPLACE\n\n---",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

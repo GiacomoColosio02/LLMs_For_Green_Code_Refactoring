@@ -1,0 +1,38 @@
+{
+  "instance_id": "sympy__sympy-14331",
+  "prompt_type": "ldb",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-13T12:16:57.315150",
+  "status": "success",
+  "error": null,
+  "repo": "sympy/sympy",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24901
+  },
+  "llm_response": "### sympy/matrices/matrices.py\n<<<<<<< SEARCH\n        for i in range(j, c):\n            v[count] = self[i, j]\n            count += 1\n        else:\n            v = zeros(c * (c - 1) // 2, 1)\n            for j in range(c):\n                for i in range(j + 1, c):\n                    v[count] = self[i, j]\n                    count += 1\n        return v\n=======\n        v = zeros(c * (c - 1) // 2, 1)\n        for j in range(c):\n            for i in range(j + 1, c):\n                v[j * (c - 1) // 2 + i - j - 1] = self[i, j]\n        return v\n>>>>>>> REPLACE",
+  "iterations": [
+    {
+      "iteration": 1,
+      "response": "### sympy/matrices/matrices.py\n<<<<<<< SEARCH\n        for i in range(j, c):\n            v[count] = self[i, j]\n            count += 1\n        else:\n            v = zeros(c * (c - 1) // 2, 1)\n            for j in range(c):\n                for i in range(j + 1, c):\n                    v[count] = self[i, j]\n                    count += 1\n        return v\n=======\n        v = zeros(c * (c - 1) // 2, 1)\n        for j in range(c):\n            for i in range(j + 1, c):\n                v[j * (c - 1) // 2 + i - j - 1] = self[i, j]\n        return v\n>>>>>>> REPLACE",
+      "patch_content": "### sympy/matrices/matrices.py\n<<<<<<< SEARCH\n        for i in range(j, c):\n            v[count] = self[i, j]\n            count += 1\n        else:\n            v = zeros(c * (c - 1) // 2, 1)\n            for j in range(c):\n                for i in range(j + 1, c):\n                    v[count] = self[i, j]\n                    count += 1\n        return v\n=======\n        v = zeros(c * (c - 1) // 2, 1)\n        for j in range(c):\n            for i in range(j + 1, c):\n                v[j * (c - 1) // 2 + i - j - 1] = self[i, j]\n        return v\n>>>>>>> REPLACE",
+      "success": true,
+      "error": null
+    }
+  ],
+  "num_iterations": 1,
+  "llm_tokens": 6679,
+  "llm_latency": 9.972731351852417,
+  "patch_content": "### sympy/matrices/matrices.py\n<<<<<<< SEARCH\n        for i in range(j, c):\n            v[count] = self[i, j]\n            count += 1\n        else:\n            v = zeros(c * (c - 1) // 2, 1)\n            for j in range(c):\n                for i in range(j + 1, c):\n                    v[count] = self[i, j]\n                    count += 1\n        return v\n=======\n        v = zeros(c * (c - 1) // 2, 1)\n        for j in range(c):\n            for i in range(j + 1, c):\n                v[j * (c - 1) // 2 + i - j - 1] = self[i, j]\n        return v\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sympy/matrices/matrices.py"
+    ],
+    "error": null
+  }
+}

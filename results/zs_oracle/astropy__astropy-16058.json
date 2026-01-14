@@ -1,0 +1,29 @@
+{
+  "instance_id": "astropy__astropy-16058",
+  "prompt_type": "zero_shot",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-10T11:56:24.390096",
+  "status": "success",
+  "error": null,
+  "repo": "astropy/astropy",
+  "context_stats": {
+    "num_files": 2,
+    "total_chars": 33866
+  },
+  "llm_response": "### astropy/units/core.py\n<<<<<<< SEARCH\n        self._scale = scale\n        self._bases = bases\n        self._powers = powers\n        self._expand_and_gather(decompose=decompose, bases=decompose_bases)\n=======\n        self._scale, self._bases, self._powers = scale, bases, powers\n        self._expand_and_gather(decompose=decompose, bases=decompose_bases)\n>>>>>>> REPLACE\n\n### astropy/units/utils.py\n<<<<<<< SEARCH\n    def validate_power(p):\n        \"\"\"Convert a power to a floating point value, an integer, or a Fraction.\n        If a fractional power can be represented exactly as a floating point\n        number, convert it to a float, to make the math much faster; otherwise,\n        retain it as a `fractions.Fraction` object to avoid losing precision.\n        Conversely, if the value is indistinguishable from a rational number with a\n        low-numbered denominator, convert to a Fraction object.\n        Parameters\n        ----------\n        p : float, int, Rational, Fraction\n            Power to be converted\n        \"\"\"\n        denom = getattr(p, \"denominator\", None)\n        if denom is None:\n            try:\n                p = float(p)\n            except Exception:\n                p = np.asanyarray(p)\n                if ((first := p.flat[0]) == p).all():\n                    p = float(first)\n                else:\n                    raise ValueError(\n                        \"Quantities and Units may only be raised to a scalar power\"\n                    )\n\n        # This returns either a (simple) Fraction or the same float.\n        p = maybe_simple_fraction(p)\n        # If still a float, nothing more to be done.\n        if isinstance(p, float):\n            return p\n\n        # Otherwise, check for simplifications.\n        denom = p.denominator\n\n    if denom == 1:\n        p = p.numerator\n\n    elif (denom & (denom - 1)) == 0:\n        # Above is a bit-twiddling hack to see if denom is a power of two.\n        # If so, float does not lose precision and will speed things up.\n        p = float(p)\n\n    return p\n=======\n    def validate_power(p):\n        return maybe_simple_fraction(p)\n>>>>>>> REPLACE",
+  "llm_tokens": 9407,
+  "llm_latency": 26.492234230041504,
+  "patch_content": "### astropy/units/core.py\n<<<<<<< SEARCH\n        self._scale = scale\n        self._bases = bases\n        self._powers = powers\n        self._expand_and_gather(decompose=decompose, bases=decompose_bases)\n=======\n        self._scale, self._bases, self._powers = scale, bases, powers\n        self._expand_and_gather(decompose=decompose, bases=decompose_bases)\n>>>>>>> REPLACE\n\n### astropy/units/utils.py\n<<<<<<< SEARCH\n    def validate_power(p):\n        \"\"\"Convert a power to a floating point value, an integer, or a Fraction.\n        If a fractional power can be represented exactly as a floating point\n        number, convert it to a float, to make the math much faster; otherwise,\n        retain it as a `fractions.Fraction` object to avoid losing precision.\n        Conversely, if the value is indistinguishable from a rational number with a\n        low-numbered denominator, convert to a Fraction object.\n        Parameters\n        ----------\n        p : float, int, Rational, Fraction\n            Power to be converted\n        \"\"\"\n        denom = getattr(p, \"denominator\", None)\n        if denom is None:\n            try:\n                p = float(p)\n            except Exception:\n                p = np.asanyarray(p)\n                if ((first := p.flat[0]) == p).all():\n                    p = float(first)\n                else:\n                    raise ValueError(\n                        \"Quantities and Units may only be raised to a scalar power\"\n                    )\n\n        # This returns either a (simple) Fraction or the same float.\n        p = maybe_simple_fraction(p)\n        # If still a float, nothing more to be done.\n        if isinstance(p, float):\n            return p\n\n        # Otherwise, check for simplifications.\n        denom = p.denominator\n\n    if denom == 1:\n        p = p.numerator\n\n    elif (denom & (denom - 1)) == 0:\n        # Above is a bit-twiddling hack to see if denom is a power of two.\n        # If so, float does not lose precision and will speed things up.\n        p = float(p)\n\n    return p\n=======\n    def validate_power(p):\n        return maybe_simple_fraction(p)\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 2,
+    "total_blocks": 2,
+    "method": "search_replace",
+    "modified_files": [
+      "astropy/units/core.py",
+      "astropy/units/utils.py"
+    ],
+    "error": null
+  }
+}

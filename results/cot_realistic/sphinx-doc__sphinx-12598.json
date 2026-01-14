@@ -1,0 +1,28 @@
+{
+  "instance_id": "sphinx-doc__sphinx-12598",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:25:23.925032",
+  "status": "success",
+  "error": null,
+  "repo": "sphinx-doc/sphinx",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34960
+  },
+  "llm_response": "Let's think step by step.\n\nThe `generate_js_fixtures.py` script runs `sphinx-build` multiple times unnecessarily. We can cache the results to avoid redundant builds.\n\n### utils/generate_js_fixtures.py\n<<<<<<< SEARCH\nfor directory in TEST_JS_ROOTS:\n    searchindex = directory / '_build' / 'searchindex.js'\n    destination = TEST_JS_FIXTURES / directory.name / 'searchindex.js'\n\n    print(f'Building {directory} ... ', end='')\n    build(directory)\n    print('done')\n\n    print(f'Copying {searchindex} to {destination} ... ', end='')\n    destination.parent.mkdir(exist_ok=True, parents=True)\n    shutil.copy2(searchindex, destination)\n    print('done')\n=======\ncached_results = {}\n\nfor directory in TEST_JS_ROOTS:\n    searchindex = directory / '_build' / 'searchindex.js'\n    destination = TEST_JS_FIXTURES / directory.name / 'searchindex.js'\n\n    if directory not in cached_results:\n        print(f'Building {directory} ... ', end='')\n        build(directory)\n        print('done')\n        cached_results[directory] = True\n\n    print(f'Copying {searchindex} to {destination} ... ', end='')\n    destination.parent.mkdir(exist_ok=True, parents=True)\n    shutil.copy2(searchindex, destination)\n    print('done')\n>>>>>>> REPLACE",
+  "llm_tokens": 9865,
+  "llm_latency": 16.334556102752686,
+  "patch_content": "### utils/generate_js_fixtures.py\n<<<<<<< SEARCH\nfor directory in TEST_JS_ROOTS:\n    searchindex = directory / '_build' / 'searchindex.js'\n    destination = TEST_JS_FIXTURES / directory.name / 'searchindex.js'\n\n    print(f'Building {directory} ... ', end='')\n    build(directory)\n    print('done')\n\n    print(f'Copying {searchindex} to {destination} ... ', end='')\n    destination.parent.mkdir(exist_ok=True, parents=True)\n    shutil.copy2(searchindex, destination)\n    print('done')\n=======\ncached_results = {}\n\nfor directory in TEST_JS_ROOTS:\n    searchindex = directory / '_build' / 'searchindex.js'\n    destination = TEST_JS_FIXTURES / directory.name / 'searchindex.js'\n\n    if directory not in cached_results:\n        print(f'Building {directory} ... ', end='')\n        build(directory)\n        print('done')\n        cached_results[directory] = True\n\n    print(f'Copying {searchindex} to {destination} ... ', end='')\n    destination.parent.mkdir(exist_ok=True, parents=True)\n    shutil.copy2(searchindex, destination)\n    print('done')\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "utils/generate_js_fixtures.py"
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-13151",
+  "prompt_type": "self_collab",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T19:23:33.860539",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34795
+  },
+  "llm_response": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(zip(*coefs.T))\nxx = np.array([sum(abs(c)) for c in coefs.T]) / sum(abs(coefs.T[-1]))\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/gaussian_process/kernels.py\nNo changes needed.\n\n### sklearn/gaussian_process/tests/test_gpr.py\nNo changes needed.\n\n### sklearn/tests/test_common.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed.\n\n### sklearn/utils/testing.py\nNo changes needed.",
+  "all_responses": [
+    "1. The files `examples/linear_model/plot_lasso_lars.py`, `sklearn/gaussian_process/kernels.py`, and `sklearn/utils/estimator_checks.py` are relevant to the performance issue.\n2. The bottleneck functions are `linear_model.lars_path`, `gaussian_process.kernels.Kernel.__call__`, and `estimator_checks.check_fit_idempotent`.\n3. They are slow due to inefficient computation, particularly in handling large datasets and complex mathematical operations.\n4. Optimizations include parallelizing computations, optimizing numerical algorithms, and reducing unnecessary calculations.",
+    "Replace the nested loop in `linear_model.lars_path` with a set lookup to reduce time complexity from O(n\u00b2) to O(n). This improvement is crucial for handling large datasets efficiently. Edge cases to consider include ensuring the set contains all necessary elements and handling potential collisions appropriately.",
+    "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(zip(*coefs.T))\nxx = np.array([sum(abs(c)) for c in coefs.T]) / sum(abs(coefs.T[-1]))\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/gaussian_process/kernels.py\nNo changes needed.\n\n### sklearn/gaussian_process/tests/test_gpr.py\nNo changes needed.\n\n### sklearn/tests/test_common.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed.\n\n### sklearn/utils/testing.py\nNo changes needed."
+  ],
+  "llm_tokens": 17885,
+  "llm_latency": 27.23094153404236,
+  "patch_content": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(zip(*coefs.T))\nxx = np.array([sum(abs(c)) for c in coefs.T]) / sum(abs(coefs.T[-1]))\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. The files `examples/linear_model/plot_lasso_lars.py`, `sklearn/gaussian_process/kernels.py`, and `sklearn/utils/estimator_checks.py` are relevant to the performance issue.\n2. The bottleneck functions are `linear_model.lars_path`, `gaussian_process.kernels.Kernel.__call__`, and `estimator_checks.check_fit_idempotent`.\n3. They are slow due to inefficient computation, particularly in handling large datasets and complex mathematical operations.\n4. Optimizations include parallelizing computations, optimizing numerical algorithms, and reducing unnecessary calculations.",
+    "optimizer": "Replace the nested loop in `linear_model.lars_path` with a set lookup to reduce time complexity from O(n\u00b2) to O(n). This improvement is crucial for handling large datasets efficiently. Edge cases to consider include ensuring the set contains all necessary elements and handling potential collisions appropriately.",
+    "reviewer": "### examples/linear_model/plot_lasso_lars.py\n<<<<<<< SEARCH\n_, _, coefs = linear_model.lars_path(X, y, method='lasso', verbose=True)\nxx = np.sum(np.abs(coefs.T), axis=1)\nxx /= xx[-1]\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n=======\ncoefs_set = set(zip(*coefs.T))\nxx = np.array([sum(abs(c)) for c in coefs.T]) / sum(abs(coefs.T[-1]))\nplt.plot(xx, coefs.T)\nymin, ymax = plt.ylim()\nplt.vlines(xx, ymin, ymax, linestyle='dashed')\nplt.xlabel('|coef| / max|coef|')\nplt.ylabel('Coefficients')\nplt.title('LASSO Path')\nplt.axis('tight')\nplt.show()\n>>>>>>> REPLACE\n\n### sklearn/gaussian_process/kernels.py\nNo changes needed.\n\n### sklearn/gaussian_process/tests/test_gpr.py\nNo changes needed.\n\n### sklearn/tests/test_common.py\nNo changes needed.\n\n### sklearn/utils/estimator_checks.py\nNo changes needed.\n\n### sklearn/utils/testing.py\nNo changes needed."
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "examples/linear_model/plot_lasso_lars.py"
+    ],
+    "error": null
+  }
+}

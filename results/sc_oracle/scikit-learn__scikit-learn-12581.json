@@ -1,0 +1,38 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12581",
+  "prompt_type": "self_collab",
+  "strategy": "oracle",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T14:42:14.219859",
+  "status": "success",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 1,
+    "total_chars": 24879
+  },
+  "llm_response": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\n        for combination in combinations(range(_num_samples(X)), self.p):\n            yield np.array(combination)\n=======\n        n_samples = _num_samples(X)\n        k = 1\n        yield np.array(list(combinations(range(n_samples), k)))\n>>>>>>> REPLACE",
+  "all_responses": [
+    "1. **Function**: `LeaveOneGroupOut.get_n_splits`\n   2. **Why Slow**: It calculates the number of splits using a loop, which is O(n).\n   3. **Optimization Type**: Use a direct mathematical formula to calculate the number of splits, avoiding loops.",
+    "Replace the loop with a direct calculation using the combination formula \\( \\binom{n}{k} = \\frac{n!}{k!(n-k)!} \\), where \\( k=1 \\). This reduces the time complexity from \\( O(n) \\) to \\( O(1) \\).\n\nThis improvement avoids the overhead of looping and directly computes the number of splits, making it much faster for large datasets. No additional edge cases need to be considered as long as \\( n \\geq 1 \\).",
+    "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\n        for combination in combinations(range(_num_samples(X)), self.p):\n            yield np.array(combination)\n=======\n        n_samples = _num_samples(X)\n        k = 1\n        yield np.array(list(combinations(range(n_samples), k)))\n>>>>>>> REPLACE"
+  ],
+  "llm_tokens": 12893,
+  "llm_latency": 13.692736387252808,
+  "patch_content": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\n        for combination in combinations(range(_num_samples(X)), self.p):\n            yield np.array(combination)\n=======\n        n_samples = _num_samples(X)\n        k = 1\n        yield np.array(list(combinations(range(n_samples), k)))\n>>>>>>> REPLACE",
+  "turns": {
+    "analyst": "1. **Function**: `LeaveOneGroupOut.get_n_splits`\n   2. **Why Slow**: It calculates the number of splits using a loop, which is O(n).\n   3. **Optimization Type**: Use a direct mathematical formula to calculate the number of splits, avoiding loops.",
+    "optimizer": "Replace the loop with a direct calculation using the combination formula \\( \\binom{n}{k} = \\frac{n!}{k!(n-k)!} \\), where \\( k=1 \\). This reduces the time complexity from \\( O(n) \\) to \\( O(1) \\).\n\nThis improvement avoids the overhead of looping and directly computes the number of splits, making it much faster for large datasets. No additional edge cases need to be considered as long as \\( n \\geq 1 \\).",
+    "reviewer": "### sklearn/model_selection/_split.py\n<<<<<<< SEARCH\n        for combination in combinations(range(_num_samples(X)), self.p):\n            yield np.array(combination)\n=======\n        n_samples = _num_samples(X)\n        k = 1\n        yield np.array(list(combinations(range(n_samples), k)))\n>>>>>>> REPLACE"
+  },
+  "patch_result": {
+    "success": true,
+    "changes_applied": 1,
+    "total_blocks": 1,
+    "method": "search_replace",
+    "modified_files": [
+      "sklearn/model_selection/_split.py"
+    ],
+    "error": null
+  }
+}

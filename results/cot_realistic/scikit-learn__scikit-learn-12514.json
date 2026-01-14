@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12514",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ",
+  "timestamp": "2026-01-12T12:13:54.236578",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34895
+  },
+  "llm_response": "Let's think step by step.\n\nThe `cross_val_score` function in `model_selection/_validation.py` performs multiple calls to `_fit_and_score`, which can be inefficient due to repeated computations.\n\n### sklearn/model_selection/_validation.py\n<<<<<<< SEARCH\ndef cross_val_score(estimator, X, y=None, groups=None, scoring=None, cv=None,\n                    n_jobs=None, verbose=0, fit_params=None, pre_dispatch='2*n_jobs',\n                    error_score=np.nan):\n    \"\"\"Evaluate metric(s) by cross-validation on given estimator, data and\n    target.\n    \"\"\"\n    # ... (rest of the function remains unchanged)\n    for train, test in cv.split(X, y, groups):\n        out = _fit_and_score(estimator, X, y, train, test, verbose, parameters,\n                             fit_params, scorers, score_func, score_func_name,\n                             return_train_score=return_train_score,\n                             return_times=return_times, return_n_test_samples=True,\n                             error_score=error_score)\n        # ... (rest of the loop remains unchanged)\n    return scores\n=======\ndef cross_val_score(estimator, X, y=None, groups=None, scoring=None, cv=None,\n                    n_jobs=None, verbose=0, fit_params=None, pre_dispatch='2*n_jobs',\n                    error_score=np.nan):\n    \"\"\"Evaluate metric(s) by cross-validation on given estimator, data and\n    target.\n    \"\"\"\n    # ... (rest of the function remains unchanged)\n    cached_scores = {}\n    for train, test in cv.split(X, y, groups):\n        key = (train, test)\n        if key not in cached_scores:\n            out = _fit_and_score(estimator, X, y, train, test, verbose, parameters,\n                                 fit_params, scorers, score_func, score_func_name,\n                                 return_train_score=return_train_score,\n                                 return_times=return_times, return_n_test_samples=True,\n                                 error_score=error_score)\n            cached_scores[key] = out\n        else:\n            out = cached_scores[key]\n        # ... (rest of the loop remains unchanged)\n    return scores\n>>>>>>> REPLACE",
+  "llm_tokens": 9816,
+  "llm_latency": 24.81365180015564,
+  "patch_content": "### sklearn/model_selection/_validation.py\n<<<<<<< SEARCH\ndef cross_val_score(estimator, X, y=None, groups=None, scoring=None, cv=None,\n                    n_jobs=None, verbose=0, fit_params=None, pre_dispatch='2*n_jobs',\n                    error_score=np.nan):\n    \"\"\"Evaluate metric(s) by cross-validation on given estimator, data and\n    target.\n    \"\"\"\n    # ... (rest of the function remains unchanged)\n    for train, test in cv.split(X, y, groups):\n        out = _fit_and_score(estimator, X, y, train, test, verbose, parameters,\n                             fit_params, scorers, score_func, score_func_name,\n                             return_train_score=return_train_score,\n                             return_times=return_times, return_n_test_samples=True,\n                             error_score=error_score)\n        # ... (rest of the loop remains unchanged)\n    return scores\n=======\ndef cross_val_score(estimator, X, y=None, groups=None, scoring=None, cv=None,\n                    n_jobs=None, verbose=0, fit_params=None, pre_dispatch='2*n_jobs',\n                    error_score=np.nan):\n    \"\"\"Evaluate metric(s) by cross-validation on given estimator, data and\n    target.\n    \"\"\"\n    # ... (rest of the function remains unchanged)\n    cached_scores = {}\n    for train, test in cv.split(X, y, groups):\n        key = (train, test)\n        if key not in cached_scores:\n            out = _fit_and_score(estimator, X, y, train, test, verbose, parameters,\n                                 fit_params, scorers, score_func, score_func_name,\n                                 return_train_score=return_train_score,\n                                 return_times=return_times, return_n_test_samples=True,\n                                 error_score=error_score)\n            cached_scores[key] = out\n        else:\n            out = cached_scores[key]\n        # ... (rest of the loop remains unchanged)\n    return scores\n>>>>>>> REPLACE",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}
