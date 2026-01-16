@@ -751,16 +751,18 @@ logger = logging.getLogger(__name__)
             print(f"  ⚠️  Warning: Could not install dependencies: {e}")
             return (None, None)
     
+
     def measure_single_test(
         self,
         collector: MetricsCollector,
         test_name: str,
         repo_path: Path,
         python_path: str,
-        repetitions: int
+        repetitions: int,
+        timeout: int = 300  # 5 minuti
     ) -> Optional[Dict]:
         """
-        Measure a single test with error handling.
+        Measure a single test with error handling and timeout.
         
         Args:
             collector: MetricsCollector instance
@@ -768,24 +770,35 @@ logger = logging.getLogger(__name__)
             repo_path: Path to repository
             python_path: Path to python executable
             repetitions: Number of repetitions
+            timeout: Maximum time in seconds for the entire measurement
             
         Returns:
             Test results dict or None if failed
         """
-        try:
-            # Build pytest command using python path
-            # Quote test name to handle special characters like [] and ()
-            test_command = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test_name}' -v"            
-            # Measure test execution
+        import concurrent.futures
+        
+        def _run_measurement():
+            test_command = f"cd {repo_path} && {python_path} -m pytest '{repo_path}/{test_name}' -v"
             test_results = collector.measure_test_execution(
                 test_command=test_command,
                 repetitions=repetitions
             )
-            
             test_results['test_name'] = test_name
             test_results['status'] = 'success'
             return test_results
-            
+        
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(_run_measurement)
+                result = future.result(timeout=timeout)
+                return result
+        except concurrent.futures.TimeoutError:
+            print(f"    ⏱️ Test timeout after {timeout}s - skipping")
+            return {
+                'test_name': test_name,
+                'status': 'timeout',
+                'error': f'Test exceeded {timeout}s timeout'
+            }
         except Exception as e:
             print(f"    ❌ Test failed: {str(e)[:100]}")
             return {
@@ -793,6 +806,8 @@ logger = logging.getLogger(__name__)
                 'status': 'failed',
                 'error': str(e)[:500]
             }
+        
+
     
     def measure_commit(
         self,

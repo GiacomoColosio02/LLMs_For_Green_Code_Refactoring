@@ -12,7 +12,7 @@ This strategy simulates multiple expert roles collaborating:
 Each role builds on the previous role's output, creating a collaborative
 refinement process within a single LLM.
 
-Version: 2.1 - Shortened Turn 1-2, stricter Turn 3 patch format
+Version: 2.2 - DeepSeek R1 Compatible - Explicit instructions to avoid <think> tags
 """
 
 import re
@@ -118,23 +118,30 @@ class SelfCollaborationTemplate(BasePromptTemplate):
         code_section = self._format_code_files(context.code_files)
         is_oracle = context.problem_statement_type == ProblemStatementType.ORACLE
         
+        # Clean previous responses from <think> tags (DeepSeek R1)
+        clean_responses = [self._clean_think_tags(r) for r in previous_responses]
+        
         if turn_index == 0:
             # ANALYST - First turn, no previous responses
             return self._build_analyst_turn(context, code_section, is_oracle)
         
         elif turn_index == 1:
             # OPTIMIZER - Has analyst response
-            analyst_output = previous_responses[0] if previous_responses else ""
+            analyst_output = clean_responses[0] if clean_responses else ""
             return self._build_optimizer_turn(context, code_section, analyst_output)
         
         elif turn_index == 2:
             # REVIEWER - Has analyst and optimizer responses
-            analyst_output = previous_responses[0] if len(previous_responses) > 0 else ""
-            optimizer_output = previous_responses[1] if len(previous_responses) > 1 else ""
+            analyst_output = clean_responses[0] if len(clean_responses) > 0 else ""
+            optimizer_output = clean_responses[1] if len(clean_responses) > 1 else ""
             return self._build_reviewer_turn(context, code_section, analyst_output, optimizer_output)
         
         else:
             raise ValueError(f"Invalid turn index: {turn_index}")
+    
+    def _clean_think_tags(self, response: str) -> str:
+        """Remove <think>...</think> blocks from response (DeepSeek R1)."""
+        return re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL).strip()
     
     # =========================================================================
     # SYSTEM PROMPT
@@ -147,6 +154,9 @@ Multiple expert roles will work together to optimize code for energy efficiency.
 You will be assigned a specific role (Analyst, Optimizer, or Reviewer).
 Focus ONLY on your assigned role's responsibilities.
 Build upon the work of previous roles when applicable.
+
+**IMPORTANT: Do NOT use <think> tags or internal reasoning blocks.**
+**Respond directly with your analysis or output.**
 
 Goal: Produce an energy-efficient code patch that maintains correctness."""
     
@@ -185,12 +195,15 @@ Goal: Produce an energy-efficient code patch that maintains correctness."""
 """
     
     # =========================================================================
-    # TURN 1: ANALYST (shortened)
+    # TURN 1: ANALYST (shortened, DeepSeek compatible)
     # =========================================================================
     
     def _get_analyst_prompt(self, is_oracle: bool) -> str:
+        no_think_warning = """**IMPORTANT: Do NOT use <think> tags. Write your analysis directly.**
+
+"""
         if is_oracle:
-            return """## YOUR ROLE: ANALYST
+            return no_think_warning + """## YOUR ROLE: ANALYST
 
 Identify the performance bottleneck in the code.
 
@@ -199,9 +212,11 @@ Identify the performance bottleneck in the code.
 2. Why is it slow? (O(n²), redundant computation, memory issues, etc.)
 3. What type of optimization would help?
 
-Be specific and concise. Do NOT provide code - the Optimizer will do that."""
+Be specific and concise. Do NOT provide code - the Optimizer will do that.
+
+Your analysis (respond directly, no <think> tags):"""
         else:
-            return """## YOUR ROLE: ANALYST
+            return no_think_warning + """## YOUR ROLE: ANALYST
 
 Identify the performance bottleneck in the retrieved code (some files may be noise).
 
@@ -211,7 +226,9 @@ Identify the performance bottleneck in the retrieved code (some files may be noi
 3. Why is it slow?
 4. What optimization would help?
 
-Be specific and concise. Do NOT provide code."""
+Be specific and concise. Do NOT provide code.
+
+Your analysis (respond directly, no <think> tags):"""
     
     def _build_analyst_turn(
         self, 
@@ -224,16 +241,16 @@ Be specific and concise. Do NOT provide code."""
         
         return f"""{initial}
 
-{role_prompt}
-
-Your analysis:"""
+{role_prompt}"""
     
     # =========================================================================
-    # TURN 2: OPTIMIZER (shortened)
+    # TURN 2: OPTIMIZER (shortened, DeepSeek compatible)
     # =========================================================================
     
     def _get_optimizer_prompt(self) -> str:
-        return """## YOUR ROLE: OPTIMIZER
+        return """**IMPORTANT: Do NOT use <think> tags. Write your strategy directly.**
+
+## YOUR ROLE: OPTIMIZER
 
 Based on the Analyst's findings, propose a concrete optimization.
 
@@ -242,7 +259,9 @@ Based on the Analyst's findings, propose a concrete optimization.
 2. Why this improves performance (e.g., "O(n²) → O(n)")
 3. Any edge cases to consider
 
-Be concrete about the transformation. Do NOT write the final patch - the Reviewer will do that."""
+Be concrete about the transformation. Do NOT write the final patch - the Reviewer will do that.
+
+Your optimization strategy (respond directly, no <think> tags):"""
     
     def _build_optimizer_turn(
         self, 
@@ -256,16 +275,16 @@ Be concrete about the transformation. Do NOT write the final patch - the Reviewe
 
 ---
 
-{self._get_optimizer_prompt()}
-
-Your optimization strategy:"""
+{self._get_optimizer_prompt()}"""
     
     # =========================================================================
-    # TURN 3: REVIEWER (strict patch format)
+    # TURN 3: REVIEWER (strict patch format, DeepSeek compatible)
     # =========================================================================
     
     def _get_reviewer_prompt(self) -> str:
         return """## YOUR ROLE: REVIEWER - PRODUCE THE FINAL PATCH
+
+**IMPORTANT: Do NOT use <think> tags. Output ONLY the patch, starting immediately with ### path/to/file.py**
 
 Generate the patch using this EXACT format:
 
@@ -277,14 +296,15 @@ Generate the patch using this EXACT format:
 >>>>>>> REPLACE
 
 **CRITICAL RULES:**
-1. First line must be: ### path/to/file.py (the actual file path)
+1. **START IMMEDIATELY with ### path/to/file.py** - no introduction or thinking
 2. SEARCH block must EXACTLY match original code (copy-paste from above)
 3. Keep SEARCH blocks small (5-15 lines)
 4. Do NOT wrap in ```python``` blocks
 5. Do NOT add explanations - ONLY output the patch
 6. Do NOT add external dependencies
+7. Do NOT use <think> tags
 
-Generate your patch now (start with ### path/to/file.py):"""
+Generate your patch now (start directly with ### path/to/file.py):"""
     
     def _build_reviewer_turn(
         self, 
@@ -313,7 +333,9 @@ Generate your patch now (start with ### path/to/file.py):"""
     
     def extract_code_from_response(self, response: str) -> str:
         """Extract patch from the final (reviewer) response."""
-        return self._extract_patch(response)
+        # First remove <think> tags (DeepSeek R1)
+        clean_response = self._clean_think_tags(response)
+        return self._extract_patch(clean_response)
     
     def parse_collaboration_responses(
         self, 
@@ -328,9 +350,12 @@ Generate your patch now (start with ### path/to/file.py):"""
         Returns:
             SelfCollabResponse with parsed components
         """
-        analyst = responses[0] if len(responses) > 0 else ""
-        optimizer = responses[1] if len(responses) > 1 else ""
-        reviewer = responses[2] if len(responses) > 2 else ""
+        # Clean all responses from <think> tags
+        clean_responses = [self._clean_think_tags(r) for r in responses]
+        
+        analyst = clean_responses[0] if len(clean_responses) > 0 else ""
+        optimizer = clean_responses[1] if len(clean_responses) > 1 else ""
+        reviewer = clean_responses[2] if len(clean_responses) > 2 else ""
         
         final_patch = self._extract_patch(reviewer)
         has_valid = bool(final_patch and "<<<<<<< SEARCH" in final_patch)

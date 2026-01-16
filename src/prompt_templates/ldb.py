@@ -13,7 +13,7 @@ This strategy implements iterative refinement with feedback:
 The key insight is that LLMs can fix their own mistakes when given
 specific error feedback from the validation step.
 
-Version: 2.1 - Clearer initial prompt, concise refinement instructions
+Version: 2.2 - DeepSeek R1 Compatible - Explicit instructions to avoid <think> tags
 """
 
 import re
@@ -91,6 +91,10 @@ class LDBTemplate(BasePromptTemplate):
         """Indicates this strategy uses iterative refinement."""
         return True
     
+    def _clean_think_tags(self, response: str) -> str:
+        """Remove <think>...</think> blocks from response (DeepSeek R1)."""
+        return re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL).strip()
+    
     def generate_prompt(self, context: PromptContext) -> Dict[str, any]:
         """
         Generate configuration for LDB strategy.
@@ -145,8 +149,10 @@ class LDBTemplate(BasePromptTemplate):
             Prompt for refinement attempt
         """
         code_section = self._format_code_files(context.code_files)
+        # Clean previous patch from <think> tags
+        clean_patch = self._clean_think_tags(previous_patch)
         return self._build_refinement_prompt(
-            context, code_section, previous_patch, feedback, iteration
+            context, code_section, clean_patch, feedback, iteration
         )
     
     # =========================================================================
@@ -156,10 +162,13 @@ class LDBTemplate(BasePromptTemplate):
     def _get_system_prompt(self) -> str:
         return """You are an expert Green Software Engineer with debugging capabilities.
 Your goal is to optimize code for energy efficiency while maintaining correctness.
-When you receive error feedback, analyze it carefully and fix your patch."""
+When you receive error feedback, analyze it carefully and fix your patch.
+
+**IMPORTANT: Do NOT use <think> tags or internal reasoning blocks.**
+**Respond directly with the patch code only.**"""
     
     # =========================================================================
-    # INITIAL PROMPT (matches ZS format for consistency)
+    # INITIAL PROMPT (matches ZS format for consistency, DeepSeek compatible)
     # =========================================================================
     
     def _build_initial_prompt(
@@ -181,6 +190,9 @@ When you receive error feedback, analyze it carefully and fix your patch."""
         
         return f"""You are an expert Green Software Engineer.
 
+**IMPORTANT: Do NOT use <think> tags or internal reasoning blocks.**
+**Start your response directly with ### path/to/file.py**
+
 ## TASK
 {task_desc}
 If your patch has errors, you will receive feedback to fix them.
@@ -201,17 +213,19 @@ If your patch has errors, you will receive feedback to fix them.
 >>>>>>> REPLACE
 
 ## RULES
-1. File path line (### path/to/file.py) MUST come immediately before <<<<<<< SEARCH
-2. SEARCH block must match original code EXACTLY (copy-paste from CODE section)
-3. Keep SEARCH blocks SMALL (5-15 lines)
-4. Do NOT wrap in ```python``` code blocks
-5. Do NOT add external dependencies
-6. Do NOT modify test files
+1. **START IMMEDIATELY with ### path/to/file.py** - no introduction or thinking
+2. File path line (### path/to/file.py) MUST come immediately before <<<<<<< SEARCH
+3. SEARCH block must match original code EXACTLY (copy-paste from CODE section)
+4. Keep SEARCH blocks SMALL (5-15 lines)
+5. Do NOT wrap in ```python``` code blocks
+6. Do NOT add external dependencies
+7. Do NOT modify test files
+8. **Do NOT use <think> tags** - output ONLY the patch
 
-Generate your optimization patch (start with ### path/to/file.py):"""
+Generate your optimization patch (start directly with ### path/to/file.py):"""
     
     # =========================================================================
-    # REFINEMENT PROMPT (concise error-specific guidance)
+    # REFINEMENT PROMPT (concise error-specific guidance, DeepSeek compatible)
     # =========================================================================
     
     def _build_refinement_prompt(
@@ -245,6 +259,8 @@ Generate your optimization patch (start with ### path/to/file.py):"""
         
         return f"""## PATCH FAILED - Attempt {iteration + 1}/{self.max_iterations} {urgency}
 
+**IMPORTANT: Do NOT use <think> tags. Start directly with ### path/to/file.py**
+
 {feedback_section}
 
 {fix_hint}
@@ -257,7 +273,7 @@ Generate your optimization patch (start with ### path/to/file.py):"""
 ### Original Code (COPY EXACTLY for SEARCH blocks):
 {code_section}
 
-Generate your CORRECTED patch (start with ### path/to/file.py):"""
+Generate your CORRECTED patch (start directly with ### path/to/file.py, no <think> tags):"""
     
     def _format_feedback(self, feedback: LDBFeedback) -> str:
         """Format feedback into a clear message for the LLM."""
@@ -285,7 +301,8 @@ Generate your CORRECTED patch (start with ### path/to/file.py):"""
         hints = {
             LDBFeedbackType.PATCH_PARSE_ERROR: """**Fix:** Patch format is wrong.
 - Line before <<<<<<< SEARCH must be: ### path/to/file.py
-- Do NOT use ```python``` blocks around the patch""",
+- Do NOT use ```python``` blocks around the patch
+- Do NOT use <think> tags""",
 
             LDBFeedbackType.PATCH_APPLY_ERROR: """**Fix:** SEARCH block doesn't match original code.
 - Copy code EXACTLY from "Original Code" section (including whitespace)
@@ -312,8 +329,11 @@ Generate your CORRECTED patch (start with ### path/to/file.py):"""
     
     def extract_code_from_response(self, response: str) -> str:
         """Extract patch from response."""
+        # First remove <think> tags (DeepSeek R1)
+        clean = self._clean_think_tags(response)
+        
         # Remove markdown code blocks if present
-        clean = re.sub(r'```(?:python|diff|text)?\s*\n?', '', response)
+        clean = re.sub(r'```(?:python|diff|text)?\s*\n?', '', clean)
         clean = re.sub(r'\n?```', '', clean)
         
         # Find file path + SEARCH pattern together

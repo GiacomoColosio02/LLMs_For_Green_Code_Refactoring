@@ -5,7 +5,7 @@ Handles both ORACLE and REALISTIC settings via PromptContext.
 ORACLE: LLM receives exact target files (gold context) - pure optimization task.
 REALISTIC: LLM receives retrieved files + repo map - must identify bottleneck first.
 
-Version: 2.0 - Enhanced with explicit output format examples
+Version: 2.1 - DeepSeek R1 Compatible - Added explicit instructions to avoid <think> tags
 """
 from typing import Union, List, Dict
 from .base_template import BasePromptTemplate, PromptStrategy, PromptContext, ProblemStatementType
@@ -79,7 +79,10 @@ class ZeroShotTemplate(BasePromptTemplate):
         return (
             "You are an expert Green Software Engineer specializing in energy-efficient Python code.\n"
             "Your task is to optimize the provided code for **energy efficiency and execution speed** "
-            "while maintaining 100% functional correctness.\n"
+            "while maintaining 100% functional correctness.\n\n"
+            "**IMPORTANT: Do NOT include any thinking, reasoning, or explanation in your response.**\n"
+            "**Do NOT use <think> tags or any internal reasoning blocks.**\n"
+            "**Respond ONLY with the SEARCH/REPLACE blocks as specified below.**\n"
         )
     
     # =========================================================================
@@ -131,6 +134,9 @@ class ZeroShotTemplate(BasePromptTemplate):
         return (
             "You are an expert Green Software Engineer specializing in energy-efficient Python code.\n"
             "You have identified a performance regression in the codebase based on failing tests.\n\n"
+            "**IMPORTANT: Do NOT include any thinking, reasoning, or explanation in your response.**\n"
+            "**Do NOT use <think> tags or any internal reasoning blocks.**\n"
+            "**Respond ONLY with the SEARCH/REPLACE blocks as specified below.**\n\n"
             "### TASK:\n"
             "1. Analyze the retrieved code context to identify the performance bottleneck\n"
             "2. Apply targeted optimizations to improve energy efficiency and execution speed\n"
@@ -148,6 +154,7 @@ class ZeroShotTemplate(BasePromptTemplate):
             "4. **Do NOT import new external libraries** unless already present in the file.\n"
             "5. **Do NOT modify test files** - only optimize the source code.\n"
             "6. Focus on: algorithmic efficiency, reducing redundant computations, memory usage, I/O optimization.\n"
+            "7. **NO EXPLANATIONS** - output ONLY the SEARCH/REPLACE blocks, nothing else.\n"
         )
     
     # =========================================================================
@@ -167,14 +174,20 @@ class ZeroShotTemplate(BasePromptTemplate):
             "5. **Do NOT modify test files** - only optimize the source code.\n"
             "6. Focus on: algorithmic efficiency, reducing redundant computations, "
             "efficient data structures, memory optimization.\n"
+            "7. **NO EXPLANATIONS, NO THINKING** - output ONLY the SEARCH/REPLACE blocks.\n"
         )
     
     def _get_search_replace_format_instruction(self) -> str:
         """
         SEARCH/REPLACE format instructions.
         Enhanced with multiple examples and common mistakes to avoid.
+        DeepSeek-specific: Strong emphasis on no explanations/thinking.
         """
         return '''### OUTPUT FORMAT (CRITICAL - FOLLOW EXACTLY)
+
+**YOUR RESPONSE MUST START DIRECTLY WITH ### path/to/file.py**
+**DO NOT write any introduction, explanation, or thinking before the code blocks.**
+**DO NOT use <think> tags or reasoning blocks.**
 
 Generate your changes using *SEARCH/REPLACE* blocks with this exact format:
 
@@ -243,6 +256,11 @@ def fibonacci(n):
 
 **WRONG - DO NOT DO THIS:**
 
+WRONG (includes thinking/explanation):
+<think>Let me analyze...</think>
+or
+"To optimize this code, I will..."
+
 WRONG (missing file path):
 <<<<<<< SEARCH
 def foo():
@@ -256,26 +274,28 @@ WRONG (wrapped in code blocks):
 <<<<<<< SEARCH
 ```
 
-WRONG (explanation instead of code):
-To optimize this, you should use a dictionary...
-
 ---
 
 **RULES:**
-1. Always specify file path on line before <<<<<<< SEARCH
-2. SEARCH must match original code EXACTLY (including whitespace)
-3. Keep SEARCH blocks SMALL - just enough to locate uniquely
-4. Multiple SEARCH/REPLACE blocks allowed for different changes
-5. Do NOT wrap in ```python``` code blocks
-6. Start your response directly with ### path/to/file.py
+1. **START IMMEDIATELY with ### path/to/file.py** - no preamble
+2. Always specify file path on line before <<<<<<< SEARCH
+3. SEARCH must match original code EXACTLY (including whitespace)
+4. Keep SEARCH blocks SMALL - just enough to locate uniquely
+5. Multiple SEARCH/REPLACE blocks allowed for different changes
+6. Do NOT wrap in ```python``` code blocks
+7. **NO EXPLANATIONS BEFORE OR AFTER** - ONLY SEARCH/REPLACE blocks
 '''
 
     def extract_code_from_response(self, response: str) -> str:
         """
         Extract code from LLM response.
-        Actual parsing is done by PatchEngine, this just returns raw response.
+        For DeepSeek R1: Remove <think>...</think> blocks if present.
+        Actual parsing is done by PatchEngine, this returns cleaned response.
         """
-        return response
+        import re
+        # Remove <think>...</think> blocks (DeepSeek R1 reasoning)
+        cleaned = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
+        return cleaned.strip()
 
 
 # =============================================================================

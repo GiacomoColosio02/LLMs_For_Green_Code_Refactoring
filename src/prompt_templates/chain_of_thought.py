@@ -1,7 +1,7 @@
 """
 Chain-of-Thought (CoT) Prompt Templates for Green Code Optimization.
 
-Version: 2.1 - Fixed prompt to emphasize patch format
+Version: 2.2 - DeepSeek R1 Compatible - Explicit instructions to avoid <think> tags
 """
 
 import re
@@ -22,7 +22,7 @@ class CoTResponse:
 
 def parse_cot_response(response: str) -> CoTResponse:
     """Parse a CoT response into its structured components."""
-    # Remove <think> tags if present (for reasoning models)
+    # Remove <think> tags if present (for reasoning models like DeepSeek R1)
     clean_response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
     
     analysis_section = ""
@@ -71,6 +71,9 @@ def parse_cot_response(response: str) -> CoTResponse:
 
 def extract_patch_from_cot(response: str) -> str:
     """Extract only the patch section from a CoT response."""
+    # First, remove <think>...</think> blocks (DeepSeek R1)
+    response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
+    
     parsed = parse_cot_response(response)
     
     patch = parsed.patch_section if parsed.patch_section else response
@@ -113,17 +116,20 @@ class ChainOfThoughtTemplate(BasePromptTemplate):
         return extract_patch_from_cot(response)
     
     def _get_cot_instructions(self) -> str:
-        """CoT instructions - simplified analysis, strict patch format."""
+        """CoT instructions - simplified analysis, strict patch format. DeepSeek R1 compatible."""
         return '''## RESPONSE FORMAT
 
+**IMPORTANT: Do NOT use <think> tags or internal reasoning blocks.**
+**Write your analysis directly in plain text, then provide the patch.**
+
 **PART 1 - ANALYSIS (3-5 lines only):**
-Start with "Let's think step by step." then briefly explain:
+Start with "ANALYSIS:" then briefly explain:
 - What function/code is inefficient?
 - Why is it slow?
 - What optimization will you apply?
 
 **PART 2 - PATCH:**
-Provide code changes using this EXACT format (no ```python``` blocks!):
+Start with "PATCH:" then provide code changes using this EXACT format (no ```python``` blocks!):
 
 ### path/to/file.py
 <<<<<<< SEARCH
@@ -134,12 +140,12 @@ your optimized replacement
 
 ---
 
-## EXAMPLE
+## EXAMPLE (follow this format exactly)
 
-Let's think step by step.
-
+ANALYSIS:
 The `find_duplicates` function in `utils.py` uses O(n²) nested loops. Using a set gives O(1) lookups, reducing to O(n).
 
+PATCH:
 ### myproject/utils.py
 <<<<<<< SEARCH
 def find_duplicates(items):
@@ -163,12 +169,14 @@ def find_duplicates(items):
 ---
 
 ## CRITICAL RULES
-1. Keep analysis SHORT (3-5 lines max)
-2. File path line (### path/to/file.py) MUST come immediately before <<<<<<< SEARCH
-3. SEARCH block must match original code EXACTLY (copy-paste from TARGET CODE)
-4. Do NOT wrap patch in ```python``` code blocks
-5. Do NOT add external dependencies
-6. Do NOT modify test files
+1. **Do NOT use <think> tags** - write analysis directly as plain text
+2. Keep analysis SHORT (3-5 lines max) - start with "ANALYSIS:"
+3. Start patch section with "PATCH:" 
+4. File path line (### path/to/file.py) MUST come immediately before <<<<<<< SEARCH
+5. SEARCH block must match original code EXACTLY (copy-paste from TARGET CODE)
+6. Do NOT wrap patch in ```python``` code blocks
+7. Do NOT add external dependencies
+8. Do NOT modify test files
 '''
 
     def _generate_oracle_prompt(self, context: PromptContext) -> str:
@@ -176,9 +184,11 @@ def find_duplicates(items):
         
         prompt = f'''You are an expert Green Software Engineer.
 
+**IMPORTANT: Respond directly without using <think> tags or hidden reasoning blocks.**
+
 ## TASK
 Optimize the provided code for energy efficiency and execution speed.
-First analyze briefly, then provide the patch.
+First provide a brief ANALYSIS (3-5 lines), then provide the PATCH.
 
 ## CONTEXT
 **Repository:** `{context.repo_name}`
@@ -197,9 +207,11 @@ First analyze briefly, then provide the patch.
         
         prompt = f'''You are an expert Green Software Engineer.
 
+**IMPORTANT: Respond directly without using <think> tags or hidden reasoning blocks.**
+
 ## TASK
 Find and fix the performance bottleneck in this codebase.
-First analyze briefly to identify the bottleneck, then provide the patch.
+First provide a brief ANALYSIS (3-5 lines) to identify the bottleneck, then provide the PATCH.
 
 ## CONTEXT
 **Repository:** `{context.repo_name}`
