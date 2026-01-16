@@ -507,6 +507,12 @@ class LLMPatchMeasurer:
         
         for idx, item in enumerate(to_measure):
             instance_id = item["instance_id"]
+                        # Skip known problematic instances
+                        
+            if instance_id == "astropy__astropy-13496":
+                logger.warning(f"\n[{idx+1}/{len(to_measure)}] ⏭️ Skipping known problematic instance: {instance_id}")
+                continue
+
             logger.info(f"\n[{idx+1}/{len(to_measure)}] {instance_id}")
             
             start_time = time.time()
