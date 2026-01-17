@@ -1,0 +1,27 @@
+{
+  "start_time": "2026-01-15T23:01:45.747544",
+  "dataset": "/home/giacomo/LLMs_For_Green_Code_Refactoring/data/processed/swe_perf_reduced.json",
+  "prompt_type": "self_collab",
+  "strategies": [
+    "realistic"
+  ],
+  "output_dir": "/home/giacomo/LLMs_For_Green_Code_Refactoring/results/DeepSeek-R1-Distill-7B/sc_realistic",
+  "results": {
+    "realistic": {
+      "total": 131,
+      "skipped": 0,
+      "processed": 131,
+      "success": 3,
+      "failed": 1,
+      "patch_failed": 127,
+      "errors": [
+        {
+          "instance_id": "pydata__xarray-9453",
+          "error": "Request timed out."
+        }
+      ]
+    }
+  },
+  "end_time": "2026-01-16T07:30:35.469282",
+  "total_duration_seconds": 30529.721737384796
+}

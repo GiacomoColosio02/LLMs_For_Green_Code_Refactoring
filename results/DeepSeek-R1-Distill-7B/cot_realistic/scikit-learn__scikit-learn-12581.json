@@ -1,0 +1,26 @@
+{
+  "instance_id": "scikit-learn__scikit-learn-12581",
+  "prompt_type": "cot",
+  "strategy": "realistic",
+  "model": "casperhansen/deepseek-r1-distill-qwen-7b-awq",
+  "timestamp": "2026-01-15T13:50:46.150439",
+  "status": "patch_failed",
+  "error": null,
+  "repo": "scikit-learn/scikit-learn",
+  "context_stats": {
+    "num_files": 6,
+    "total_chars": 34795
+  },
+  "llm_response": "<think>\nOkay, so I'm trying to figure out how to optimize the `find_duplicates` function in the provided code. Let me start by understanding what the function does. \n\nThe current function, `find_duplicates`, takes an iterable `items` and returns a list of items that appear more than once. It does this by using two nested loops: the outer loop iterates over each item, and the inner loop checks every other item to see if it's the same. If it finds a duplicate and the item isn't already in the `duplicates` list, it adds it there. \n\nHmm, that's O(n\u00b2) time complexity because for each item, it's checking all other items. That's not efficient, especially if the input is large. \n\nI remember that using a set can help here because checking membership in a set is O(1). So, the plan is to track which items have been seen as we iterate through them. \n\nLet me outline the steps:\n1. Initialize an empty set called `seen` to keep track of items we've encountered.\n2. Create an empty set called `duplicates` to store items that appear more than once.\n3. Loop through each item in `items`:\n   a. If the item is already in `seen`, add it to `duplicates`.\n   b. Add the item to `seen`.\n4. After processing all items, convert `duplicates` to a list and return it.\n\nThis approach reduces the time complexity from O(n\u00b2) to O(n), which is a significant improvement. \n\nNow, I'll write the code changes. The original function is in `sklearn/decomposition/factorization.py`, but wait, no\u2014the user provided a different code snippet. Oh, no, looking back, the `find_duplicates` function is in `sklearn/utils/estimator_checks.py`. So I'll correct that.\n\nThe SEARCH block needs to match the original code exactly. So I'll replace the entire function with the new version. \n\nI should make sure that the new code doesn't have any unnecessary imports and that it's properly indented. Also, the function name and parameters should remain the same.\n\nSo, the new function will loop through each item, check if it's in `seen`, and if so, add it to `duplicates`. Then, add the item to `seen`. This way, by the end, `duplicates` contains all items that appeared more than once.\n\nI think that's it. This should make the function much more efficient, especially for large datasets.\n</think>\n\nLet's think step by step:\n\n**Analysis:**\nThe `find_duplicates` function in `sklearn/utils/estimator_checks.py` has a nested loop approach which results in O(n\u00b2) time complexity. This is inefficient for large datasets as it repeatedly scans all previous elements for each item.\n\n**Optimization:**\nUsing a set to track seen elements will reduce the time complexity to O(n) since set lookups are average O(1). We can then collect duplicates in a second pass through the unique elements.\n\n**Patch:**\n\n```python\n<<<<<<< SEARCH\ndef find_duplicates(items):\n    duplicates = []\n    for i, item in enumerate(items):\n        for j, other in enumerate(items):\n            if i != j and item == other and item not in duplicates:\n                duplicates.append(item)\n    return duplicates\n=======\ndef find_duplicates(items):\n    seen = set()\n    duplicates = set()\n    for item in items:\n        if item in seen:\n            duplicates.add(item)\n        seen.add(item)\n    return list(duplicates)\n>>>>>>> REPLACE\n```\n\nThis change:\n1. Uses a set (`seen`) to track items as they are encountered\n2. Collects duplicates in a second pass through the unique items\n3. Converts the set to a list before returning while maintaining O(n) complexity",
+  "llm_tokens": 10304,
+  "llm_latency": 43.999674558639526,
+  "patch_content": "<<<<<<< SEARCH\ndef find_duplicates(items):\n    duplicates = []\n    for i, item in enumerate(items):\n        for j, other in enumerate(items):\n            if i != j and item == other and item not in duplicates:\n                duplicates.append(item)\n    return duplicates\n=======\ndef find_duplicates(items):\n    seen = set()\n    duplicates = set()\n    for item in items:\n        if item in seen:\n            duplicates.add(item)\n        seen.add(item)\n    return list(duplicates)\n>>>>>>> REPLACE\nThis change:\n1. Uses a set (`seen`) to track items as they are encountered\n2. Collects duplicates in a second pass through the unique items\n3. Converts the set to a list before returning while maintaining O(n) complexity",
+  "patch_result": {
+    "success": false,
+    "changes_applied": 0,
+    "total_blocks": 0,
+    "method": "none",
+    "modified_files": [],
+    "error": "Could not apply patch with any method"
+  }
+}

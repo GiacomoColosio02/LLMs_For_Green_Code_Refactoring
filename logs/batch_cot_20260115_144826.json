@@ -1,0 +1,22 @@
+{
+  "start_time": "2026-01-15T12:29:18.671124",
+  "dataset": "/home/giacomo/LLMs_For_Green_Code_Refactoring/data/processed/swe_perf_reduced.json",
+  "prompt_type": "cot",
+  "strategies": [
+    "realistic"
+  ],
+  "output_dir": "/home/giacomo/LLMs_For_Green_Code_Refactoring/results/DeepSeek-R1-Distill-7B/cot_realistic",
+  "results": {
+    "realistic": {
+      "total": 131,
+      "skipped": 0,
+      "processed": 131,
+      "success": 3,
+      "failed": 0,
+      "patch_failed": 128,
+      "errors": []
+    }
+  },
+  "end_time": "2026-01-15T14:48:26.498439",
+  "total_duration_seconds": 8347.827314853668
+}

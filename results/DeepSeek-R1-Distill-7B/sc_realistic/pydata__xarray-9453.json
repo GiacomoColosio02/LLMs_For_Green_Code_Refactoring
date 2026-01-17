@@ -1,0 +1,14 @@
+{
+  "instance_id": "pydata__xarray-9453",
+  "prompt_type": "self_collab",
+  "strategy": "realistic",
+  "model": "casperhansen/deepseek-r1-distill-qwen-7b-awq",
+  "timestamp": "2026-01-16T01:28:04.677761",
+  "status": "error",
+  "error": "Request timed out.",
+  "repo": "pydata/xarray",
+  "context_stats": {
+    "num_files": 7,
+    "total_chars": 34962
+  }
+}

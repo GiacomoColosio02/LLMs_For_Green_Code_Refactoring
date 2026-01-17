@@ -1,0 +1,22 @@
+{
+  "start_time": "2026-01-15T00:38:50.971140",
+  "dataset": "/home/giacomo/LLMs_For_Green_Code_Refactoring/data/processed/swe_perf_reduced.json",
+  "prompt_type": "zero_shot",
+  "strategies": [
+    "oracle"
+  ],
+  "output_dir": "/home/giacomo/LLMs_For_Green_Code_Refactoring/results/DeepSeek-R1-Distill-7B/zs_oracle",
+  "results": {
+    "oracle": {
+      "total": 131,
+      "skipped": 0,
+      "processed": 131,
+      "success": 37,
+      "failed": 0,
+      "patch_failed": 94,
+      "errors": []
+    }
+  },
+  "end_time": "2026-01-15T05:14:37.538198",
+  "total_duration_seconds": 16546.567057609558
+}
