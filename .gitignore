@@ -72,4 +72,4 @@ models/
 # Log files
 *.log
 nohup.out
-measurement_full.log
+measurement_full.logenergibridge_temp_*.csv
