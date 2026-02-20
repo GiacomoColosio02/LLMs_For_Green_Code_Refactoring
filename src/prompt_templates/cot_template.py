@@ -1,7 +1,7 @@
 """
 Chain-of-Thought (CoT) Prompt Templates for Green Code Optimization.
 
-Version: 2.2 - DeepSeek R1 Compatible - Explicit instructions to avoid <think> tags
+Version: 3.0 - Green Software Oriented
 """
 
 import re
@@ -116,17 +116,17 @@ class ChainOfThoughtTemplate(BasePromptTemplate):
         return extract_patch_from_cot(response)
     
     def _get_cot_instructions(self) -> str:
-        """CoT instructions - simplified analysis, strict patch format. DeepSeek R1 compatible."""
+        """CoT instructions - green-oriented analysis, strict patch format. DeepSeek R1 compatible."""
         return '''## RESPONSE FORMAT
 
 **IMPORTANT: Do NOT use <think> tags or internal reasoning blocks.**
 **Write your analysis directly in plain text, then provide the patch.**
 
-**PART 1 - ANALYSIS (3-5 lines only):**
+**PART 1 - ENERGY ANALYSIS (3-5 lines only):**
 Start with "ANALYSIS:" then briefly explain:
-- What function/code is inefficient?
-- Why is it slow?
-- What optimization will you apply?
+- What code pattern is energy-intensive? (e.g., redundant computations, inefficient algorithm, excessive memory allocation)
+- Why does it consume unnecessary energy? (e.g., O(n²) complexity causes excessive CPU cycles)
+- What green optimization will you apply to reduce energy consumption?
 
 **PART 2 - PATCH:**
 Start with "PATCH:" then provide code changes using this EXACT format (no ```python``` blocks!):
@@ -135,7 +135,7 @@ Start with "PATCH:" then provide code changes using this EXACT format (no ```pyt
 <<<<<<< SEARCH
 exact original code to find
 =======
-your optimized replacement
+your energy-efficient replacement
 >>>>>>> REPLACE
 
 ---
@@ -143,7 +143,7 @@ your optimized replacement
 ## EXAMPLE (follow this format exactly)
 
 ANALYSIS:
-The `find_duplicates` function in `utils.py` uses O(n²) nested loops. Using a set gives O(1) lookups, reducing to O(n).
+The `find_duplicates` function in `utils.py` uses O(n²) nested loops, causing excessive CPU cycles and energy waste. Using a set gives O(1) lookups, reducing time complexity to O(n) and significantly lowering CPU energy consumption.
 
 PATCH:
 ### myproject/utils.py
@@ -171,28 +171,33 @@ def find_duplicates(items):
 ## CRITICAL RULES
 1. **Do NOT use <think> tags** - write analysis directly as plain text
 2. Keep analysis SHORT (3-5 lines max) - start with "ANALYSIS:"
-3. Start patch section with "PATCH:" 
-4. File path line (### path/to/file.py) MUST come immediately before <<<<<<< SEARCH
-5. SEARCH block must match original code EXACTLY (copy-paste from TARGET CODE)
-6. Do NOT wrap patch in ```python``` code blocks
-7. Do NOT add external dependencies
-8. Do NOT modify test files
+3. Focus the analysis on **energy impact**: why the code wastes energy and how your change reduces it
+4. Start patch section with "PATCH:" 
+5. File path line (### path/to/file.py) MUST come immediately before <<<<<<< SEARCH
+6. SEARCH block must match original code EXACTLY (copy-paste from TARGET CODE)
+7. Do NOT wrap patch in ```python``` code blocks
+8. Do NOT add external dependencies
+9. Do NOT modify test files
 '''
 
     def _generate_oracle_prompt(self, context: PromptContext) -> str:
         code_section = self._format_code_files(context.code_files)
         
-        prompt = f'''You are an expert Green Software Engineer.
+        prompt = f'''You are an expert Green Software Engineer focused on reducing code energy consumption and environmental impact.
 
 **IMPORTANT: Respond directly without using <think> tags or hidden reasoning blocks.**
 
+The optimized code will be measured with energy profiling tools that track CPU energy, GPU energy, total system power, and carbon emissions. Your changes should minimize these metrics.
+
 ## TASK
-Optimize the provided code for energy efficiency and execution speed.
-First provide a brief ANALYSIS (3-5 lines), then provide the PATCH.
+Analyze the provided code to identify energy-intensive patterns, then provide an optimized patch that reduces energy consumption while maintaining correctness.
+First provide a brief ANALYSIS of the energy inefficiency (3-5 lines), then provide the PATCH.
 
 ## CONTEXT
 **Repository:** `{context.repo_name}`
 **Problem:** {context.problem_description}
+
+{self._get_green_software_context()}
 
 ## TARGET CODE
 {code_section}
@@ -205,13 +210,15 @@ First provide a brief ANALYSIS (3-5 lines), then provide the PATCH.
         code_section = self._format_code_files(context.code_files)
         repo_map_section = f"## REPO STRUCTURE\n```\n{context.repo_map}\n```" if context.repo_map else ""
         
-        prompt = f'''You are an expert Green Software Engineer.
+        prompt = f'''You are an expert Green Software Engineer focused on reducing code energy consumption and environmental impact.
 
 **IMPORTANT: Respond directly without using <think> tags or hidden reasoning blocks.**
 
+The optimized code will be measured with energy profiling tools that track CPU energy, GPU energy, total system power, and carbon emissions. Your changes should minimize these metrics.
+
 ## TASK
-Find and fix the performance bottleneck in this codebase.
-First provide a brief ANALYSIS (3-5 lines) to identify the bottleneck, then provide the PATCH.
+Find and fix the energy-intensive code pattern in this codebase.
+First provide a brief ANALYSIS (3-5 lines) identifying which code wastes the most energy and why, then provide the PATCH.
 
 ## CONTEXT
 **Repository:** `{context.repo_name}`
@@ -219,7 +226,7 @@ First provide a brief ANALYSIS (3-5 lines) to identify the bottleneck, then prov
 
 {repo_map_section}
 
-## RETRIEVED CODE (some files may be noise - identify the real bottleneck)
+## RETRIEVED CODE (some files may be noise - identify the energy-intensive bottleneck)
 {code_section}
 
 {self._get_cot_instructions()}
@@ -247,7 +254,10 @@ class CoTRealisticTemplate(ChainOfThoughtTemplate):
         return self._generate_realistic_prompt(context)
 
 
+# Backward compatibility alias
+CoTTemplate = ChainOfThoughtTemplate
+
 __all__ = [
-    'ChainOfThoughtTemplate', 'CoTOracleTemplate', 'CoTRealisticTemplate',
+    'ChainOfThoughtTemplate', 'CoTTemplate', 'CoTOracleTemplate', 'CoTRealisticTemplate',
     'CoTResponse', 'parse_cot_response', 'extract_patch_from_cot'
 ]

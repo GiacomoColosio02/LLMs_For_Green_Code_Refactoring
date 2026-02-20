@@ -1,6 +1,8 @@
 """
 Base classes for prompt templates.
 Defines the standard interface and context structure for all prompting strategies.
+
+Version: 3.0 - Green Software Oriented
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -194,16 +196,40 @@ class BasePromptTemplate(ABC):
         return self.extract_code_from_response(response)
     
     # =========================================================================
-    # SHARED PROMPT COMPONENTS
+    # SHARED PROMPT COMPONENTS - GREEN SOFTWARE ORIENTED
     # =========================================================================
     
     def _get_sweperf_header(self) -> str:
-        """Standard SWE-perf premise."""
+        """Standard SWE-perf premise with green software focus."""
         return (
             "You will be provided with a partial code base and objective functions. "
-            "You need to improve the objective function's efficiency and execution speed "
-            "by editing the code base."
+            "You need to reduce the code's energy consumption and environmental impact "
+            "by editing the code base, while maintaining functional correctness."
         )
+    
+    def _get_green_software_context(self) -> str:
+        """
+        Green software optimization context.
+        Explains what will be measured and what principles to follow.
+        """
+        return """### Green Software Engineering Context
+
+Your optimized code will be measured using energy profiling tools that track:
+- **CPU energy consumption** (Joules) via hardware energy counters
+- **GPU energy consumption** (Joules) via GPU power monitoring
+- **Total system energy** (Joules) measured at the power outlet
+- **Carbon emissions** (gCO2e) calculated from energy × grid carbon intensity
+- **Execution time** (seconds) as a proxy for energy usage
+
+### Green Optimization Principles
+To reduce energy consumption, apply these strategies:
+1. **Reduce CPU cycles**: Use efficient algorithms (lower time complexity), avoid redundant computations, leverage caching and memoization
+2. **Minimize memory allocations**: Reuse objects, use generators instead of lists where possible, avoid unnecessary copies
+3. **Optimize data structures**: Choose structures with lower overhead for the access pattern (e.g., sets for lookups, deques for queues)
+4. **Reduce I/O operations**: Batch reads/writes, avoid repeated file/network access
+5. **Avoid unnecessary work**: Short-circuit evaluations, early returns, skip redundant checks
+6. **Use built-in optimizations**: Prefer Python built-ins and standard library functions (implemented in C) over manual Python loops
+"""
     
     def _get_search_replace_format_instruction(self) -> str:
         """
@@ -212,7 +238,7 @@ class BasePromptTemplate(ABC):
         This is the standard format that the PatchEngine expects.
         """
         return """
-Please improve its efficiency and execution speed by generating *SEARCH/REPLACE* edits.
+Please reduce the code's energy consumption by generating *SEARCH/REPLACE* edits.
 
 Every *SEARCH/REPLACE* edit must use this format:
 1. The file path
@@ -237,14 +263,3 @@ import math
 from flask import Flask
 >>>>>>> REPLACE
 """
-    
-    def _get_green_software_context(self) -> str:
-        """Context about green software optimization goals."""
-        return (
-            "### Green Software Optimization Goals:\n"
-            "- Reduce CPU cycles and execution time\n"
-            "- Minimize memory allocations and peak usage\n"
-            "- Optimize I/O operations\n"
-            "- Use efficient algorithms and data structures\n"
-            "- Avoid redundant computations\n"
-        )

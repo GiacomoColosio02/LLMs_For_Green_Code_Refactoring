@@ -1,11 +1,11 @@
 """
-Zero-Shot Prompting Strategy (Unified).
+Zero-Shot Prompting Strategy (Unified) - Green Software Oriented.
 Handles both ORACLE and REALISTIC settings via PromptContext.
 
 ORACLE: LLM receives exact target files (gold context) - pure optimization task.
 REALISTIC: LLM receives retrieved files + repo map - must identify bottleneck first.
 
-Version: 2.1 - DeepSeek R1 Compatible - Added explicit instructions to avoid <think> tags
+Version: 3.0 - Green Software Oriented
 """
 from typing import Union, List, Dict
 from .base_template import BasePromptTemplate, PromptStrategy, PromptContext, ProblemStatementType
@@ -39,23 +39,26 @@ class ZeroShotTemplate(BasePromptTemplate):
             return self._generate_oracle_prompt(context)
     
     # =========================================================================
-    # ORACLE PROMPT (Gold Context - Direct Optimization)
+    # ORACLE PROMPT (Gold Context - Direct Green Optimization)
     # =========================================================================
     
     def _generate_oracle_prompt(self, context: PromptContext) -> str:
         """
         Generate ORACLE prompt: LLM knows exactly which files to modify.
-        Focus on pure optimization without retrieval noise.
+        Focus on reducing energy consumption with known target files.
         """
         sections = []
         
         # 1. Role & Task
         sections.append(self._get_oracle_header())
         
-        # 2. Critical Rules
+        # 2. Green Software Context
+        sections.append(self._get_green_software_context())
+        
+        # 3. Critical Rules
         sections.append(self._get_optimization_rules())
         
-        # 3. Problem Description
+        # 4. Problem Description
         if context.repo_name:
             sections.append(f"### Repository: `{context.repo_name}`\n")
         
@@ -63,64 +66,9 @@ class ZeroShotTemplate(BasePromptTemplate):
         sections.append(context.problem_description)
         sections.append("")
         
-        # 4. Target Code (Gold Files)
+        # 5. Target Code (Gold Files)
         sections.append("### Target Code Files:")
-        sections.append("The following files contain the code that needs optimization.\n")
-        sections.append(context.get_formatted_code())
-        sections.append("")
-        
-        # 5. Output Format
-        sections.append(self._get_search_replace_format_instruction())
-        
-        return "\n".join(sections)
-    
-    def _get_oracle_header(self) -> str:
-        """Header for ORACLE setting."""
-        return (
-            "You are an expert Green Software Engineer specializing in energy-efficient Python code.\n"
-            "Your task is to optimize the provided code for **energy efficiency and execution speed** "
-            "while maintaining 100% functional correctness.\n\n"
-            "**IMPORTANT: Do NOT include any thinking, reasoning, or explanation in your response.**\n"
-            "**Do NOT use <think> tags or any internal reasoning blocks.**\n"
-            "**Respond ONLY with the SEARCH/REPLACE blocks as specified below.**\n"
-        )
-    
-    # =========================================================================
-    # REALISTIC PROMPT (Retrieved Context - Analysis + Optimization)
-    # =========================================================================
-    
-    def _generate_realistic_prompt(self, context: PromptContext) -> str:
-        """
-        Generate REALISTIC prompt: LLM must analyze retrieved files to find bottleneck.
-        Includes repo map and warning about noise in retrieved files.
-        """
-        sections = []
-        
-        # 1. Role & Task
-        sections.append(self._get_realistic_header())
-        
-        # 2. Critical Rules (with noise warning)
-        sections.append(self._get_realistic_rules())
-        
-        # 3. Repository Structure (if available)
-        if context.repo_map:
-            sections.append("### Repository Structure:")
-            sections.append("```")
-            sections.append(context.repo_map)
-            sections.append("```")
-            sections.append("")
-        
-        # 4. Problem Description / Failing Tests
-        sections.append("### Performance Issue:")
-        sections.append(context.problem_description)
-        sections.append("")
-        
-        # 5. Retrieved Code Context
-        sections.append("### Retrieved Code Context:")
-        sections.append(
-            "The following files were retrieved based on the test code. "
-            "**Note:** Some files may be irrelevant - analyze carefully.\n"
-        )
+        sections.append("The following files contain the code that needs to be optimized for lower energy consumption.\n")
         sections.append(context.get_formatted_code())
         sections.append("")
         
@@ -129,17 +77,79 @@ class ZeroShotTemplate(BasePromptTemplate):
         
         return "\n".join(sections)
     
-    def _get_realistic_header(self) -> str:
-        """Header for REALISTIC setting."""
+    def _get_oracle_header(self) -> str:
+        """Header for ORACLE setting - green software focused."""
         return (
             "You are an expert Green Software Engineer specializing in energy-efficient Python code.\n"
-            "You have identified a performance regression in the codebase based on failing tests.\n\n"
+            "Your primary goal is to **reduce the energy consumption and environmental impact** of the provided code "
+            "while maintaining 100% functional correctness.\n\n"
+            "The optimized code will be measured with energy profiling tools that track CPU energy, GPU energy, "
+            "total system power, and carbon emissions. Your changes should minimize these metrics.\n\n"
+            "**IMPORTANT: Do NOT include any thinking, reasoning, or explanation in your response.**\n"
+            "**Do NOT use <think> tags or any internal reasoning blocks.**\n"
+            "**Respond ONLY with the SEARCH/REPLACE blocks as specified below.**\n"
+        )
+    
+    # =========================================================================
+    # REALISTIC PROMPT (Retrieved Context - Analysis + Green Optimization)
+    # =========================================================================
+    
+    def _generate_realistic_prompt(self, context: PromptContext) -> str:
+        """
+        Generate REALISTIC prompt: LLM must analyze retrieved files to find bottleneck.
+        Focus on identifying and reducing energy-intensive code patterns.
+        """
+        sections = []
+        
+        # 1. Role & Task
+        sections.append(self._get_realistic_header())
+        
+        # 2. Green Software Context
+        sections.append(self._get_green_software_context())
+        
+        # 3. Critical Rules (with noise warning)
+        sections.append(self._get_realistic_rules())
+        
+        # 4. Repository Structure (if available)
+        if context.repo_map:
+            sections.append("### Repository Structure:")
+            sections.append("```")
+            sections.append(context.repo_map)
+            sections.append("```")
+            sections.append("")
+        
+        # 5. Problem Description
+        sections.append("### Performance Issue:")
+        sections.append(context.problem_description)
+        sections.append("")
+        
+        # 6. Retrieved Code Context
+        sections.append("### Retrieved Code Context:")
+        sections.append(
+            "The following files were retrieved based on the test code. "
+            "**Note:** Some files may be irrelevant - identify the energy-intensive code patterns.\n"
+        )
+        sections.append(context.get_formatted_code())
+        sections.append("")
+        
+        # 7. Output Format
+        sections.append(self._get_search_replace_format_instruction())
+        
+        return "\n".join(sections)
+    
+    def _get_realistic_header(self) -> str:
+        """Header for REALISTIC setting - green software focused."""
+        return (
+            "You are an expert Green Software Engineer specializing in energy-efficient Python code.\n"
+            "You have identified an energy inefficiency in the codebase based on energy profiling results.\n\n"
+            "The optimized code will be measured with energy profiling tools that track CPU energy, GPU energy, "
+            "total system power, and carbon emissions. Your changes should minimize these metrics.\n\n"
             "**IMPORTANT: Do NOT include any thinking, reasoning, or explanation in your response.**\n"
             "**Do NOT use <think> tags or any internal reasoning blocks.**\n"
             "**Respond ONLY with the SEARCH/REPLACE blocks as specified below.**\n\n"
             "### TASK:\n"
-            "1. Analyze the retrieved code context to identify the performance bottleneck\n"
-            "2. Apply targeted optimizations to improve energy efficiency and execution speed\n"
+            "1. Analyze the retrieved code context to identify energy-intensive code patterns\n"
+            "2. Apply targeted optimizations to reduce energy consumption and carbon emissions\n"
         )
     
     def _get_realistic_rules(self) -> str:
@@ -147,13 +157,14 @@ class ZeroShotTemplate(BasePromptTemplate):
         return (
             "### CRITICAL RULES:\n"
             "1. **Analyze Retrieved Files Carefully:** The context contains files found by code search. "
-            "Some files may be NOISE - focus only on code relevant to the performance issue.\n"
+            "Some files may be NOISE - focus only on code relevant to the energy inefficiency.\n"
             "2. **Output ONLY the code patch** using SEARCH/REPLACE format (see below).\n"
             "3. **Use SMALL, UNIQUE SEARCH blocks** - include only enough lines to locate the code uniquely. "
             "Do NOT copy entire functions or files.\n"
             "4. **Do NOT import new external libraries** unless already present in the file.\n"
             "5. **Do NOT modify test files** - only optimize the source code.\n"
-            "6. Focus on: algorithmic efficiency, reducing redundant computations, memory usage, I/O optimization.\n"
+            "6. Focus on: reducing CPU cycles, minimizing memory allocations, avoiding redundant computations, "
+            "optimizing I/O, using energy-efficient algorithms and data structures.\n"
             "7. **NO EXPLANATIONS** - output ONLY the SEARCH/REPLACE blocks, nothing else.\n"
         )
     
@@ -162,7 +173,7 @@ class ZeroShotTemplate(BasePromptTemplate):
     # =========================================================================
     
     def _get_optimization_rules(self) -> str:
-        """Optimization rules for ORACLE setting."""
+        """Optimization rules for ORACLE setting - green software focused."""
         return (
             "### CRITICAL RULES:\n"
             "1. **Output ONLY the code patch** using SEARCH/REPLACE format (see below).\n"
@@ -172,8 +183,8 @@ class ZeroShotTemplate(BasePromptTemplate):
             "unless they are ALREADY imported in the file.\n"
             "4. **Do NOT change function signatures** - maintain API compatibility.\n"
             "5. **Do NOT modify test files** - only optimize the source code.\n"
-            "6. Focus on: algorithmic efficiency, reducing redundant computations, "
-            "efficient data structures, memory optimization.\n"
+            "6. Focus on reducing energy consumption: fewer CPU cycles, less memory allocation, "
+            "efficient data structures, reduced I/O, avoiding redundant computations.\n"
             "7. **NO EXPLANATIONS, NO THINKING** - output ONLY the SEARCH/REPLACE blocks.\n"
         )
     
@@ -189,20 +200,20 @@ class ZeroShotTemplate(BasePromptTemplate):
 **DO NOT write any introduction, explanation, or thinking before the code blocks.**
 **DO NOT use <think> tags or reasoning blocks.**
 
-Generate your changes using *SEARCH/REPLACE* blocks with this exact format:
+Generate your energy-efficient changes using *SEARCH/REPLACE* blocks with this exact format:
 
 ### path/to/file.py
 <<<<<<< SEARCH
 [exact lines from the original file to find]
 =======
-[your optimized replacement code]
+[your energy-efficient replacement code]
 >>>>>>> REPLACE
 
 ---
 
 **CORRECT EXAMPLES:**
 
-**Example 1: List comprehension optimization**
+**Example 1: Reduce CPU cycles with list comprehension**
 
 ### myproject/utils.py
 <<<<<<< SEARCH
@@ -216,7 +227,7 @@ def process_items(items):
     return [transform(item) for item in items]
 >>>>>>> REPLACE
 
-**Example 2: Adding caching**
+**Example 2: Reduce redundant computation with caching**
 
 ### myproject/compute.py
 <<<<<<< SEARCH

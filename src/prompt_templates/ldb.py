@@ -1,7 +1,7 @@
 """
 LDB (LLM Debugger) Prompting Strategy for Green Code Optimization.
 
-Based on: "Teaching Large Language Models to Self-Debug"
+Based on: "LDB: A Large Language Model Debugger via Verifying Runtime Execution Step by Step"
 https://arxiv.org/abs/2304.05128
 
 This strategy implements iterative refinement with feedback:
@@ -10,10 +10,7 @@ This strategy implements iterative refinement with feedback:
 3. REFINE: If errors, provide feedback and regenerate
 4. Repeat until success or max iterations
 
-The key insight is that LLMs can fix their own mistakes when given
-specific error feedback from the validation step.
-
-Version: 2.2 - DeepSeek R1 Compatible - Explicit instructions to avoid <think> tags
+Version: 3.0 - Green Software Oriented
 """
 
 import re
@@ -64,7 +61,7 @@ class LDBTemplate(BasePromptTemplate):
     LDB (LLM Debugger) template implementing iterative refinement.
     
     This is a multi-turn strategy where:
-    1. First turn: Generate initial patch
+    1. First turn: Generate initial energy-efficient patch
     2. Subsequent turns: Refine based on feedback
     
     The runner should:
@@ -156,19 +153,20 @@ class LDBTemplate(BasePromptTemplate):
         )
     
     # =========================================================================
-    # SYSTEM PROMPT
+    # SYSTEM PROMPT - GREEN SOFTWARE ORIENTED
     # =========================================================================
     
     def _get_system_prompt(self) -> str:
         return """You are an expert Green Software Engineer with debugging capabilities.
-Your goal is to optimize code for energy efficiency while maintaining correctness.
+Your goal is to reduce code energy consumption and environmental impact while maintaining correctness.
+The optimized code will be measured with energy profiling tools tracking CPU energy, GPU energy, system power, and carbon emissions.
 When you receive error feedback, analyze it carefully and fix your patch.
 
 **IMPORTANT: Do NOT use <think> tags or internal reasoning blocks.**
 **Respond directly with the patch code only.**"""
     
     # =========================================================================
-    # INITIAL PROMPT (matches ZS format for consistency, DeepSeek compatible)
+    # INITIAL PROMPT - GREEN SOFTWARE ORIENTED
     # =========================================================================
     
     def _build_initial_prompt(
@@ -177,14 +175,14 @@ When you receive error feedback, analyze it carefully and fix your patch.
         code_section: str,
         is_oracle: bool
     ) -> str:
-        """Build the initial generation prompt."""
+        """Build the initial generation prompt with green software focus."""
         
         repo_info = f"**Repository:** `{context.repo_name}`\n" if context.repo_name else ""
         
         if is_oracle:
-            task_desc = "Optimize the following code for energy efficiency and execution speed."
+            task_desc = "Optimize the following code to reduce its energy consumption and environmental impact."
         else:
-            task_desc = "Find and fix performance bottlenecks in the retrieved code (some files may be noise)."
+            task_desc = "Find and fix energy-intensive code patterns in the retrieved code (some files may be noise)."
             if context.repo_map:
                 repo_info += f"\n**Repository Structure:**\n```\n{context.repo_map}\n```\n"
         
@@ -195,7 +193,10 @@ When you receive error feedback, analyze it carefully and fix your patch.
 
 ## TASK
 {task_desc}
+Your changes will be measured with energy profiling tools (CPU energy, GPU energy, system power, carbon emissions).
 If your patch has errors, you will receive feedback to fix them.
+
+{self._get_green_software_context()}
 
 ## CONTEXT
 {repo_info}**Problem:** {context.problem_description}
@@ -209,7 +210,7 @@ If your patch has errors, you will receive feedback to fix them.
 <<<<<<< SEARCH
 [exact original code - copy from CODE section above]
 =======
-[your optimized replacement]
+[your energy-efficient replacement]
 >>>>>>> REPLACE
 
 ## RULES
@@ -222,10 +223,10 @@ If your patch has errors, you will receive feedback to fix them.
 7. Do NOT modify test files
 8. **Do NOT use <think> tags** - output ONLY the patch
 
-Generate your optimization patch (start directly with ### path/to/file.py):"""
+Generate your energy-efficient patch (start directly with ### path/to/file.py):"""
     
     # =========================================================================
-    # REFINEMENT PROMPT (concise error-specific guidance, DeepSeek compatible)
+    # REFINEMENT PROMPT
     # =========================================================================
     
     def _build_refinement_prompt(
@@ -273,7 +274,7 @@ Generate your optimization patch (start directly with ### path/to/file.py):"""
 ### Original Code (COPY EXACTLY for SEARCH blocks):
 {code_section}
 
-Generate your CORRECTED patch (start directly with ### path/to/file.py, no <think> tags):"""
+Generate your CORRECTED energy-efficient patch (start directly with ### path/to/file.py, no <think> tags):"""
     
     def _format_feedback(self, feedback: LDBFeedback) -> str:
         """Format feedback into a clear message for the LLM."""
@@ -318,7 +319,8 @@ Generate your CORRECTED patch (start directly with ### path/to/file.py, no <thin
 
             LDBFeedbackType.TEST_FAILURE: """**Fix:** Tests failing - optimization broke functionality.
 - Ensure behavior is preserved exactly
-- Check edge cases (empty inputs, None values)"""
+- Check edge cases (empty inputs, None values)
+- Energy optimization must not change functional behavior"""
         }
         
         return hints.get(feedback_type, "**Fix:** Review the error and correct your patch.")

@@ -5,14 +5,11 @@ Based on: "Unleashing the Emergent Cognitive Synergy in Large Language Models"
 https://arxiv.org/abs/2310.01234
 
 This strategy simulates multiple expert roles collaborating:
-1. ANALYST: Identifies performance bottlenecks and inefficiencies
-2. OPTIMIZER: Proposes concrete code optimizations
+1. ANALYST: Identifies energy-intensive code patterns and inefficiencies
+2. OPTIMIZER: Proposes concrete energy-reducing optimizations
 3. REVIEWER: Validates and refines the final patch
 
-Each role builds on the previous role's output, creating a collaborative
-refinement process within a single LLM.
-
-Version: 2.2 - DeepSeek R1 Compatible - Explicit instructions to avoid <think> tags
+Version: 3.0 - Green Software Oriented
 """
 
 import re
@@ -31,7 +28,7 @@ from .base_template import (
 class SelfCollabResponse:
     """Parsed Self-Collaboration response."""
     raw_responses: List[str]          # All role responses
-    analyst_output: str               # Bottleneck analysis
+    analyst_output: str               # Energy analysis
     optimizer_output: str             # Proposed optimizations
     reviewer_output: str              # Final validated patch
     final_patch: str                  # Extracted patch
@@ -40,7 +37,8 @@ class SelfCollabResponse:
 
 class SelfCollaborationTemplate(BasePromptTemplate):
     """
-    Self-Collaboration template implementing multi-expert collaboration.
+    Self-Collaboration template implementing multi-expert collaboration
+    for green software optimization.
     
     Returns a list of message sequences for multi-turn conversation.
     The runner should call the LLM 3 times, passing previous responses.
@@ -81,17 +79,17 @@ class SelfCollaborationTemplate(BasePromptTemplate):
                 {
                     "role": "ANALYST",
                     "prompt": self._get_analyst_prompt(is_oracle),
-                    "description": "Identify performance bottlenecks"
+                    "description": "Identify energy-intensive code patterns"
                 },
                 {
                     "role": "OPTIMIZER",
                     "prompt": self._get_optimizer_prompt(),
-                    "description": "Propose optimizations"
+                    "description": "Propose energy-reducing optimizations"
                 },
                 {
                     "role": "REVIEWER",
                     "prompt": self._get_reviewer_prompt(),
-                    "description": "Validate and produce final patch"
+                    "description": "Validate and produce final energy-efficient patch"
                 }
             ],
             "code_context": code_section,
@@ -144,12 +142,18 @@ class SelfCollaborationTemplate(BasePromptTemplate):
         return re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL).strip()
     
     # =========================================================================
-    # SYSTEM PROMPT
+    # SYSTEM PROMPT - GREEN SOFTWARE ORIENTED
     # =========================================================================
     
     def _get_system_prompt(self) -> str:
-        return """You are participating in a collaborative code optimization session.
-Multiple expert roles will work together to optimize code for energy efficiency.
+        return """You are participating in a collaborative green code optimization session.
+Multiple expert roles will work together to reduce the code's energy consumption and environmental impact.
+
+The optimized code will be measured with energy profiling tools that track:
+- CPU energy consumption (Joules)
+- GPU energy consumption (Joules)
+- Total system power (Watts)
+- Carbon emissions (gCO2e)
 
 You will be assigned a specific role (Analyst, Optimizer, or Reviewer).
 Focus ONLY on your assigned role's responsibilities.
@@ -158,10 +162,10 @@ Build upon the work of previous roles when applicable.
 **IMPORTANT: Do NOT use <think> tags or internal reasoning blocks.**
 **Respond directly with your analysis or output.**
 
-Goal: Produce an energy-efficient code patch that maintains correctness."""
+Goal: Produce a code patch that minimizes energy consumption and carbon emissions while maintaining correctness."""
     
     # =========================================================================
-    # INITIAL CONTEXT
+    # INITIAL CONTEXT - GREEN SOFTWARE ORIENTED
     # =========================================================================
     
     def _get_initial_context(
@@ -175,13 +179,13 @@ Goal: Produce an energy-efficient code patch that maintains correctness."""
         repo_info = f"**Repository:** `{context.repo_name}`" if context.repo_name else ""
         
         if is_oracle:
-            task_desc = "Optimize the following code for energy efficiency and execution speed."
+            task_desc = "Optimize the following code to reduce its energy consumption and environmental impact."
         else:
-            task_desc = "Find and fix performance bottlenecks in the retrieved code."
+            task_desc = "Find and fix energy-intensive code patterns in the retrieved code."
             if context.repo_map:
                 repo_info += f"\n\n**Repository Structure:**\n```\n{context.repo_map}\n```"
         
-        return f"""## OPTIMIZATION TASK
+        return f"""## GREEN OPTIMIZATION TASK
 
 {repo_info}
 
@@ -189,13 +193,15 @@ Goal: Produce an energy-efficient code patch that maintains correctness."""
 
 **Objective:** {task_desc}
 
+**Measurement:** The optimized code will be profiled for CPU energy, GPU energy, total system power, and carbon emissions. Minimize these metrics.
+
 ## CODE CONTEXT
 
 {code_section}
 """
     
     # =========================================================================
-    # TURN 1: ANALYST (shortened, DeepSeek compatible)
+    # TURN 1: ANALYST - GREEN SOFTWARE ORIENTED
     # =========================================================================
     
     def _get_analyst_prompt(self, is_oracle: bool) -> str:
@@ -203,32 +209,32 @@ Goal: Produce an energy-efficient code patch that maintains correctness."""
 
 """
         if is_oracle:
-            return no_think_warning + """## YOUR ROLE: ANALYST
+            return no_think_warning + """## YOUR ROLE: ENERGY ANALYST
 
-Identify the performance bottleneck in the code.
+Identify the energy-intensive code pattern in the code.
 
 **In 5-7 lines, answer:**
-1. Which function/method is the bottleneck? (give exact name and file)
-2. Why is it slow? (O(n²), redundant computation, memory issues, etc.)
-3. What type of optimization would help?
+1. Which function/method is the most energy-intensive? (give exact name and file)
+2. Why does it waste energy? (excessive CPU cycles from O(n²), redundant computations, unnecessary memory allocations, etc.)
+3. What type of green optimization would reduce its energy consumption?
 
 Be specific and concise. Do NOT provide code - the Optimizer will do that.
 
-Your analysis (respond directly, no <think> tags):"""
+Your energy analysis (respond directly, no <think> tags):"""
         else:
-            return no_think_warning + """## YOUR ROLE: ANALYST
+            return no_think_warning + """## YOUR ROLE: ENERGY ANALYST
 
-Identify the performance bottleneck in the retrieved code (some files may be noise).
+Identify the energy-intensive code pattern in the retrieved code (some files may be noise).
 
 **In 5-7 lines, answer:**
-1. Which file(s) are relevant to the performance issue?
-2. Which function/method is the bottleneck? (exact name)
-3. Why is it slow?
-4. What optimization would help?
+1. Which file(s) are relevant to the energy inefficiency?
+2. Which function/method is the most energy-intensive? (exact name)
+3. Why does it waste energy? (excessive CPU cycles, redundant computation, unnecessary allocations, etc.)
+4. What green optimization would reduce its energy consumption?
 
 Be specific and concise. Do NOT provide code.
 
-Your analysis (respond directly, no <think> tags):"""
+Your energy analysis (respond directly, no <think> tags):"""
     
     def _build_analyst_turn(
         self, 
@@ -244,24 +250,24 @@ Your analysis (respond directly, no <think> tags):"""
 {role_prompt}"""
     
     # =========================================================================
-    # TURN 2: OPTIMIZER (shortened, DeepSeek compatible)
+    # TURN 2: OPTIMIZER - GREEN SOFTWARE ORIENTED
     # =========================================================================
     
     def _get_optimizer_prompt(self) -> str:
         return """**IMPORTANT: Do NOT use <think> tags. Write your strategy directly.**
 
-## YOUR ROLE: OPTIMIZER
+## YOUR ROLE: GREEN OPTIMIZER
 
-Based on the Analyst's findings, propose a concrete optimization.
+Based on the Energy Analyst's findings, propose a concrete optimization to reduce energy consumption.
 
 **In 5-7 lines, describe:**
-1. What specific change to make (e.g., "replace nested loop with set lookup")
-2. Why this improves performance (e.g., "O(n²) → O(n)")
-3. Any edge cases to consider
+1. What specific change to make (e.g., "replace nested loop with set lookup to reduce CPU cycles")
+2. Why this reduces energy consumption (e.g., "O(n²) → O(n) means fewer CPU cycles, lower CPU energy")
+3. Any edge cases to consider to maintain correctness
 
 Be concrete about the transformation. Do NOT write the final patch - the Reviewer will do that.
 
-Your optimization strategy (respond directly, no <think> tags):"""
+Your green optimization strategy (respond directly, no <think> tags):"""
     
     def _build_optimizer_turn(
         self, 
@@ -269,7 +275,7 @@ Your optimization strategy (respond directly, no <think> tags):"""
         code_section: str,
         analyst_output: str
     ) -> str:
-        return f"""## ANALYST'S FINDINGS
+        return f"""## ENERGY ANALYST'S FINDINGS
 
 {analyst_output}
 
@@ -278,21 +284,21 @@ Your optimization strategy (respond directly, no <think> tags):"""
 {self._get_optimizer_prompt()}"""
     
     # =========================================================================
-    # TURN 3: REVIEWER (strict patch format, DeepSeek compatible)
+    # TURN 3: REVIEWER - GREEN SOFTWARE ORIENTED
     # =========================================================================
     
     def _get_reviewer_prompt(self) -> str:
-        return """## YOUR ROLE: REVIEWER - PRODUCE THE FINAL PATCH
+        return """## YOUR ROLE: REVIEWER - PRODUCE THE FINAL ENERGY-EFFICIENT PATCH
 
 **IMPORTANT: Do NOT use <think> tags. Output ONLY the patch, starting immediately with ### path/to/file.py**
 
-Generate the patch using this EXACT format:
+Generate the energy-efficient patch using this EXACT format:
 
 ### path/to/file.py
 <<<<<<< SEARCH
 [exact original code - copy from ORIGINAL CODE section above]
 =======
-[your optimized version]
+[your energy-efficient optimized version]
 >>>>>>> REPLACE
 
 **CRITICAL RULES:**
@@ -304,7 +310,7 @@ Generate the patch using this EXACT format:
 6. Do NOT add external dependencies
 7. Do NOT use <think> tags
 
-Generate your patch now (start directly with ### path/to/file.py):"""
+Generate your energy-efficient patch now (start directly with ### path/to/file.py):"""
     
     def _build_reviewer_turn(
         self, 
@@ -313,7 +319,7 @@ Generate your patch now (start directly with ### path/to/file.py):"""
         analyst_output: str,
         optimizer_output: str
     ) -> str:
-        return f"""## OPTIMIZATION STRATEGY
+        return f"""## GREEN OPTIMIZATION STRATEGY
 
 {optimizer_output}
 
