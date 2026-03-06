@@ -94,9 +94,12 @@ To reproduce the full measurement pipeline, the following hardware is required:
 
 | Component | Specification |
 |-----------|---------------|
-| **GPU** | NVIDIA GeForce RTX 4090 (24GB VRAM) |
-| **Power Monitor** | NETIO PowerBOX 4KF |
-| **CPU Energy** | Intel RAPL via EnergiBridge |
+| **CPU** | AMD EPYC 7742 (64 cores, 2.25 GHz) |
+| **GPU** | NVIDIA GeForce RTX 4090 (24 GB VRAM) |
+| **RAM** | 512 GB DDR4-3200 |
+| **Storage** | NVMe SSD (Samsung 980 PRO) |
+| **Power Monitor** | NETIO PowerBOX 4KF (0.5% accuracy) |
+| **OS** | Ubuntu 22.04 LTS (kernel 5.15) |
 ```bash
 # Single instance measurement
 python scripts/measure_instance.py \
