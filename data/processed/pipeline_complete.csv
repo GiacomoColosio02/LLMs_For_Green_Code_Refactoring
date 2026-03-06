@@ -1,0 +1,17 @@
+Model,Strategy,Context,Config,Generated,Passed,Pass Rate (%)
+Qwen,ZS,Oracle,ZS-O,131,74,59.199999999999996
+Qwen,ZS,Realistic,ZS-R,131,77,61.6
+Qwen,COT,Oracle,COT-O,131,50,40.0
+Qwen,COT,Realistic,COT-R,131,60,48.0
+Qwen,LDB,Oracle,LDB-O,131,82,65.60000000000001
+Qwen,LDB,Realistic,LDB-R,131,65,52.0
+Qwen,SC,Oracle,SC-O,131,58,46.400000000000006
+Qwen,SC,Realistic,SC-R,131,74,59.199999999999996
+DeepSeek,ZS,Oracle,ZS-O,131,19,15.2
+DeepSeek,ZS,Realistic,ZS-R,131,6,4.8
+DeepSeek,COT,Oracle,COT-O,131,9,7.199999999999999
+DeepSeek,COT,Realistic,COT-R,131,0,0.0
+DeepSeek,LDB,Oracle,LDB-O,131,28,22.400000000000002
+DeepSeek,LDB,Realistic,LDB-R,85,8,6.4
+DeepSeek,SC,Oracle,SC-O,131,8,6.4
+DeepSeek,SC,Realistic,SC-R,131,0,0.0

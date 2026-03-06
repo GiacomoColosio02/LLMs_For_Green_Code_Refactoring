@@ -1,0 +1,15 @@
+Model,Strategy,Context,Config,Passed,Total,Pass Rate (%)
+Qwen2.5-Coder-7B,ZS,Oracle,ZS-Oracle,74,125,59.199999999999996
+Qwen2.5-Coder-7B,ZS,Realistic,ZS-Realistic,77,125,61.6
+Qwen2.5-Coder-7B,COT,Oracle,COT-Oracle,50,125,40.0
+Qwen2.5-Coder-7B,COT,Realistic,COT-Realistic,60,125,48.0
+Qwen2.5-Coder-7B,LDB,Oracle,LDB-Oracle,82,125,65.60000000000001
+Qwen2.5-Coder-7B,LDB,Realistic,LDB-Realistic,65,125,52.0
+Qwen2.5-Coder-7B,SC,Oracle,SC-Oracle,58,125,46.400000000000006
+Qwen2.5-Coder-7B,SC,Realistic,SC-Realistic,74,125,59.199999999999996
+DeepSeek-R1-Distill-7B,ZS,Oracle,ZS-Oracle,19,125,15.2
+DeepSeek-R1-Distill-7B,ZS,Realistic,ZS-Realistic,6,125,4.8
+DeepSeek-R1-Distill-7B,COT,Oracle,COT-Oracle,9,125,7.199999999999999
+DeepSeek-R1-Distill-7B,LDB,Oracle,LDB-Oracle,28,125,22.400000000000002
+DeepSeek-R1-Distill-7B,LDB,Realistic,LDB-Realistic,8,125,6.4
+DeepSeek-R1-Distill-7B,SC,Oracle,SC-Oracle,8,125,6.4
